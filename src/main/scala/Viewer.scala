@@ -1,6 +1,7 @@
 import scala.swing._
 import scala.swing.BorderPanel.Position._
 import java.awt.Graphics2D
+import scala.math.round
 
 /**
  * Simple viewer to display the Island
@@ -11,9 +12,13 @@ import java.awt.Graphics2D
 
 object Viewer extends SimpleSwingApplication {
 
+  final val SIZE = 200
+
   def top = new MainFrame { // top is a required method
     title = "Island's Map Viewer"
-    val canvas = new MapCanvas()
+    val mesh = new SquaredMesh(SIZE, 15*15)
+    val canvas = new MapCanvas(SIZE, mesh.faces)
+
     contents = new BorderPanel { layout(canvas) = Center }
     size = new Dimension(500, 500)
 
@@ -21,15 +26,19 @@ object Viewer extends SimpleSwingApplication {
 }
 
 
-class MapCanvas extends Panel {
+class MapCanvas(val length: Int, val faces: Set[Face]) extends Panel {
 
-  preferredSize = new Dimension(500, 500)
+  override val size = new Dimension(length, length)
 
   override def paintComponent(g: Graphics2D) {
     g.clearRect(0, 0, size.width, size.height)
-    val xs: Array[Int] = Array(100, 100, 200, 200)
-    val ys: Array[Int] = Array(100, 200, 200, 100)
-    g.drawPolygon(xs, ys, 4)
+
+    faces.foreach { face =>
+      val xs = face.corners map { p => round(p.x).toInt }
+      val ys = face.corners map { p => round(p.y).toInt }
+      g.drawPolygon(xs.toArray, ys.toArray, face.corners.size)
+    }
+
   }
 
 }
