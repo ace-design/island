@@ -1,6 +1,6 @@
-import scala.swing._
-import scala.swing.BorderPanel.Position._
-import java.awt.Graphics2D
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.ImageIO
 import scala.math.round
 
 /**
@@ -10,35 +10,33 @@ import scala.math.round
  */
 
 
-object Viewer extends SimpleSwingApplication {
+object Viewer extends App {
 
-  final val SIZE = 200
-
-  def top = new MainFrame { // top is a required method
-    title = "Island's Map Viewer"
-    val mesh = new SquaredMesh(SIZE, 15*15)
-    val canvas = new MapCanvas(SIZE, mesh.faces)
-
-    contents = new BorderPanel { layout(canvas) = Center }
-    size = new Dimension(500, 500)
-
-  }
+  val mesh = new SquaredMesh(200, 15*15)
+  val map = new ImageMap(mesh)
+  map.toPNG("image.png")
 }
 
 
-class MapCanvas(val length: Int, val faces: Set[Face]) extends Panel {
+class ImageMap(val mesh: Mesh) {
 
-  override val size = new Dimension(length, length)
 
-  override def paintComponent(g: Graphics2D) {
-    g.clearRect(0, 0, size.width, size.height)
-
-    faces.foreach { face =>
+  private def build: BufferedImage = {
+    val img = new BufferedImage(mesh.size, mesh.size, BufferedImage.TYPE_INT_BGR)
+    val g = img.createGraphics()
+    g.clearRect(0, 0, mesh.size, mesh.size)
+    mesh.faces.foreach { face =>
       val xs = face.corners map { p => round(p.x).toInt }
       val ys = face.corners map { p => round(p.y).toInt }
       g.drawPolygon(xs.toArray, ys.toArray, face.corners.size)
     }
+    img
+  }
 
+  def toPNG(fileName: String) = {
+    val img = build
+    val outputFile = new File(fileName)
+    ImageIO.write(img, "png", outputFile)
   }
 
 }
