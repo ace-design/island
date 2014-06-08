@@ -13,7 +13,7 @@ object Viewer extends SimpleSwingApplication {
 
   def top = new MainFrame { // top is a required method
     title = "Island's Map Viewer"
-    val canvas = new MapViewer()
+    val canvas = new MapCanvas()
     contents = new BorderPanel { layout(canvas) = Center }
     size = new Dimension(500, 500)
 
@@ -21,8 +21,7 @@ object Viewer extends SimpleSwingApplication {
 }
 
 
-
-class MapViewer extends Panel {
+class MapCanvas extends Panel {
 
   preferredSize = new Dimension(500, 500)
 
