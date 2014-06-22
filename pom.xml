@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.ace-design</groupId>
-    <artifactId>myrmes</artifactId>
+    <artifactId>island</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Myrmes</name>
-    <description>An implementation of the Myrmes board game</description>
+    <name>Island</name>
+    <description>Island is a programing game used to support Software engineering teaching</description>
 
     <parent>
         <groupId>org.sonatype.oss</groupId>
@@ -55,15 +55,15 @@
             <version>${scala.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-swing</artifactId>
-            <version>2.10.4</version>
-        </dependency>
-        <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2_${scala.version.short}</artifactId>
             <version>${specs2.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <version>1.13</version>
         </dependency>
     </dependencies>
 

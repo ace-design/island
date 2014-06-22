@@ -28,8 +28,8 @@ class SquaredMesh(override val size: Int, override val chunk: Int) extends Mesh 
   require(size > 0, "Plane size must be positive")
 
   override val faces: Set[Face] = {
-    val inc = round(sqrt(chunk)).toInt
-    val squareLength = size / round(sqrt(chunk))
+    val inc = sqrt(chunk).toInt
+    val squareLength = size / sqrt(chunk)
     val delta = squareLength / 2
 
     val centers = for (x <- 0 until inc; y <- 0 until inc)
