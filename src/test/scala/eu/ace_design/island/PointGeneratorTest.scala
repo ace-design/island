@@ -52,5 +52,18 @@ class PointGeneratorTest extends SpecificationWithJUnit {
     }
   }
 
+  "A RelaxedRandomGrid generator" should {
+    val g = new RelaxedRandomGrid(GRID_SIZE)
+    "generate the appropriate number of points" in { g(4) must haveSize(4) }
+    "generates points in the given space" in {
+      val points = g(10)
+      val xs: Set[Double] = points map { _.x }
+      xs must contain(be_>=(0.0)).forall
+      xs must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
+      val ys: Set[Double] = points map { _.y }
+      ys must contain ( be_>=(0.0) ).forall
+      ys must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
+    }
+  }
 
 }

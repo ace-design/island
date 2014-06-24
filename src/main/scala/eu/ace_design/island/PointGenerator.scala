@@ -90,3 +90,52 @@ class RandomGrid(override val size: Int) extends PointGenerator {
     seq.toSet
   }
 }
+
+/**
+ * This generator generates a set of relaxed pseudo-random points, according to a standard uniform distribution law
+ *
+ * The smoothing is done according to the following techniques:
+ * Generate a set of Random points. For a given number of time, compute the Voronoi diagram of the distribution,
+ * and move each point to the centroid of its associated polygon.
+ *
+ * Remark: Without any smoothing iteration, this generator has the same behavior as the RandomGrid one.  This generator
+ * require the JTS Topology Suite to compute Voronoi diagrams and centroid coordinates.
+ *
+ * @param size   the size of the PointGenerator
+ * @param factor the number of iteration executed for smoothing (default is 5)
+ */
+class RelaxedRandomGrid(override val size: Int, val factor: Int = 5) extends PointGenerator {
+  import scala.util.Random
+  import com.vividsolutions.jts.triangulate.{VoronoiDiagramBuilder}
+  import com.vividsolutions.jts.geom.{GeometryCollection, GeometryFactory, Coordinate, Envelope}
+  import scala.collection.JavaConversions._
+
+  override protected def run(n: Int): Set[Point] = {
+    val random = new Random()
+    val distribution = for (i <- 1 to n) yield Point(random.nextDouble() * size, random.nextDouble() * size)
+    smooth(distribution.toSet, factor)
+  }
+
+  private def smooth(points: Set[Point], n: Int): Set[Point] = {
+    import scala.math.{min,max}
+    require(n >= 0, "n must be positive or null")
+    n match {
+      case 0 => points
+      case x => {
+        val coordinates = points map { p => new Coordinate(p.x, p.y)}
+        val voronoi = new VoronoiDiagramBuilder()
+        voronoi.setSites(coordinates)
+        val envelope = new Envelope(new Coordinate(0.0,0.0), new Coordinate(size, size))
+        voronoi.setClipEnvelope(envelope)
+        val geometry = voronoi.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection]
+        val centroids = for (i <- 0 until geometry.getNumGeometries)
+                            yield geometry.getGeometryN(i).getCentroid.getCoordinate
+        val result = centroids map { c =>
+          Point(min(max(c.x,0.0),size), min(max(c.y,0.0), size))
+        }
+        smooth(result.toSet, n - 1)
+      }
+    }
+  }
+
+}
