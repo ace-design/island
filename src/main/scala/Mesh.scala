@@ -1,5 +1,7 @@
 import scala.math._
 
+import eu.ace_design.island.Point
+
 /**
  * A trait to represent what is a mesh in Island
  * @author mosser
@@ -54,10 +56,5 @@ class SquaredMesh(override val size: Int, override val chunk: Int) extends Mesh 
  */
 case class Face(center: Point, corners: Seq[Point])
 
-/**
- * A point represents a location in a 2 dimensional plane
- * @param x
- * @param y
- */
-case class Point(x: Double, y: Double)
+
 
