@@ -49,17 +49,20 @@
     </properties>
 
     <dependencies>
+        <!-- Import the Scala language -->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
         </dependency>
+        <!-- Import the Specs 2 framework for Behavior-driven development  -->
         <dependency>
             <groupId>org.specs2</groupId>
             <artifactId>specs2_${scala.version.short}</artifactId>
             <version>${specs2.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Import JTS for geometrical operations -->
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
@@ -76,9 +79,9 @@
     </distributionManagement>
 
     <scm>
-        <url>https://github.com/ace-design/myrmes</url>
-        <connection>scm:git:git@github.com:ace-design/myrmes.git</connection>
-        <developerConnection>scm:git:git@github.com:ace-design/myrmes.git</developerConnection>
+        <url>https://github.com/ace-design/island</url>
+        <connection>scm:git:git@github.com:ace-design/island.git</connection>
+        <developerConnection>scm:git:git@github.com:ace-design/island.git</developerConnection>
     </scm>
 
     <developers>
@@ -105,7 +108,7 @@
 
     <organization>
         <name>Université Nice-Sophia Antipolis :: Polytech Nice-Sophia </name>
-        <url>http://www.polytechnice.fr/en/informatique.html</url>
+        <url>http://informatique.polytechnice.fr</url>
     </organization>
 
     <build>
@@ -133,7 +136,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Scala Tests -->
+            <!-- Integration Tests -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.6</version>
@@ -164,6 +167,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Unit test -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -171,8 +175,6 @@
                 <configuration>
                     <useFile>false</useFile>
                     <disableXmlReport>true</disableXmlReport>
-                    <!-- If you have classpath issue like NoDefClassError,... -->
-                    <!-- useManifestOnlyJar>false</useManifestOnlyJar -->
                     <includes>
                         <include>**/*Test.*</include>
                         <include>**/*Suite.*</include>
