@@ -1,5 +1,6 @@
 package eu.ace_design.island
 
+
 /**
  * This file is part of the Island project.
  * @author mosser
@@ -105,19 +106,20 @@ class RandomGrid(override val size: Int) extends PointGenerator {
  * @param factor the number of iteration executed for smoothing (default is 5)
  */
 class RelaxedRandomGrid(override val size: Int, val factor: Int = 5) extends PointGenerator {
+
   import scala.util.Random
-  import com.vividsolutions.jts.triangulate.{VoronoiDiagramBuilder}
-  import com.vividsolutions.jts.geom.{GeometryCollection, GeometryFactory, Coordinate, Envelope}
+  import scala.math.{min,max}
   import scala.collection.JavaConversions._
+  import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
+  import com.vividsolutions.jts.geom.{GeometryCollection, GeometryFactory, Coordinate, CoordinateFilter}
 
   override protected def run(n: Int): Set[Point] = {
     val random = new Random()
     val distribution = for (i <- 1 to n) yield Point(random.nextDouble() * size, random.nextDouble() * size)
-    smooth(distribution.toSet, factor)
+    smooth(distribution, factor).toSet
   }
 
-  private def smooth(points: Set[Point], n: Int): Set[Point] = {
-    import scala.math.{min,max}
+  private def smooth(points: Seq[Point], n: Int): Seq[Point] = {
     require(n >= 0, "n must be positive or null")
     n match {
       case 0 => points
@@ -125,17 +127,22 @@ class RelaxedRandomGrid(override val size: Int, val factor: Int = 5) extends Poi
         val coordinates = points map { p => new Coordinate(p.x, p.y)}
         val voronoi = new VoronoiDiagramBuilder()
         voronoi.setSites(coordinates)
-        val envelope = new Envelope(new Coordinate(0.0,0.0), new Coordinate(size, size))
-        voronoi.setClipEnvelope(envelope)
         val geometry = voronoi.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection]
+        geometry.apply(stayInTheBox)
         val centroids = for (i <- 0 until geometry.getNumGeometries)
                             yield geometry.getGeometryN(i).getCentroid.getCoordinate
-        val result = centroids map { c =>
-          Point(min(max(c.x,0.0),size), min(max(c.y,0.0), size))
-        }
-        smooth(result.toSet, n - 1)
+        val result = centroids map { c => Point(inside(c.x), inside(c.y)) }
+        smooth(result, n - 1)
       }
     }
+  }
+
+  // Returns a double that is equals to 0 is d < 0, equals to size if d > size, or d elsewhere.
+  private def inside(d: Double): Double = min(max(d,0.0),size)
+
+  // This coordinate filter helps the voronoi diagram to stay in the defined clipping space (size x size)
+  private val stayInTheBox = new CoordinateFilter {
+    override def filter(c: Coordinate) { c.setCoordinate(new Coordinate(inside(c.x), inside(c.y))) }
   }
 
 }
