@@ -19,7 +19,7 @@ class GeometryTest extends SpecificationWithJUnit {
 
   "A VerticeRegistry" should {
 
-    val reg = new VerticeRegistry()
+    val reg = new VertexRegistry()
     val p1 = Point(0.0, 0.1); val p2 = Point(2.5, 4.9)
     val regP = reg + p1 + p2
 
@@ -30,9 +30,9 @@ class GeometryTest extends SpecificationWithJUnit {
       regP.size must_== 1
     }
     "support adding as a sequential operator" in {
-      regP(0) must beSome(p1)
-      regP(1) must beSome(p2)
-      regP(2) must beNone
+      regP(0) must_== p1
+      regP(1) must_== p2
+      regP(2) must throwA[NoSuchElementException]
     }
     "support looking for vertice" in {
       regP(p1) must beSome(0)

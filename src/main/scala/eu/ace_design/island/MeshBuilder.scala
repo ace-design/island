@@ -10,12 +10,19 @@ package eu.ace_design.island
  *
  * Remark: this class exploits the JTS Topology Suites for Voronoi and Delaunay computations
  *
+ * @param size the size of the map (a square of size x size)
  */
-class MeshBuilder() {
+class MeshBuilder(val size: Int) {
 
 
-
-  def apply(sites: Set[Point]): Mesh = ???
+  /**
+   * Create a Mesh by applying a builder to a given set of points
+   * @param sites the points used to generate the mesh
+   * @return the associated mesh
+   */
+  def apply(sites: Set[Point]): Mesh = {
+    Mesh()
+  }
 
 
 }
