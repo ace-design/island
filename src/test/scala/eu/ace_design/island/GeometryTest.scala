@@ -17,11 +17,13 @@ class GeometryTest extends SpecificationWithJUnit {
     "hold an Y coordinate" in { p.y must_== y }
   }
 
-  "A VerticeRegistry" should {
+  "A VertexRegistry" should {
 
     val reg = new VertexRegistry()
     val p1 = Point(0.0, 0.1); val p2 = Point(2.5, 4.9)
     val regP = reg + p1 + p2
+    val p3 = Point(4.2, 8.9) ; val p4 = Point(7.4, 9.9); val p5 = Point(1.8, 9.5)
+    val regPP = VertexRegistry() + p3 + p4 + p5
 
     "be empty when initialized" in { reg.size must_== 0 }
     "support functional adding" in {
@@ -34,10 +36,27 @@ class GeometryTest extends SpecificationWithJUnit {
       regP(1) must_== p2
       regP(2) must throwA[NoSuchElementException]
     }
-    "support looking for vertice" in {
+    "support looking for a given vertex" in {
       regP(p1) must beSome(0)
       regP(p2) must beSome(1)
       regP(Point(0.0,0.0)) must beNone
+    }
+    "support the + operator" in {
+      val sum = regP + regPP
+      sum.size must_== 5
+    }
+    "change index of its right parameter" in {
+      val sum = regP + regPP
+      sum(p1) must beSome(0)
+      sum(p2) must beSome(1)
+      sum(p3) must beSome( (i: Int) => i != sum(p4).get && i != sum(p5).get )
+      sum(p4) must beSome( (i: Int) => i != sum(p3).get && i != sum(p5).get )
+      sum(p5) must beSome( (i: Int) => i != sum(p3).get && i != sum(p4).get )
+    }
+    "do not introduce duplicate points in a registry" in {
+      val sum = regP + (reg + p1)
+      sum.size must_== regP.size
+      sum(p1) must beSome(0)
     }
 
   }

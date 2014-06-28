@@ -21,9 +21,7 @@ case class Point(x: Double, y: Double)
  * A Mesh contains the vertices, edges and faces associated to a given map
  * @param registry the vertex registry  (default the empty one)
  */
-case class Mesh(
-  registry: VertexRegistry = new VertexRegistry()
-  ) {
+case class Mesh(registry: VertexRegistry = new VertexRegistry()) {
 
   /**
    * Return a new mesh that contains
@@ -37,9 +35,9 @@ case class Mesh(
  * A VertexRegistry store all the points used by a given mesh
  * @param vertices A map binding points to indexes, default is the empty map
  */
-case class VertexRegistry(
-  vertices: Map[Point, Int] = Map()) {
+case class VertexRegistry(vertices: Map[Point, Int] = Map()) {
 
+  // _lookup = vertices^-1
   private lazy val _lookup: Map[Int, Point] = vertices map { _.swap }
 
   /**
@@ -51,13 +49,34 @@ case class VertexRegistry(
     this.copy(vertices = this.vertices + (p -> this.size))
 
   /**
+   * Implements the sum of a VertexRegistry with another one. (Actually the semantics is more close to an append)
+   *
+   * Remark: this operator is not COMMUTATIVE !! It change the index of the points contained in its right parameter
+   * @param that  the registry to be added to this one.
+   * @return (this + that)
+   */
+  def +(that: VertexRegistry): VertexRegistry = {
+    val vP = that.vertices.foldLeft(this.vertices) { case (acc, (p,_)) =>
+      acc.get(p) match {
+        case None    => acc + (p -> acc.size)
+        case Some(_) => acc
+      }
+    }
+    this.copy(vertices = vP)
+  }
+
+  /**
    * The size of this registry (immutable)
    * @return the size of this
    */
   val size: Int = vertices.size
 
   /**
-   * Access to the i_th element of the registry
+   * Access to the i_th element of the registry.
+   *
+   * Remark: This operation implies a time-consuming operation (O(|vertices|) when
+   * called the first time.
+   *
    * @param i the index to retrieve
    * @return None if the index is out of point, Some(p) elsewhere (where p is located at index i)
    */
