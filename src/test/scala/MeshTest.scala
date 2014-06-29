@@ -1,4 +1,4 @@
-import eu.ace_design.island.Point
+import eu.ace_design.island.geom.Point
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner

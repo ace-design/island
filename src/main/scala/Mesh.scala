@@ -1,6 +1,7 @@
-import scala.math._
 
-import eu.ace_design.island.Point
+import eu.ace_design.island.geom.Point
+
+import scala.math._
 
 /**
  * A trait to represent what is a mesh in Island

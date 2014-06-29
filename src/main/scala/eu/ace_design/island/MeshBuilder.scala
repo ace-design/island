@@ -1,5 +1,7 @@
 package eu.ace_design.island
 
+
+import eu.ace_design.island.geom.{VertexRegistry, Mesh, Point}
 import com.vividsolutions.jts.geom.Polygon
 
 /**
@@ -29,7 +31,7 @@ class MeshBuilder(val size: Int) {
     // introduce points added by the computation of the Voronoi diagram for this site
     val voronoiReg: VertexRegistry = this.voronoi(sites, initialRegistry)
 
-    Mesh(registry = initialRegistry + voronoiReg)
+    Mesh(vertices = initialRegistry + voronoiReg)
   }
 
 
@@ -49,7 +51,7 @@ class MeshBuilder(val size: Int) {
     val geometry = builder.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection]
     // Bring back points to the map
     geometry.apply(stayInTheBox)
-    // Retrieve the Poloygons contained in the diagram
+    // Retrieve the Polygons contained in the diagram
     val polygons = for(i <- 0 until geometry.getNumGeometries) yield geometry.getGeometryN(i).asInstanceOf[Polygon]
 
     /** add the points located in the polygons to the received registry  **/

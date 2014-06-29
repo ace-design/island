@@ -1,5 +1,6 @@
 package eu.ace_design.island
 
+import eu.ace_design.island.geom.{VertexRegistry, Point}
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner

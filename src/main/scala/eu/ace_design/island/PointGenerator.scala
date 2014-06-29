@@ -1,5 +1,7 @@
 package eu.ace_design.island
 
+import _root_.eu.ace_design.island.geom.Point
+
 
 /**
  * This file is part of the Island project.
