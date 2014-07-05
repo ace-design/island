@@ -15,6 +15,46 @@ package eu.ace_design.island.geom
  */
 case class Point(x: Double, y: Double)
 
+/**
+ * An immutable edge is a line that goes from a given vertex to another one. Vertex are not stored directly, but instead
+ * stored by their reference in a VertexRegistry (this is actually quite classical in geometrical libraries).
+ *
+ * Remark: p1 and p2 **must** be valid references in the very same VertexRegistry.
+ *
+ * @param p1 the first point reference
+ * @param p2 the second point reference
+ */
+class Edge(val p1: Int, val p2: Int) {
+
+  /**
+   * Two edges are equals since they point to the same vertices, in any order (Edge(p,p') == Edge(p',p)).
+   * @param other  an object to be tested for equality with this.
+   * @return
+   */
+  override def equals(other: Any) = other match {
+    case that: Edge => (this.p1 == that.p1 && this.p2 == that.p2) || (this.p1 == that.p2 && this.p2 == that.p1)
+    case _ => false
+  }
+
+  /**
+   * Mimic the case class default toString method usually generated automatically by the scala compiler
+   * @return
+   */
+  override def toString: String = s"Edge({$p1,$p2})"
+}
+
+/**
+ * A companion object to mimic a case class for the Edge concept.
+ */
+object Edge {
+  /**
+   * The apply method allow one to build an Edge without using the new operator (as Point and Face are case classes)
+   * @param p1 first point reference
+   * @param p2 2nd point reference
+   * @return an instance of Point
+   */
+  def apply(p1: Int, p2: Int): Edge = { new Edge(p1,p2) }
+}
 
 /**
  * A Mesh contains the vertices, edges and faces associated to a given map
@@ -22,21 +62,12 @@ case class Point(x: Double, y: Double)
  */
 case class Mesh(
   vertices: VertexRegistry = VertexRegistry(),
-  edges: EdgeRegistry      = EdgeRegistry(),
-  faces: FaceRegistry      = FaceRegistry()) {
-
-  /**
-   * Return a new mesh that contains
-   * @param p
-   * @return
-   */
-  def +(p: Point) = this.copy(vertices = this.vertices + p)
+  edges:    EdgeRegistry   = EdgeRegistry(),
+  faces:    FaceRegistry   = FaceRegistry()) {
 }
-
-
 
 
 case class Face()
 
-case class Edge()
+
 

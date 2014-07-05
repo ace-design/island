@@ -42,7 +42,10 @@ trait Registry[T] {
    * @param t the element to add
    * @return a new map that contains the new element indexed at this.size.
    */
-  protected def addToContents(t: T): InternalStorage = this.contents + (t -> this.size)
+  protected def addToContents(t: T): InternalStorage = this.contents.get(t) match {
+    case None => this.contents + (t -> this.size)
+    case Some(_) => this.contents
+  }
 
   /**
    * Append the content of another InternalStorage to the one contained in this.contents.
