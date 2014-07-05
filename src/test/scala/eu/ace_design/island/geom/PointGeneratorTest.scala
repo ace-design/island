@@ -1,8 +1,8 @@
-package eu.ace_design.island
+package eu.ace_design.island.geom
 
-import _root_.eu.ace_design.island.geom.Point
-import org.specs2.mutable._
+import eu.ace_design.island.RelaxedRandomGrid
 import org.junit.runner.RunWith
+import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
 
 /**

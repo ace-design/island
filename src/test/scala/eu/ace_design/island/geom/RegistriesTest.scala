@@ -1,17 +1,16 @@
-package eu.ace_design.island
+package eu.ace_design.island.geom
 
-import eu.ace_design.island.geom.{Edge, Point, VertexRegistry}
 import org.junit.runner.RunWith
 import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class GeometryTest extends SpecificationWithJUnit {
+class RegistriesTest extends SpecificationWithJUnit {
 
-  "Geometry Specifications".title
+  "RegistriesTest Specifications".title
 
   /**
-   * Data used for test purpose 
+   * Data used for test purpose
    */
 
   val p1 = Point(0.0, 0.1); val p2 = Point(2.5, 4.9)
@@ -21,20 +20,6 @@ class GeometryTest extends SpecificationWithJUnit {
   val regPP = VertexRegistry() + p3 + p4 + p5
 
   val e1 = Edge(regP(p1).get, regP(p1).get)
-
-
-  "A Point" should {
-    val x = 2.0; val y = 5.0;  val p = Point(x,y)
-    "hold an X coordinate" in { p.x must_== x }
-    "hold an Y coordinate" in { p.y must_== y }
-  }
-
-  "An Edge" should {
-    "be constructed in any order (non-directional)" in {
-      Edge(1,2) must_== Edge(2,1)
-    }
-  }
-  
 
   "A VertexRegistry" should {
     "be empty when initialized" in { VertexRegistry().size must_== 0 }
@@ -77,5 +62,4 @@ class GeometryTest extends SpecificationWithJUnit {
       sum(p1) must beSome(0)
     }
   }
-
 }

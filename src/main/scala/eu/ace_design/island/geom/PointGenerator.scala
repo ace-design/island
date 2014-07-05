@@ -1,6 +1,4 @@
-package eu.ace_design.island
-
-import _root_.eu.ace_design.island.geom.Point
+package eu.ace_design.island.geom
 
 
 /**
@@ -109,11 +107,12 @@ class RandomGrid(override val size: Int) extends PointGenerator {
  */
 class RelaxedRandomGrid(override val size: Int, val factor: Int = 5) extends PointGenerator {
 
-  import scala.util.Random
-  import scala.math.{min,max}
-  import scala.collection.JavaConversions._
+  import com.vividsolutions.jts.geom.{Coordinate, CoordinateFilter, GeometryCollection, GeometryFactory}
   import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
-  import com.vividsolutions.jts.geom.{GeometryCollection, GeometryFactory, Coordinate, CoordinateFilter}
+
+import scala.collection.JavaConversions._
+  import scala.math.{max, min}
+  import scala.util.Random
 
   override protected def run(n: Int): Set[Point] = {
     val random = new Random()
