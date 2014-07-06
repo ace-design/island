@@ -37,6 +37,12 @@ class Edge(val p1: Int, val p2: Int) {
   }
 
   /**
+   * HashCode method to support storage in maps
+   * @return the sum of the hashcode of each integer used as point reference
+   */
+  override def hashCode(): Int = p1.hashCode() + p2.hashCode()
+
+  /**
    * Mimic the case class default toString method usually generated automatically by the scala compiler
    * @return
    */
@@ -64,10 +70,25 @@ case class Mesh(
   vertices: VertexRegistry = VertexRegistry(),
   edges:    EdgeRegistry   = EdgeRegistry(),
   faces:    FaceRegistry   = FaceRegistry()) {
+
+  /**
+   * Add a VertexRegistry to this mesh
+   * @param vReg  the registry to add
+   * @return a new Mesh, with vertices attribute updated.
+   */
+  def +(vReg: VertexRegistry): Mesh = this.copy(vertices = this.vertices + vReg)
+
+  /**
+   * Add an EdgeRegistry to this mesh
+   * @param eReg  the registry to add
+   * @return a new Mesh, with edges attribute update
+   */
+  def +(eReg: EdgeRegistry): Mesh = this.copy(edges = this.edges + eReg)
+
 }
 
 
-case class Face()
+case class Face() {}
 
 
 

@@ -1,14 +1,17 @@
 package eu.ace_design.island.geom
 
-import eu.ace_design.island.RelaxedRandomGrid
 import org.junit.runner.RunWith
 import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
 
 /**
- * This file is part of the island project
+ * This file is part of the island project.
+ *
+ * WARNING: The syntax highlighter of IntelliJ 13.1 indicates compilation error in this class. This is a bug in the
+ * highlighter, this file is absolutely valid w.r.t. to the scala grammar and the Specs2 framework.
+ *
  * @author mosser (22/06/2014, 19:28)
- **/
+ */
 
 @RunWith(classOf[JUnitRunner])
 class PointGeneratorTest extends SpecificationWithJUnit {

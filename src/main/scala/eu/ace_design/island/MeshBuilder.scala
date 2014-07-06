@@ -1,8 +1,7 @@
 package eu.ace_design.island
 
 
-import eu.ace_design.island.geom.{VertexRegistry, Mesh, Point}
-import com.vividsolutions.jts.geom.Polygon
+import eu.ace_design.island.geom._
 
 /**
  * This file is part of the Island project.
@@ -18,6 +17,7 @@ import com.vividsolutions.jts.geom.Polygon
  */
 class MeshBuilder(val size: Int) {
   import com.vividsolutions.jts.geom.CoordinateFilter
+  import com.vividsolutions.jts.geom.Polygon
 
   /**
    * Create a Mesh by applying a builder to a given set of points
@@ -27,15 +27,16 @@ class MeshBuilder(val size: Int) {
   def apply(sites: Set[Point]): Mesh = {
     // Create an initial registry with the given sites
     val initialRegistry = (sites foldLeft VertexRegistry()) ( (reg, p) => reg + p )
+    val initialMesh = Mesh(vertices = initialRegistry)
 
     // introduce points added by the computation of the Voronoi diagram for this site
-    val voronoiReg: VertexRegistry = this.voronoi(sites, initialRegistry)
+    val voronoiMesh = this.voronoi(sites, initialMesh)
 
-    Mesh(vertices = initialRegistry + voronoiReg)
+    voronoiMesh
   }
 
 
-  private def voronoi(sites: Set[Point], reg: VertexRegistry): VertexRegistry = {
+  private def voronoi(sites: Set[Point], mesh: Mesh): Mesh = {
     import scala.collection.JavaConversions._
     import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
     import com.vividsolutions.jts.geom.{Coordinate, GeometryCollection, GeometryFactory}
@@ -55,15 +56,32 @@ class MeshBuilder(val size: Int) {
     val polygons = for(i <- 0 until geometry.getNumGeometries) yield geometry.getGeometryN(i).asInstanceOf[Polygon]
 
     /** add the points located in the polygons to the received registry  **/
-    val result = polygons.foldLeft(reg) { (r, poly) =>
+    val vertexRegistry = polygons.foldLeft(mesh.vertices) { (r, poly) =>
       val coordinates = poly.getBoundary.getCoordinates
       val points = coordinates map { c => Point(c.x, c.y) }
-      points.foldLeft(r) { (acc, point) => acc(point) match {
-        case Some(_) => acc
-        case None => acc + point
-      } }
+      points.foldLeft(r) { (acc, point) => acc + point }
     }
-    result
+    val meshWithVertices = mesh + vertexRegistry
+
+    /** add the different edges stored in each polygon **/
+    val edgeRegistry = polygons.foldLeft(EdgeRegistry()) { (r, poly) =>
+      val edges = extractEdges(meshWithVertices.vertices, poly)
+      edges.foldLeft(r) { (reg, e) => reg + e }
+    }
+
+    val meshWithVerticesAndEdges = meshWithVertices + edgeRegistry
+
+    /** Return the mesh based on the voronoi representation (vertices, edges and faces)**/
+    meshWithVerticesAndEdges
+  }
+
+  private def extractEdges(vReg: VertexRegistry, poly: Polygon): Seq[Edge] = {
+    def loop(points: Array[Point]): Seq[Edge] = points match {
+      case Array() => Seq()
+      case Array(p) => Seq()
+      case Array(p1, p2, _*) => Edge(vReg(p1).get,vReg(p2).get) +: loop(points.slice(1,points.length))
+    }
+    loop(poly.getBoundary.getCoordinates map { c => Point(c.x, c.y) })
   }
 
   /**

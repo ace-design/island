@@ -44,14 +44,14 @@ class MeshBuilderTest extends SpecificationWithJUnit {
       mesh.faces.size must_== 4
     }
 
-    "contains the input points in its registry" in {
+    "contain the input points in its registry" in {
       mesh.vertices(points(50 , 50)) must beSome
       mesh.vertices(points(50 ,150)) must beSome
       mesh.vertices(points(150, 50)) must beSome
       mesh.vertices(points(150,150)) must beSome
     }
 
-    "contains voronoi-based points used to separate regions in the map" in {
+    "contain voronoi-based points used to separate regions in the map" in {
       mesh.vertices(points(0  ,  0))  must beSome
       mesh.vertices(points(100,  0))  must beSome
       mesh.vertices(points(200,  0))  must beSome
@@ -63,6 +63,21 @@ class MeshBuilderTest extends SpecificationWithJUnit {
       mesh.vertices(points(200, 200)) must beSome
     }
 
+    "contain all the edges used to build the different faces" in {
+      def p(x: Int,y: Int): Int = mesh.vertices(points(x,y)).get
+      mesh.edges(Edge(p(0,0),     p(0, 100)))   must beSome
+      mesh.edges(Edge(p(0,100),   p(0, 200)))   must beSome
+      mesh.edges(Edge(p(0,0),     p(100, 0)))   must beSome
+      mesh.edges(Edge(p(0,100),   p(100, 100))) must beSome
+      mesh.edges(Edge(p(0,200),   p(100, 200))) must beSome
+      mesh.edges(Edge(p(100,0),   p(100, 100))) must beSome
+      mesh.edges(Edge(p(100,100), p(100, 200))) must beSome
+      mesh.edges(Edge(p(100,0),   p(200, 0)))   must beSome
+      mesh.edges(Edge(p(100,100), p(200, 100))) must beSome
+      mesh.edges(Edge(p(100,200), p(200, 200))) must beSome
+      mesh.edges(Edge(p(200,0),   p(200, 100))) must beSome
+      mesh.edges(Edge(p(200,100), p(200, 200))) must beSome
+    }
   }
 
 

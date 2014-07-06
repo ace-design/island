@@ -5,9 +5,9 @@ import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class GeometryTest extends SpecificationWithJUnit {
+class ModelTest extends SpecificationWithJUnit {
 
-  "Geometry Specifications".title
+  "Geometry Model Specifications".title
 
   "A Point" should {
     val x = 2.0; val y = 5.0;  val p = Point(x,y)
