@@ -40,7 +40,7 @@ class Edge(val p1: Int, val p2: Int) {
    * HashCode method to support storage in maps
    * @return the sum of the hashcode of each integer used as point reference
    */
-  override def hashCode(): Int = p1.hashCode() + p2.hashCode()
+  override def hashCode(): Int = Set(p1,p2).hashCode
 
   /**
    * Mimic the case class default toString method usually generated automatically by the scala compiler
