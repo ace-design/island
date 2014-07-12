@@ -62,6 +62,13 @@ object Edge {
   def apply(p1: Int, p2: Int): Edge = { new Edge(p1,p2) }
 }
 
+
+/**
+ * A Face is defined by a center, and a sequence of edges that draws its border.
+ */
+// TODO Add neighbors
+case class Face(center: Int, edges: Seq[Int])
+
 /**
  * A Mesh contains the vertices, edges and faces associated to a given map
  * @param vertices the vertex registry  (default the empty one)
@@ -71,24 +78,14 @@ case class Mesh(
   edges:    EdgeRegistry   = EdgeRegistry(),
   faces:    FaceRegistry   = FaceRegistry()) {
 
-  /**
-   * Add a VertexRegistry to this mesh
-   * @param vReg  the registry to add
-   * @return a new Mesh, with vertices attribute updated.
-   */
-  def +(vReg: VertexRegistry): Mesh = this.copy(vertices = this.vertices + vReg)
 
-  /**
-   * Add an EdgeRegistry to this mesh
-   * @param eReg  the registry to add
-   * @return a new Mesh, with edges attribute update
-   */
-  def +(eReg: EdgeRegistry): Mesh = this.copy(edges = this.edges + eReg)
+  def +(that: Mesh): Mesh = Mesh(vertices = this.vertices + that.vertices,
+                                 edges = this.edges + that.edges,
+                                 faces = this.faces + that.faces)
 
 }
 
 
-case class Face() {}
 
 
 
