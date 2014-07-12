@@ -26,55 +26,88 @@ class MeshBuilder(val size: Int) {
    */
   def apply(sites: Set[Point]): Mesh = {
     // Create an initial registry with the given sites
-    val initialRegistry = (sites foldLeft VertexRegistry()) ( (reg, p) => reg + p )
-    val initialMesh = Mesh(vertices = initialRegistry)
+    val initialRegistry = (sites.par foldLeft VertexRegistry()) ( (reg, p) => reg + p )
 
     // introduce points added by the computation of the Voronoi diagram for this site
-    val voronoiMesh = this.voronoi(sites, initialMesh)
-
+    val voronoiMesh = this.voronoi(sites, initialRegistry)
     voronoiMesh
   }
 
-
-  private def voronoi(sites: Set[Point], mesh: Mesh): Mesh = {
+  /**
+   * Exploit a Voronoi diagram to build the different area of the maps
+   * @param sites a distribution of points used as inputs for the Voronoi Builder
+   * @param vReg the initial vertex Registry containing the sites
+   * @return a complete mesh (based on voronoi algorithm) with the associated Faces, Edges and Vertex.
+   */
+  private def voronoi(sites: Set[Point], vReg: VertexRegistry): Mesh = {
     import scala.collection.JavaConversions._
     import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
     import com.vividsolutions.jts.geom.{Coordinate, GeometryCollection, GeometryFactory}
 
-    /** Exploiting JTS to compute the geometrical objects associated to **/
-
     // Transform the Points into JTS coordinates
     val coordinates = sites map { p => new Coordinate(p.x, p.y) }
+
     // Instantiate a DiagramBuilder, associated to the computed coordinates.
     val builder = new VoronoiDiagramBuilder()
     builder.setSites(coordinates)
-    // Actually compute the diagram
     val geometry = builder.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection]
     // Bring back points to the map
     geometry.apply(stayInTheBox)
+
     // Retrieve the Polygons contained in the diagram
     val polygons = for(i <- 0 until geometry.getNumGeometries) yield geometry.getGeometryN(i).asInstanceOf[Polygon]
 
-    /** add the points located in the polygons to the received registry  **/
-    val vertexRegistry = polygons.foldLeft(mesh.vertices) { (r, poly) =>
+    // Compute the contents of the mesh
+    // TODO factorize the code to go through the list of polygons only one time instead of three.
+    val completeVertexRegistry = buildVertexRegistry(polygons, vReg)
+    val edgeRegistry = buildEdgeRegistry(polygons, completeVertexRegistry)
+    val faceRegistry = buildFaceRegistry(polygons, sites, completeVertexRegistry, edgeRegistry)
+    // Return the mesh
+    Mesh(vertices = completeVertexRegistry, edges = edgeRegistry, faces = faceRegistry)
+  }
+
+  /**
+   * Compute a vertex registry that contains all the vertices used in the given polygons
+   * @param polygons the polygons to work on
+   * @param init a Vertex Registry used as starting point
+   * @return  A vertex registry containing all the vertices in init + the one defined in the given polygons
+   */
+  private def buildVertexRegistry(polygons: Seq[Polygon], init: VertexRegistry): VertexRegistry = {
+    polygons.foldLeft(init) { (r, poly) =>
       val coordinates = poly.getBoundary.getCoordinates
       val points = coordinates map { c => Point(c.x, c.y) }
       points.foldLeft(r) { (acc, point) => acc + point }
     }
-    val meshWithVertices = mesh + vertexRegistry
-
-    /** add the different edges stored in each polygon **/
-    val edgeRegistry = polygons.foldLeft(EdgeRegistry()) { (r, poly) =>
-      val edges = extractEdges(meshWithVertices.vertices, poly)
-      edges.foldLeft(r) { (reg, e) => reg + e }
-    }
-
-    val meshWithVerticesAndEdges = meshWithVertices + edgeRegistry
-
-    /** Return the mesh based on the voronoi representation (vertices, edges and faces)**/
-    meshWithVerticesAndEdges
   }
 
+  /**
+   * Compute and EdgeRegistry based on the given polygons and a vertex registry containing the associated vertices
+   * @param polygons the polygons to work on
+   * @param vertices the vertices used by these polygons
+   * @return the associated EdgeRegistry
+   */
+  private def buildEdgeRegistry(polygons: Seq[Polygon], vertices: VertexRegistry): EdgeRegistry = {
+    polygons.foldLeft(EdgeRegistry()) { (r, poly) =>
+      val edges = extractEdges(vertices, poly)
+      edges.foldLeft(r) { (reg, e) => reg + e }
+    }
+  }
+
+  private def buildFaceRegistry(polygons: Seq[Polygon], sites: Set[Point],
+                                vReg: VertexRegistry, eReg: EdgeRegistry): FaceRegistry = {
+    polygons.foldLeft(FaceRegistry()) { (reg, poly) =>
+      val centerRef = extractCenter(sites, vReg, poly)
+      val edgeRefs = extractEdges(vReg, poly) map { e => eReg(e).get }
+      reg + Face(center = centerRef, edges = edgeRefs)
+    }
+  }
+
+  /**
+   * Transform a given polygon into a sequence of Edges
+   * @param vReg the VertexRegistry containing the associated vertices
+   * @param poly the polygon to transform
+   * @return the associated sequence of edges
+   */
   private def extractEdges(vReg: VertexRegistry, poly: Polygon): Seq[Edge] = {
     def loop(points: Array[Point]): Seq[Edge] = points match {
       case Array() => Seq()
@@ -82,6 +115,27 @@ class MeshBuilder(val size: Int) {
       case Array(p1, p2, _*) => Edge(vReg(p1).get,vReg(p2).get) +: loop(points.slice(1,points.length))
     }
     loop(poly.getBoundary.getCoordinates map { c => Point(c.x, c.y) })
+  }
+
+  /**
+   * For a given polygon, find the voronoi site used to compute it
+   * @param sites  the sites used to build the polygon according to the Voronoi algorithm
+   * @param vReg the VertexRegistry containing
+   * @param poly
+   * @return
+   */
+  private def extractCenter(sites: Set[Point], vReg: VertexRegistry, poly: Polygon): Int = {
+    val geomFact = new com.vividsolutions.jts.geom.GeometryFactory()
+    val opt = sites.par find { p =>
+      poly.contains(geomFact.createPoint(new com.vividsolutions.jts.geom.Coordinate(p.x, p.y)))
+    }
+    opt match {
+      case Some(p) => vReg(p) match {
+        case Some(pRef) => pRef
+        case None => throw new IllegalArgumentException("Center is not contained in the VertexRegistry")
+      }
+      case None => throw new IllegalArgumentException("No site contained by this polygon")
+    }
   }
 
   /**

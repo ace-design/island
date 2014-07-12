@@ -35,6 +35,20 @@ class MeshBuilderTest extends SpecificationWithJUnit {
   val grid4 = Set(points(50,50), points(50,150), points(150,50), points(150, 150))
   val mesh = builder(grid4)
 
+  def p(x: Int,y: Int): Int = mesh.vertices(points(x,y)).get
+  def e(p1: (Int,Int), p2: (Int,Int)) = mesh.edges(Edge(p(p1._1,p1._2), p(p2._1, p2._2))).get
+
+  val faces: Map[(Double,Double), Face] = Map(
+    (50.0,50.0) -> Face(p(50,50),
+                    Seq(e((0,0), (0,100)), e((0,100),(100,100)), e((100,100),(100,0)), e((100,0),(0,0)))),
+    (50.0,150.0) -> Face(p(50,150),
+                     Seq(e((0,100), (0,200)), e((0,200),(100,200)), e((100,200),(100,100)), e((100,100),(0,100)))),
+    (150.0,50.0) -> Face(p(150,50),
+                     Seq(e((100,0), (100,100)), e((100,100),(200,100)), e((200,100),(200,0)), e((200,0),(100,0)))),
+    (150.0,150.0) -> Face(p(150,150),
+                      Seq(e((100,100),(100,200)),e((100,200),(200,200)),e((200,200),(200,100)),e((200,100),(100,100)))))
+
+
   "A MeshBuilder" should {
 
     "produce a mesh when applied to a set of points" in {
@@ -64,7 +78,6 @@ class MeshBuilderTest extends SpecificationWithJUnit {
     }
 
     "contain all the edges used to build the different faces" in {
-      def p(x: Int,y: Int): Int = mesh.vertices(points(x,y)).get
       mesh.edges(Edge(p(0,0),     p(0, 100)))   must beSome
       mesh.edges(Edge(p(0,100),   p(0, 200)))   must beSome
       mesh.edges(Edge(p(0,0),     p(100, 0)))   must beSome
@@ -78,7 +91,18 @@ class MeshBuilderTest extends SpecificationWithJUnit {
       mesh.edges(Edge(p(200,0),   p(200, 100))) must beSome
       mesh.edges(Edge(p(200,100), p(200, 200))) must beSome
     }
-  }
 
+    "contain all the faces that should be present in this mesh" in {
+      def isValid(f: Face): Boolean = {
+        val center = mesh.vertices(f.center)
+        val expected = faces((center.x, center.y))
+        f.edges.toSet == expected.edges.toSet
+      }
+      isValid(mesh.faces(0)) must beTrue
+      isValid(mesh.faces(1)) must beTrue
+      isValid(mesh.faces(2)) must beTrue
+      isValid(mesh.faces(3)) must beTrue
+    }
+  }
 
 }
