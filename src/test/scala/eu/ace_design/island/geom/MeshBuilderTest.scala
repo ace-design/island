@@ -1,6 +1,5 @@
 package eu.ace_design.island.geom
 
-import eu.ace_design.island.MeshBuilder
 import org.junit.runner.RunWith
 import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
