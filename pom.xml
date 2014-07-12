@@ -41,9 +41,9 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <!-- Software dependencies version-->
-        <scala.version>2.10.3</scala.version>
+        <scala.version>2.10.4</scala.version>
         <scala.version.short>2.10</scala.version.short>
-        <specs2.version>2.3.10</specs2.version>
+        <specs2.version>2.3.13</specs2.version>
         <scalaz.version>7.0.0</scalaz.version>
         <junit.version>4.11</junit.version>
     </properties>
