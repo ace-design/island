@@ -44,8 +44,9 @@
         <scala.version>2.10.4</scala.version>
         <scala.version.short>2.10</scala.version.short>
         <specs2.version>2.3.13</specs2.version>
-        <scalaz.version>7.0.0</scalaz.version>
         <junit.version>4.11</junit.version>
+        <jts.version>1.13</jts.version>
+        <batik.version>1.7</batik.version>
     </properties>
 
     <dependencies>
@@ -66,7 +67,13 @@
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
-            <version>1.13</version>
+            <version>${jts.version}</version>
+        </dependency>
+        <!-- Apache Batik for SVG manipulation -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-svggen</artifactId>
+            <version>${batik.version}</version>
         </dependency>
     </dependencies>
 
