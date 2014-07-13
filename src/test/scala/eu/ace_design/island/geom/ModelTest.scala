@@ -1,10 +1,7 @@
 package eu.ace_design.island.geom
 
-import org.junit.runner.RunWith
 import org.specs2.mutable._
-import org.specs2.runner.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ModelTest extends SpecificationWithJUnit {
 
   "Geometry Model Specifications".title
