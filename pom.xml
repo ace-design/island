@@ -69,6 +69,13 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Apache Tika is only used for test purpose (checking mime type of produced files) -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>1.5</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Import JTS for geometrical operations -->
         <dependency>
             <groupId>com.vividsolutions</groupId>
@@ -84,6 +91,11 @@
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-dom</artifactId>
+            <version>${batik.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-svg-dom</artifactId>
             <version>${batik.version}</version>
         </dependency>
     </dependencies>
