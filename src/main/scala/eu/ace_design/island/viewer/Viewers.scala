@@ -35,7 +35,6 @@ trait Viewer {
 class SVGViewer extends Viewer  {
   import java.awt._
   import org.apache.batik.svggen.SVGGraphics2D
-  import org.apache.batik.dom.GenericDOMImplementation
   import org.apache.batik.dom.svg.SVGDOMImplementation
 
   override val extension = "svg"
@@ -45,19 +44,22 @@ class SVGViewer extends Viewer  {
   override def apply(mesh: Mesh): File = {
     val paintbrush = initGraphics(mesh)
     draw(mesh, paintbrush)
-    flush(paintbrush)
+    flush(paintbrush, mesh.size)
   }
 
   /**
-   * Initialise the graphics@D object used to draw the mesh.
+   * Initialise the graphics2D object used to draw the mesh.
    * @return
    */
   private def initGraphics(mesh: Mesh): SVGGraphics2D = {
-    val domImpl = GenericDOMImplementation.getDOMImplementation
+    val domImpl = SVGDOMImplementation.getDOMImplementation
     val document = domImpl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null)
-    val root = document.getDocumentElement
-    root.setAttributeNS(null,"width")
-    new SVGGraphics2D(document)
+    val r = new SVGGraphics2D(document)
+    mesh.size match {
+      case Some(s) => r.setSVGCanvasSize(new Dimension(s, s))
+      case None =>
+    }
+    r
   }
 
   /**
@@ -67,19 +69,19 @@ class SVGViewer extends Viewer  {
    */
   private def draw(mesh: Mesh, g: Graphics2D) {
 
-    g.setPaint(Color.red);
+    g.setPaint(Color.red)
     g.fill(new Rectangle(10, 10, 100, 100))
   }
 
   /**
    * Flush the mesh being drawn in an Graphics2D object into a plain file
-   * @param svg2D
-   * @return
+   * @param svg2D the graphic object used to draw the mesh
+   * @param clip the size of the SVG file (attributes of the svg tag if present)
+   * @return the file used to flush the graphic object
    */
-  private def flush(svg2D: SVGGraphics2D): File = {
+  private def flush(svg2D: SVGGraphics2D, clip: Option[Int]): File = {
     val result = File.createTempFile("island-viewer-", "."+extension)
     svg2D.stream(result.getAbsolutePath, true) // true means "use CSS".
     result
   }
-
 }

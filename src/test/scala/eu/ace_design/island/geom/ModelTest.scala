@@ -18,4 +18,18 @@ class ModelTest extends SpecificationWithJUnit {
     }
   }
 
+  "A Mesh" should {
+    val mesh = Mesh()
+    "not have size by default" in { mesh.size must beNone }
+    "support clipping" in {
+      val origin = mesh.size
+      val mP = mesh clip 200
+      mP.size must beSome(200)
+      mesh.size must_== origin
+
+    }
+
+  }
+
+
 }

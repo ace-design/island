@@ -26,7 +26,7 @@ class MeshBuilder(val size: Int) {
 
     // introduce points added by the computation of the Voronoi diagram for this site
     val voronoiMesh = this.voronoi(sites, initialRegistry)
-    voronoiMesh
+    voronoiMesh clip size
   }
 
   /**
@@ -90,6 +90,15 @@ import scala.collection.JavaConversions._
     }
   }
 
+  /**
+   * Compute a FaceRegistry based on the given polygons, the sites used to compute these polygons,
+   * and preexisting registries
+   * @param polygons the polygons to work on
+   * @param sites the sites used to generate the polygons
+   * @param vReg the vertexRegistry used to store the vertices
+   * @param eReg the edgeRegistry used to store the edges
+   * @return a FaceRegistry
+   */
   private def buildFaceRegistry(polygons: Seq[Polygon], sites: Set[Point],
                                 vReg: VertexRegistry, eReg: EdgeRegistry): FaceRegistry = {
     polygons.foldLeft(FaceRegistry()) { (reg, poly) =>
