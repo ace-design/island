@@ -10,6 +10,6 @@ It leverages [map generation techniques](http://www-cs-students.stanford.edu/~am
 
 This game is developed at Université Nice-Sophia Antipolis, and used in the Polytech'Nice Sophia curriculum. From a research point of view, it is also exploited to support the teaching of variability modelling at the graduate level. 
 
-Continuous integration is handled by Drone.io.
+Continuous integration is supported by [Drone.io](https://drone.io/github.com/ace-design/island/latest).
 
-[![Build Status](https://drone.io/github.com/ace-design/island/status.png)](https://drone.io/github.com/ace-design/island/latest)
+![Build Status](https://drone.io/github.com/ace-design/island/status.png)
