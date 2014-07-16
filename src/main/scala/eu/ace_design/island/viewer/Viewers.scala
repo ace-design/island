@@ -33,7 +33,8 @@ trait Viewer {
  * The SVG viewer relies on the Apache Batik library
  */
 class SVGViewer extends Viewer  {
-  import java.awt._
+  import java.awt.{Graphics2D,Color, Dimension}
+  import java.awt.geom.Path2D
   import org.apache.batik.svggen.SVGGraphics2D
   import org.apache.batik.dom.svg.SVGDOMImplementation
 
@@ -48,6 +49,26 @@ class SVGViewer extends Viewer  {
   }
 
   /**
+   * Actually draw a given mesh using a Graphics2D object (side-effect on g)
+   * @param mesh the mesh to draw with g
+   * @param g the Graphics2D object used to draw the mesh
+   */
+  private def draw(mesh: Mesh, g: Graphics2D) {
+    g.setPaint(Color.red)
+    mesh.faces.contents.keys foreach { f =>
+      val path = new Path2D.Double()
+      f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
+        val start = mesh.vertices(e.p1)
+        val end   = mesh.vertices(e.p2)
+        path.moveTo(start.x, start.y)
+        path.lineTo(end.x, end.y)
+      }
+      g.draw(path)
+    }
+  }
+
+
+  /**
    * Initialise the graphics2D object used to draw the mesh.
    * @return
    */
@@ -60,17 +81,6 @@ class SVGViewer extends Viewer  {
       case None =>
     }
     r
-  }
-
-  /**
-   * Actually draw a given mesh using a Graphics2D object (side-effect on g)
-   * @param mesh the mesh to draw with g
-   * @param g the Graphics2D object used to draw the mesh
-   */
-  private def draw(mesh: Mesh, g: Graphics2D) {
-
-    g.setPaint(Color.red)
-    g.fill(new Rectangle(10, 10, 100, 100))
   }
 
   /**
