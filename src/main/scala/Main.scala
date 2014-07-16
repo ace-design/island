@@ -5,7 +5,7 @@ import eu.ace_design.island.viewer._
 object Main extends App {
 
   // constants used by this generation program
-  final val OUTPUT_FILE = "/Users/mosser/Desktop/map.svg"
+  final val OUTPUT_FILE = "/Users/mosser/Desktop/map.pdf"
   final val MAP_SIZE = 2048
   final val NB_FACES = 2000
 
@@ -20,7 +20,7 @@ object Main extends App {
   val mesh = builder(sites)
 
   // Transform the result into a PDF file
-  val transformer = new SVGViewer()
+  val transformer = new PDFViewer()
   val result = transformer(mesh)
 
   // Move the generated map to my Desktop

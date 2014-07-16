@@ -40,12 +40,11 @@ trait Viewer {
  */
 class SVGViewer extends Viewer  {
   import java.awt.{Graphics2D,Color, Dimension}
-  import java.awt.geom.Path2D
+  import java.awt.geom.{Line2D, Path2D}
   import org.apache.batik.svggen.SVGGraphics2D
   import org.apache.batik.dom.svg.SVGDOMImplementation
 
   override val extension = "svg"
-
   override val mimeType = "image/svg+xml"
 
   override def apply(mesh: Mesh): File = {
@@ -60,7 +59,6 @@ class SVGViewer extends Viewer  {
    * @param g the Graphics2D object used to draw the mesh
    */
   private def draw(mesh: Mesh, g: Graphics2D) {
-    g.setPaint(Color.red)
     mesh.faces.contents.keys foreach { f =>
       val path = new Path2D.Double()
       f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
@@ -69,7 +67,11 @@ class SVGViewer extends Viewer  {
         path.moveTo(start.x, start.y)
         path.lineTo(end.x, end.y)
       }
+      g.setPaint(Color.red)
       g.draw(path)
+      g.setPaint(Color.black)
+      val center = mesh.vertices(f.center)
+      g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
     }
   }
 
