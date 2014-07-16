@@ -5,7 +5,7 @@
     <groupId>eu.ace-design</groupId>
     <artifactId>island</artifactId>
     <version>0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>Island</name>
     <description>Island is a programing game used to support Software engineering teaching</description>
 
@@ -205,6 +205,9 @@
                         <include>**/*Test.*</include>
                         <include>**/*Suite.*</include>
                     </includes>
+                    <systemPropertyVariables>
+                        <java.awt.headless>true</java.awt.headless>
+                    </systemPropertyVariables>
                 </configuration>
                 <executions>
                     <execution>
