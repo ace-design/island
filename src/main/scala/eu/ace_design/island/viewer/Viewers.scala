@@ -26,6 +26,12 @@ trait Viewer {
    */
   def apply(mesh: Mesh): File
 
+  /**
+   * Protected method used to generate a temporary file as an output
+   * @return
+   */
+  protected def initOutput: File = File.createTempFile("island-viewer-", "."+extension)
+
 }
 
 
@@ -90,8 +96,36 @@ class SVGViewer extends Viewer  {
    * @return the file used to flush the graphic object
    */
   private def flush(svg2D: SVGGraphics2D, clip: Option[Int]): File = {
-    val result = File.createTempFile("island-viewer-", "."+extension)
+    val result = initOutput
     svg2D.stream(result.getAbsolutePath, true) // true means "use CSS".
     result
   }
+}
+
+class PDFViewer extends Viewer {
+  import org.apache.batik.apps.rasterizer.{DestinationType, SVGConverter}
+
+  override val extension: String = "pdf"
+  override val mimeType: String = "application/pdf"
+
+  override def apply(mesh: Mesh): File = {
+    val result = initOutput
+
+    // We first create an SVG file with the SVG viewer:
+    val svgFile = (new SVGViewer())(mesh)
+
+    // We leverage the Batik rasterizer
+    val converter = new SVGConverter()
+    converter.setDestinationType(DestinationType.PDF)
+    converter.setSources(Array(svgFile.getAbsolutePath))
+    converter.setDst(result)
+
+    // Running the converter and eventually returning the result
+    // Batik has a f*cking System.out.println() instruction in its source => ugly patch
+    System.setOut(new java.io.PrintStream(new java.io.ByteArrayOutputStream()))
+    converter.execute()
+    System.setOut(new java.io.PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out)))
+    result
+  }
+
 }

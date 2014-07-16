@@ -12,28 +12,46 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
 
   "ViewerTest Specifications".title
 
-  "the SVG viewer" should {
+  val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
+  val tika =  new org.apache.tika.Tika()
+
+  "The SVG viewer" should {
     val toSVG = new SVGViewer()
-    val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
     val file = toSVG(mesh)
+    val xml = scala.xml.XML.loadFile(file)
+
     "use 'svg' as extension" in { toSVG.extension must_== "svg" }
     "process a mesh into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as SVG" in {
-      val tika =  new org.apache.tika.Tika()
       tika.detect(file.getAbsolutePath) must_== toSVG.mimeType
     }
     "respect the dimension for the mesh" in {
       mesh.size match {
         case Some(s) => {
-          val xml = scala.xml.XML.loadFile(file)
           (xml \ "@width").toString aka "the width"   must_== s"$s"
           (xml \ "@height").toString aka "the height" must_== s"$s"
         }
         case None => true must beTrue
       }
+    }
+    "Contains as many 'path' as given faces" in {
+      xml \\ "path" must haveSize(mesh.faces.size)
+    }
+  }
+
+  "The PDF viewer" should {
+    val toPDF = new PDFViewer()
+    val file = toPDF(mesh)
+    "use 'pdf' as extension" in { toPDF.extension must_== "pdf" }
+    "process a mesh into a file" in {
+      file must beAFile
+      file must beReadable
+    }
+    "create a file recognized as a PDF" in {
+      tika.detect(file.getAbsolutePath) must_== toPDF.mimeType
     }
   }
 }

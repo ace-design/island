@@ -98,6 +98,12 @@
             <artifactId>batik-svg-dom</artifactId>
             <version>${batik.version}</version>
         </dependency>
+        <!-- Apache Batik rasterizer is used for PDF generation -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-rasterizer</artifactId>
+            <version>1.7</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
