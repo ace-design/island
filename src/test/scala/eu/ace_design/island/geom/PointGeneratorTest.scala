@@ -1,8 +1,6 @@
 package eu.ace_design.island.geom
 
-import org.junit.runner.RunWith
 import org.specs2.mutable._
-import org.specs2.runner.JUnitRunner
 
 /**
  * This file is part of the island project.
@@ -13,7 +11,6 @@ import org.specs2.runner.JUnitRunner
  * @author mosser (22/06/2014, 19:28)
  */
 
-@RunWith(classOf[JUnitRunner])
 class PointGeneratorTest extends SpecificationWithJUnit {
 
   "PointGenerator specification".title

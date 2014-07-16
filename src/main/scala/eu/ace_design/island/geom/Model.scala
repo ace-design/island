@@ -40,7 +40,7 @@ class Edge(val p1: Int, val p2: Int) {
    * HashCode method to support storage in maps
    * @return the sum of the hashcode of each integer used as point reference
    */
-  override def hashCode(): Int = Set(p1,p2).hashCode
+  override def hashCode(): Int = Set(p1,p2).hashCode()
 
   /**
    * Mimic the case class default toString method usually generated automatically by the scala compiler
@@ -76,13 +76,21 @@ case class Face(center: Int, edges: Seq[Int])
 case class Mesh(
   vertices: VertexRegistry = VertexRegistry(),
   edges:    EdgeRegistry   = EdgeRegistry(),
-  faces:    FaceRegistry   = FaceRegistry()) {
+  faces:    FaceRegistry   = FaceRegistry(),
+  size: Option[Int] = None) {
 
 
   def +(that: Mesh): Mesh = Mesh(vertices = this.vertices + that.vertices,
                                  edges = this.edges + that.edges,
                                  faces = this.faces + that.faces)
 
+  /**
+   * Clip a given mesh by specifying its size (this is purely for information purpose, and supposed consistent with the
+   * content of the mesh).
+   * @param i the size (side length of a square) used for clipping.
+   * @return a mesh with the given parameter as size.
+   */
+  def clip(i: Int): Mesh = this.copy(size = Some(i))
 }
 
 

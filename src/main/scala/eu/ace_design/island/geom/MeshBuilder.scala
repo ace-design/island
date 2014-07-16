@@ -1,7 +1,4 @@
-package eu.ace_design.island
-
-
-import eu.ace_design.island.geom._
+package eu.ace_design.island.geom
 
 /**
  * This file is part of the Island project.
@@ -16,8 +13,7 @@ import eu.ace_design.island.geom._
  * @param size the size of the map (a square of size x size)
  */
 class MeshBuilder(val size: Int) {
-  import com.vividsolutions.jts.geom.CoordinateFilter
-  import com.vividsolutions.jts.geom.Polygon
+  import com.vividsolutions.jts.geom.{CoordinateFilter, Polygon}
 
   /**
    * Create a Mesh by applying a builder to a given set of points
@@ -30,7 +26,7 @@ class MeshBuilder(val size: Int) {
 
     // introduce points added by the computation of the Voronoi diagram for this site
     val voronoiMesh = this.voronoi(sites, initialRegistry)
-    voronoiMesh
+    voronoiMesh clip size
   }
 
   /**
@@ -40,9 +36,10 @@ class MeshBuilder(val size: Int) {
    * @return a complete mesh (based on voronoi algorithm) with the associated Faces, Edges and Vertex.
    */
   private def voronoi(sites: Set[Point], vReg: VertexRegistry): Mesh = {
-    import scala.collection.JavaConversions._
-    import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
     import com.vividsolutions.jts.geom.{Coordinate, GeometryCollection, GeometryFactory}
+    import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
+
+import scala.collection.JavaConversions._
 
     // Transform the Points into JTS coordinates
     val coordinates = sites map { p => new Coordinate(p.x, p.y) }
@@ -93,6 +90,15 @@ class MeshBuilder(val size: Int) {
     }
   }
 
+  /**
+   * Compute a FaceRegistry based on the given polygons, the sites used to compute these polygons,
+   * and preexisting registries
+   * @param polygons the polygons to work on
+   * @param sites the sites used to generate the polygons
+   * @param vReg the vertexRegistry used to store the vertices
+   * @param eReg the edgeRegistry used to store the edges
+   * @return a FaceRegistry
+   */
   private def buildFaceRegistry(polygons: Seq[Polygon], sites: Set[Point],
                                 vReg: VertexRegistry, eReg: EdgeRegistry): FaceRegistry = {
     polygons.foldLeft(FaceRegistry()) { (reg, poly) =>
@@ -143,7 +149,8 @@ class MeshBuilder(val size: Int) {
    */
   val stayInTheBox = new CoordinateFilter {
     import com.vividsolutions.jts.geom.Coordinate
-    import scala.math._
+
+import scala.math._
 
     /**
      * Check if a point is located inside the map (size x size square).

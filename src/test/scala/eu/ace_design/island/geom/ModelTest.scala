@@ -1,10 +1,7 @@
 package eu.ace_design.island.geom
 
-import org.junit.runner.RunWith
 import org.specs2.mutable._
-import org.specs2.runner.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ModelTest extends SpecificationWithJUnit {
 
   "Geometry Model Specifications".title
@@ -20,5 +17,19 @@ class ModelTest extends SpecificationWithJUnit {
       Edge(1,2) must_== Edge(2,1)
     }
   }
+
+  "A Mesh" should {
+    val mesh = Mesh()
+    "not have size by default" in { mesh.size must beNone }
+    "support clipping" in {
+      val origin = mesh.size
+      val mP = mesh clip 200
+      mP.size must beSome(200)
+      mesh.size must_== origin
+
+    }
+
+  }
+
 
 }

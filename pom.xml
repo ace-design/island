@@ -41,11 +41,12 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <!-- Software dependencies version-->
-        <scala.version>2.10.3</scala.version>
-        <scala.version.short>2.10</scala.version.short>
-        <specs2.version>2.3.10</specs2.version>
-        <scalaz.version>7.0.0</scalaz.version>
+        <scala.version>2.11.0</scala.version>
+        <scala.version.short>2.11</scala.version.short>
+        <specs2.version>2.3.12</specs2.version>
         <junit.version>4.11</junit.version>
+        <jts.version>1.13</jts.version>
+        <batik.version>1.7</batik.version>
     </properties>
 
     <dependencies>
@@ -62,11 +63,46 @@
             <version>${specs2.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Apache Tika is only used for test purpose (checking mime type of produced files) -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>1.5</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Import JTS for geometrical operations -->
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
-            <version>1.13</version>
+            <version>${jts.version}</version>
+        </dependency>
+        <!-- Apache Batik for SVG manipulation -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-svggen</artifactId>
+            <version>${batik.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-dom</artifactId>
+            <version>${batik.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-svg-dom</artifactId>
+            <version>${batik.version}</version>
+        </dependency>
+        <!-- Apache Batik rasterizer is used for PDF generation -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+            <artifactId>batik-rasterizer</artifactId>
+            <version>1.7</version>
         </dependency>
     </dependencies>
 
@@ -90,6 +126,8 @@
             <name>Sebastien Mosser</name>
             <email>mosser@i3s.unice,fr</email>
             <url>http://www.i3s.unice.fr/~mosser</url>
+            <organization>I3S Lab, University of Nice - Sophia Antipolis (UMR CNRS 7271)</organization>
+            <organizationUrl>http://www.i3s.unice.fr</organizationUrl>
             <timezone>+2</timezone>
             <roles>
                 <role>Architect</role>
@@ -127,6 +165,10 @@
                             <goal>testCompile</goal>
                         </goals>
                         <configuration>
+                            <jvmArgs>
+                                <jvmArg>-Xms64m</jvmArg>
+                                <jvmArg>-Xmx1024m</jvmArg>
+                            </jvmArgs>
                             <args>
                                 <arg>-deprecation</arg>
                                 <arg>-dependencyfile</arg>
@@ -135,22 +177,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <!-- Integration Tests -->
-            <plugin>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <useFile>false</useFile>
-                </configuration>
             </plugin>
             <!-- Maven GPG signature plugin -->
             <plugin>
@@ -180,6 +206,13 @@
                         <include>**/*Suite.*</include>
                     </includes>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
