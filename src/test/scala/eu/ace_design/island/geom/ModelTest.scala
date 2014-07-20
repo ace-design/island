@@ -30,6 +30,10 @@ class ModelTest extends SpecificationWithJUnit {
     val x = 2.0; val y = 5.0;  val p = Point(x,y)
     "hold an X coordinate" in { p.x must_== x }
     "hold an Y coordinate" in { p.y must_== y }
+    "reject negative values" in {
+      Point(-1,0) must throwAn[IllegalArgumentException]
+      Point(0,-1) must throwAn[IllegalArgumentException]
+    }
   }
 
   "An Edge" should {

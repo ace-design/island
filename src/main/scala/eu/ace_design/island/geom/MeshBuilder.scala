@@ -15,7 +15,7 @@ import eu.ace_design.island.util.Log
  * @param size the size of the map (a square of size x size)
  */
 class MeshBuilder(val size: Int) extends Log {
-  import com.vividsolutions.jts.geom.{CoordinateFilter, Polygon, GeometryCollection}
+  import com.vividsolutions.jts.geom.{CoordinateFilter, Polygon,  GeometryCollection, Coordinate}
 
   /**
    * Create a Mesh by applying a builder to a given set of points
@@ -55,15 +55,7 @@ class MeshBuilder(val size: Int) extends Log {
     val builder = new VoronoiDiagramBuilder()
     builder.setSites(coordinates)
     //builder.setClipEnvelope(new Envelope(0,size,0,size))
-    val geometry = builder.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection]
-
-    logger.info("Restricting the geometry to the map")
-    // Bring back points to the map, breaking the Voronoi property for the boundary polygons
-    geometry.apply(stayInTheBox)
-
-    // Retrieve the Polygons contained in the diagram
-    val polygons = for(i <- 0 until geometry.getNumGeometries)
-                    yield geometry.getGeometryN(i).asInstanceOf[Polygon]
+    val polygons =  buildPolygons(builder.getDiagram(new GeometryFactory()).asInstanceOf[GeometryCollection])
 
     // Compute the contents of the mesh
     val completeVertexRegistry = buildVertexRegistry(polygons, vReg)
@@ -73,8 +65,25 @@ class MeshBuilder(val size: Int) extends Log {
     Mesh(vertices = completeVertexRegistry, edges = edgeRegistry, faces = faceRegistry)
   }
 
-
-  private def buildPolygons(coll: GeometryCollection): Seq[Polygon] = ???
+  /**
+   * Compute a sequence of Polygons based on a GeometryCollection obtained as the output of a Voronoi Builder
+   * It aims to restricts the geometry to coordinates compatible with the Mesh to be built
+   * @param geometry the output of a voronoi builder
+   * @return a sequence of polygons compatible with a Mesh (\in [0, SIZE] x [0,SIZE])
+   */
+  private def buildPolygons(geometry: GeometryCollection): Seq[Polygon] = {
+    //geometry.apply(stayInTheBox)
+    val rect = geometry.getFactory.createPolygon(Array(new Coordinate(0,0), new Coordinate(0,size),
+                                                       new Coordinate(size, size), new Coordinate(size, 0),
+                                                       new Coordinate(0,0)))
+    val iterator = (0 until geometry.getNumGeometries).par
+    val r = (Seq[Polygon]() /: iterator) { (polygons, idx) =>
+      val p: Polygon = geometry.getGeometryN(idx).asInstanceOf[Polygon]
+      val inTheBox = p.intersection(rect).asInstanceOf[Polygon]
+      polygons :+ inTheBox
+    }
+    r
+  }
 
   /**
    * Compute a vertex registry that contains all the vertices used in the given polygons

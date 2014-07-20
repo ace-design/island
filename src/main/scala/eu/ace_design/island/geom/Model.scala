@@ -13,7 +13,10 @@ package eu.ace_design.island.geom
  * @param x coordinate according to the X axis
  * @param y coordinate according to the Y axis
  */
-case class Point(x: Double, y: Double)
+case class Point(x: Double, y: Double) {
+  require(x >= 0, "The x coordinate cannot be negative")
+  require(y >= 0, "The y coordinate cannot be negative")
+}
 
 /**
  * An immutable edge is a line that goes from a given vertex to another one. Vertex are not stored directly, but instead
