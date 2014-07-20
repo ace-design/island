@@ -6,9 +6,9 @@ class RegistriesTest extends SpecificationWithJUnit {
 
   "RegistriesTest Specifications".title
 
-  /**
-   * Data used for test purpose
-   */
+  /********************************
+   ** Data used for test purpose **
+   ********************************/
 
   val p1 = Point(0.0, 0.1); val p2 = Point(2.5, 4.9)
   val p3 = Point(4.2, 8.9) ; val p4 = Point(7.4, 9.9); val p5 = Point(1.8, 9.5)
@@ -22,6 +22,12 @@ class RegistriesTest extends SpecificationWithJUnit {
   val e4 = Edge(30,40)
   val eReg = EdgeRegistry() + e1 + e2 + e3
   val eRegP = EdgeRegistry() + e4
+
+  val f1 = Face(0,Seq(1,2,3))
+  val f2 = Face(10,Seq(11,12,13))
+  val f3 = Face(100, Seq(101,102,103))
+  val fReg = FaceRegistry() + f1 + f2
+  val fRegP = FaceRegistry() + f3
 
   "A VertexRegistry" should {
     "be empty when initialized" in { VertexRegistry().size must_== 0 }
@@ -63,6 +69,14 @@ class RegistriesTest extends SpecificationWithJUnit {
       sum.size must_== vReg.size
       sum(p1) must beSome(0)
     }
+    "return its references" in {
+      vReg.references must contain(0,1).exactly
+      vRegP.references must contain(0,1,2).exactly
+    }
+    "return its registered vertices" in {
+      vReg.values must contain(p1,p2).exactly
+      vRegP.values must contain(p3,p4,p5).exactly
+    }
   }
 
   "An EdgeRegistry" should {
@@ -98,7 +112,7 @@ class RegistriesTest extends SpecificationWithJUnit {
     }
     "not introduce duplicates while adding an edge into a registry" in {
       val nReg = eReg + e1
-      nReg(e1) must_== nReg(e1)
+      nReg(e1) must_== eReg(e1)
       nReg.size must_== eReg.size
     }
     "not introduce duplicate edges while merging two registries" in {
@@ -106,5 +120,63 @@ class RegistriesTest extends SpecificationWithJUnit {
       sum.size must_== eReg.size
       sum(e1) must beSome(0)
     }
+    "return its references" in {
+      eReg.references  must contain(0,1,2).exactly
+      eRegP.references must_== Set(0)
+    }
+    "return its registered edges" in {
+      eReg.values  must contain(e1,e2,e3).exactly
+      eRegP.values must_== Set(e4)
+    }
   }
+
+  "A Face Registry" should {
+    "be empty when initialised" in { FaceRegistry().size must_== 0 }
+    "support functional adding" in {
+      val init = FaceRegistry()
+      val reg = init + Face(0,Seq())
+      init.size must_== 0
+      reg.size must_== 1
+    }
+    "support adding as a sequential operator" in {
+      fReg(0) must_== f1
+      fReg(1) must_== f2
+    }
+    "support looking for a given face" in {
+      fReg(f1) must beSome(0)
+      fReg(f2) must beSome(1)
+    }
+    "support the + operator" in { (fReg + fRegP).size must_== 3 }
+    "change index of its right parameter" in {
+      val sum = fReg + fRegP
+      sum(f1) must beSome(0)
+      sum(f2) must beSome(1)
+      sum(f3) must beSome(2)
+    }
+    "not introduce duplicates while adding a face into a registry" in {
+      val nReg = fReg + f1
+      nReg(f1) must_== fReg(f1)
+      nReg.size must_== fReg.size
+    }
+    "not introduce duplicates while merging two registries" in {
+      val sum = fReg + (FaceRegistry() + f1)
+      sum.size must_== fReg.size
+      sum(f1) must beSome(0)
+    }
+    "support a search-by-center mechanisms" in {
+      fReg.lookFor(0)    must beSome(0)
+      fReg.lookFor(10)   must beSome(1)
+      fReg.lookFor(100)  must beNone
+    }
+    "return its references" in {
+      fReg.references must contain(0,1).exactly
+      fRegP.references must_== Set(0)
+    }
+    "return its registered faces" in {
+      fReg.values must contain(f1,f2).exactly
+      fRegP.values must_== Set(f3)
+    }
+  }
+
+
 }

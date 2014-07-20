@@ -60,6 +60,7 @@ class SVGViewer extends Viewer  {
    */
   private def draw(mesh: Mesh, g: Graphics2D) {
     mesh.faces.contents.keys foreach { f =>
+      // Draw the frontier of the polygon
       val path = new Path2D.Double()
       f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
         val start = mesh.vertices(e.p1)

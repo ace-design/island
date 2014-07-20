@@ -15,6 +15,18 @@ trait Registry[T] {
   protected lazy val _lookup: LookupTable = contents map { _.swap }
 
   /**
+   * Return all the references contained in this registry
+   * @return a Set of Integer referencing the contents of this
+   */
+  def references: Set[Int] = contents.map { case (t,i) => i }.toSet
+
+  /**
+   * Return all the values contained in this registry
+   * @return a set of values
+   */
+  def values: Set[T] = contents.map { case (t,i) => t }.toSet
+
+  /**
    * As registries are immutable, the associated size is a val
    */
   val size: Int  = contents.size
@@ -78,6 +90,16 @@ case class VertexRegistry(override val contents: Map[Point, Int] = Map()) extend
 case class FaceRegistry(override val contents: Map[Face, Int]= Map())extends Registry[Face] {
   def +(t: Face) = this.copy(addToContents(t))
   def +(r: FaceRegistry) = this.copy(appendToContents(r.contents))
+
+  /**
+   * Look for a given face, based on its center (a vertex reference)
+   * @param center the vertex reference used as index
+   * @return None if no faces matched, Some(f) where f is the reference of the matched face elsewhere
+   */
+  def lookFor(center: Int): Option[Int] = this.contents.par.find { case (f,i) => f.center == center  } match {
+    case None => None
+    case Some((f,i)) => Some(i)
+  }
 }
 
 case class EdgeRegistry(override val contents: Map[Edge, Int]= Map()) extends Registry[Edge] {

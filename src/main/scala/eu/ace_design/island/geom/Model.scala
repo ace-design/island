@@ -25,6 +25,7 @@ case class Point(x: Double, y: Double)
  * @param p2 the second point reference
  */
 class Edge(val p1: Int, val p2: Int) {
+  require(p1 != p2, "Vertices references must be different")
 
   /**
    * Two edges are equals since they point to the same vertices, in any order (Edge(p,p') == Edge(p',p)).
@@ -65,9 +66,18 @@ object Edge {
 
 /**
  * A Face is defined by a center, and a sequence of edges that draws its border.
+ * @param center    The vertex reference for the center of this face
+ * @param edges     The edges references that draw the border of this face
+ * @param neighbors Optional references to the faces that share a border with this, default is None
  */
-// TODO Add neighbors
-case class Face(center: Int, edges: Seq[Int])
+case class Face(center: Int, edges: Seq[Int], neighbors: Option[Set[Int]] = None) {
+  /**
+   * Compute the vertices references associated to this (in its frontier), based on a given EdgeRegistry
+   * @param eReg the edge registry to be used
+   * @return a Set of Integers that are vertex references involved in this face.
+   */
+  def vertices(eReg: EdgeRegistry) = (edges map { eReg(_) } map { e => Set(e.p1, e.p2) }).flatten.toSet
+}
 
 /**
  * A Mesh contains the vertices, edges and faces associated to a given map
@@ -91,6 +101,22 @@ case class Mesh(
    * @return a mesh with the given parameter as size.
    */
   def clip(i: Int): Mesh = this.copy(size = Some(i))
+
+  /**
+   * Compute the neighbors of a given face reference
+   * The neighborhood relationship is defined a the following: two faces sharing a common vertex are neighbors
+   * @param faceRef the integer referencing this face
+   * @return a set of face references
+   */
+  def neighbors(faceRef: Int): Set[Int] = {
+    // Identifying vertex references (as a set) involved in the given face reference
+    val involved = faces(faceRef).vertices(edges)
+    // Exploiting parallel computing to get the neighbors (≠ this and involving at least one common vertex)
+    val raw = faces.contents.par collect {
+      case (f,idx) if idx != faceRef && (f.vertices(edges) & involved).nonEmpty => idx
+    }
+    raw.seq.toSet
+  }
 }
 
 
