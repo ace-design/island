@@ -105,21 +105,6 @@ case class Mesh(
    */
   def clip(i: Int): Mesh = this.copy(size = Some(i))
 
-  /**
-   * Compute the neighbors of a given face reference
-   * The neighborhood relationship is defined a the following: two faces sharing a common vertex are neighbors
-   * @param faceRef the integer referencing this face
-   * @return a set of face references
-   */
-  def neighbors(faceRef: Int): Set[Int] = {
-    // Identifying vertex references (as a set) involved in the given face reference
-    val involved = faces(faceRef).vertices(edges)
-    // Exploiting parallel computing to get the neighbors (≠ this and involving at least one common vertex)
-    val raw = faces.contents.par collect {
-      case (f,idx) if idx != faceRef && (f.vertices(edges) & involved).nonEmpty => idx
-    }
-    raw.seq.toSet
-  }
 }
 
 

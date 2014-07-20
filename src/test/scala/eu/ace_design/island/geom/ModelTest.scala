@@ -74,13 +74,6 @@ class ModelTest extends SpecificationWithJUnit {
       mP.size must beSome(200)
       mesh.size must_== origin
     }
-    "compute neighbors for a given face" in {
-      val fourTriangles = Mesh(pReg, eReg, fRegNoNeighbors)
-      fourTriangles.neighbors(0) must contain(1,2).exactly
-      fourTriangles.neighbors(1) must contain(0,2,3).exactly
-      fourTriangles.neighbors(2) must contain(0,1,3).exactly
-      fourTriangles.neighbors(3) must contain(1,2).exactly
-    }
   }
 
 

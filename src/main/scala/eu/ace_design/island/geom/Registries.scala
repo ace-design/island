@@ -75,7 +75,6 @@ trait Registry[T] {
       }
     }
   }
-
 }
 
 /**
@@ -100,6 +99,15 @@ case class FaceRegistry(override val contents: Map[Face, Int]= Map())extends Reg
     case None => None
     case Some((f,i)) => Some(i)
   }
+
+  /**
+   * Update the face located at a given index r, replacing it by a new one (f)
+   * @param r the reference to be updated
+   * @param f the new face
+   * @return a new FaceRegistry, taking into account the update
+   */
+  def update(r: Int, f: Face): FaceRegistry = this.copy(contents = contents - this(r) + (f -> r))
+
 }
 
 case class EdgeRegistry(override val contents: Map[Edge, Int]= Map()) extends Registry[Edge] {

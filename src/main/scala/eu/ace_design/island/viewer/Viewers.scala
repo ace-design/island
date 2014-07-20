@@ -73,6 +73,13 @@ class SVGViewer extends Viewer  {
       g.setPaint(Color.black)
       val center = mesh.vertices(f.center)
       g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
+      f.neighbors match {
+        case None =>
+        case Some(refs) => refs foreach { idx =>
+          val p = mesh.vertices(mesh.faces(idx).center)
+          g.draw(new Line2D.Double(center.x, center.y,p.x, p.y))
+        }
+      }
     }
   }
 
