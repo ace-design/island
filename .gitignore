@@ -21,3 +21,4 @@ project/plugins/project/
 *.iml
 *.iws
 sandbox.sc
+*.pdf

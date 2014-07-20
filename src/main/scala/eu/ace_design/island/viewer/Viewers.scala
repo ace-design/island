@@ -60,6 +60,7 @@ class SVGViewer extends Viewer  {
    */
   private def draw(mesh: Mesh, g: Graphics2D) {
     mesh.faces.contents.keys foreach { f =>
+      // Draw the frontier of the polygon
       val path = new Path2D.Double()
       f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
         val start = mesh.vertices(e.p1)
@@ -72,6 +73,13 @@ class SVGViewer extends Viewer  {
       g.setPaint(Color.black)
       val center = mesh.vertices(f.center)
       g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
+      f.neighbors match {
+        case None =>
+        case Some(refs) => refs foreach { idx =>
+          val p = mesh.vertices(mesh.faces(idx).center)
+          g.draw(new Line2D.Double(center.x, center.y,p.x, p.y))
+        }
+      }
     }
   }
 
