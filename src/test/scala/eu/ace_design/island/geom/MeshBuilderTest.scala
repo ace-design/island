@@ -139,13 +139,6 @@ class MeshBuilderTest extends SpecificationWithJUnit {
       check(mesh.faces(3))
     }
 
-    "identify the right neighborhood relationships" in  {
-      def check(f: Face) = f.neighbors must_== getExpectedFace(f).neighbors
-      check(mesh.faces(0))
-      check(mesh.faces(1))
-      check(mesh.faces(2))
-      check(mesh.faces(3))
-    }.pendingUntilFixed
   }
 
 }
