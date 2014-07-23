@@ -1,8 +1,7 @@
 package eu.ace_design.island.map
 
+import eu.ace_design.island.geom.{VertexRegistry,Point}
 import org.specs2.mutable._
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
 
 class PropertiesTest extends SpecificationWithJUnit {
 
@@ -47,7 +46,15 @@ class PropertiesTest extends SpecificationWithJUnit {
       pSet.size must_== targets.size
       pSet.get(1) must_== Set(prop, HasForHeight())
     }
-
+    "support projection" in {
+      val reg = VertexRegistry() + Point(0.0,0.0) + Point(1.0,1.0) + Point(2.0,2.0) + Point(3.0,3.0)
+      val pSet = empty + (3 -> IsBorder()) bulkAdd(Set(0,2) -> HasForHeight(100)) bulkAdd(Set(0,1) -> IsWater())
+      val projected = pSet.project(reg) _
+      projected(Set(HasForHeight(100))) must    contain(Point(0.0,0.0),Point(2.0,2.0)).exactly
+      projected(Set(IsBorder()))        must_== Set(Point(3.0,3.0))
+      projected(Set(IsWater()))         must    contain(Point(0.0,0.0), Point(1.0,1.0)).exactly
+      projected(Set(IsWater(), HasForHeight(100))) must_== Set(Point(0.0,0.0))
+    }
 
   }
 

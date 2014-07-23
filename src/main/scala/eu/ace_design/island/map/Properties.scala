@@ -1,5 +1,7 @@
 package eu.ace_design.island.map
 
+import eu.ace_design.island.geom.Registry
+
 /**
  * A property bound a value to an immutable key.  The trait is sealed, and cannot be implemented outside of this file.
  * @tparam T the type of value
@@ -75,6 +77,23 @@ class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
   def check(idx: Int, p: Property[_]): Boolean = _contents.get(idx) match {
     case None => false
     case Some(existing) => existing contains p
+  }
+
+  /**
+   * Project this property set according to a given registry.
+   *
+   * The semantics of the projection is to find all the elements stored in a given registry that satisfy a set of given
+   * properties (combined as a conjunction). It is defined as a partial function, first capturing the registry to be
+   * used, and then allowing one to identify elements in this registry according to properties.
+   *
+   * @param reg the registry to be used
+   * @param props the property one is looking for
+   * @tparam T the type of the elements stored in reg
+   * @return a set of T satisfying the properties props and stored in reg.
+   */
+  def project[T](reg: Registry[T])(props: Set[Property[_]]): Set[T] = {
+    val concerned = _contents filter { case (i,existing) => (existing & props) == props } map { _._1 }
+    (concerned map { reg(_) }).toSet
   }
 }
 
