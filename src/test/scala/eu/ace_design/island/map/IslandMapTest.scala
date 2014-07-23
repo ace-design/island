@@ -10,7 +10,10 @@ class IslandMapTest extends SpecificationWithJUnit {
   "A map" should {
     val m = IslandMap(MeshBuilderTestDataSet.mesh)
     "rely on a mesh" in { m must beAnInstanceOf[IslandMap] }
-    "do not contain any property when created"
+    "do not contain any property when created" in {
+      m.faceProps.size must_== 0
+      m.vertexProps.size must_== 0
+    }
   }
 
 }
