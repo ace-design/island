@@ -49,6 +49,9 @@ trait Registry[T] {
    */
   def apply(t: T): Option[Int] = _contents.get(t)
 
+  def queryReferences(f: T => Boolean): Set[Int] = (_contents filter { case (t,i) => f(t) }).values.toSet
+
+
   /**
    * Add an element to the registry in a functional way (no side effect, return a new InternalStorage), at the end.
    * @param t the element to add

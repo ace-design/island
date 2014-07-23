@@ -1,7 +1,7 @@
 package eu.ace_design.island.geom
 
 import org.specs2.mutable._
-
+// TODO Refactor this class to avoid test duplication, this is quite annoying
 class RegistriesTest extends SpecificationWithJUnit {
 
   "RegistriesTest Specifications".title
@@ -77,6 +77,11 @@ class RegistriesTest extends SpecificationWithJUnit {
       vReg.values must contain(p1,p2).exactly
       vRegP.values must contain(p3,p4,p5).exactly
     }
+    "support querying" in {
+      val refs = vReg queryReferences( _.x == 0 )
+      refs must_== Set(0)
+    }
+
   }
 
   "An EdgeRegistry" should {
