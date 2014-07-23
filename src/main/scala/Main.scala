@@ -1,4 +1,5 @@
 import eu.ace_design.island.geom._
+import eu.ace_design.island.map.ConcreteBuilder
 import eu.ace_design.island.viewer._
 import eu.ace_design.island.util.Log
 
@@ -16,14 +17,16 @@ object Main extends App with Log {
   val sites = generator(NB_FACES)
 
   // Instantiate a builder, and process the random sites to create a mesh
-  val builder = new MeshBuilder(MAP_SIZE)
-  val mesh = builder(sites)
+  val meshBuilder = new MeshBuilder(MAP_SIZE)
+  val mesh = meshBuilder(sites)
+  val mapBuilder = new ConcreteBuilder()
+  val map = mapBuilder(mesh)
 
   logger.info("End of the map generation process")
 
   logger.info("Starting the transformation into PDF")
   val transformer = new PDFViewer()
-  val result = transformer(mesh)
+  val result = transformer(map)
   result.renameTo(new java.io.File(OUTPUT_FILE))
 
   logger.info("PDF file generated!")

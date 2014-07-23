@@ -1,5 +1,6 @@
 package eu.ace_design.island.viewer
 
+import eu.ace_design.island.map.IslandMap
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
 import java.nio.file.{Path, Files, Paths}
@@ -13,11 +14,12 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "ViewerTest Specifications".title
 
   val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
+  val map = IslandMap(mesh)
   val tika =  new org.apache.tika.Tika()
 
   "The SVG viewer" should {
     val toSVG = new SVGViewer()
-    val file = toSVG(mesh)
+    val file = toSVG(map)
     val xml = scala.xml.XML.loadFile(file)
 
     "use 'svg' as extension" in { toSVG.extension must_== "svg" }
@@ -44,7 +46,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
 
   "The PDF viewer" should {
     val toPDF = new PDFViewer()
-    val file = toPDF(mesh)
+    val file = toPDF(map)
     "use 'pdf' as extension" in { toPDF.extension must_== "pdf" }
     "process a mesh into a file" in {
       file must beAFile

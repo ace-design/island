@@ -2,6 +2,7 @@ package eu.ace_design.island.viewer
 
 import java.io.File
 import eu.ace_design.island.geom.Mesh
+import eu.ace_design.island.map.IslandMap
 
 
 /**
@@ -20,11 +21,13 @@ trait Viewer {
    */
   def mimeType: String
   /**
-   * A viewer is a function, transforming a Mesh into a viewable file. Thus, we use Scala syntactic sugar to support it
-   * @param mesh the mesh one wants to visualize
+   * A viewer is a function, transforming an IslandMap into a viewable file.
+   * Thus, we use Scala syntactic sugar to support it
+   *
+   * @param m the map one wants to visualize
    * @return a File containing the associated representation
    */
-  def apply(mesh: Mesh): File
+  def apply(m: IslandMap): File
 
   /**
    * Protected method used to generate a temporary file as an output
@@ -47,18 +50,19 @@ class SVGViewer extends Viewer  {
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
 
-  override def apply(mesh: Mesh): File = {
-    val paintbrush = initGraphics(mesh)
-    draw(mesh, paintbrush)
-    flush(paintbrush, mesh.size)
+  override def apply(m: IslandMap): File = {
+    val paintbrush = initGraphics(m)
+    draw(m, paintbrush)
+    flush(paintbrush, m.mesh.size)
   }
 
   /**
    * Actually draw a given mesh using a Graphics2D object (side-effect on g)
-   * @param mesh the mesh to draw with g
+   * @param m the map one wants to draw
    * @param g the Graphics2D object used to draw the mesh
    */
-  private def draw(mesh: Mesh, g: Graphics2D) {
+  private def draw(m: IslandMap, g: Graphics2D) {
+    val mesh = m.mesh
     mesh.faces.values foreach { f =>
       // Draw the frontier of the polygon
       val path = new Path2D.Double()
@@ -88,7 +92,8 @@ class SVGViewer extends Viewer  {
    * Initialise the graphics2D object used to draw the mesh.
    * @return
    */
-  private def initGraphics(mesh: Mesh): SVGGraphics2D = {
+  private def initGraphics(m: IslandMap): SVGGraphics2D = {
+    val mesh = m.mesh
     val domImpl = SVGDOMImplementation.getDOMImplementation
     val document = domImpl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null)
     val r = new SVGGraphics2D(document)
@@ -118,11 +123,11 @@ class PDFViewer extends Viewer {
   override val extension: String = "pdf"
   override val mimeType: String = "application/pdf"
 
-  override def apply(mesh: Mesh): File = {
+  override def apply(m: IslandMap): File = {
     val result = initOutput
 
     // We first create an SVG file with the SVG viewer:
-    val svgFile = (new SVGViewer())(mesh)
+    val svgFile = (new SVGViewer())(m)
 
     // We leverage the Batik rasterizer
     val converter = new SVGConverter()
