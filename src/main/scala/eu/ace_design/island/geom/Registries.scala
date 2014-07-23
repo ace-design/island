@@ -8,28 +8,28 @@ trait Registry[T] {
 
   protected type InternalStorage = Map[T, Int]
 
-  val contents: InternalStorage
+  protected val _contents: InternalStorage
 
   // _lookup = contents^-1
   type LookupTable = Map[Int, T]
-  protected lazy val _lookup: LookupTable = contents map { _.swap }
+  protected lazy val _lookup: LookupTable = _contents map { _.swap }
 
   /**
    * Return all the references contained in this registry
    * @return a Set of Integer referencing the contents of this
    */
-  def references: Set[Int] = contents.map { case (t,i) => i }.toSet
+  def references: Set[Int] = _contents.map { case (t,i) => i }.toSet
 
   /**
    * Return all the values contained in this registry
    * @return a set of values
    */
-  def values: Set[T] = contents.map { case (t,i) => t }.toSet
+  def values: Set[T] = _contents.map { case (t,i) => t }.toSet
 
   /**
    * As registries are immutable, the associated size is a val
    */
-  val size: Int  = contents.size
+  val size: Int  = _contents.size
 
   /**
    * Access to the i_th element stored in this registry.
@@ -47,16 +47,16 @@ trait Registry[T] {
    * @param t the element to look for
    * @return Some(idx) if t is located at the index idx in the registry, None elsewhere.
    */
-  def apply(t: T): Option[Int] = contents.get(t)
+  def apply(t: T): Option[Int] = _contents.get(t)
 
   /**
    * Add an element to the registry in a functional way (no side effect, return a new InternalStorage), at the end.
    * @param t the element to add
    * @return a new map that contains the new element indexed at this.size.
    */
-  protected def addToContents(t: T): InternalStorage = this.contents.get(t) match {
-    case None => this.contents + (t -> this.size)
-    case Some(_) => this.contents
+  protected def addToContents(t: T): InternalStorage = this._contents.get(t) match {
+    case None => this._contents + (t -> this.size)
+    case Some(_) => this._contents
   }
 
   /**
@@ -68,7 +68,7 @@ trait Registry[T] {
    * @return
    */
   protected def appendToContents(other: InternalStorage): InternalStorage = {
-    (this.contents /: other) { case (acc, (p,_)) =>
+    (this._contents /: other) { case (acc, (p,_)) =>
       acc.get(p) match {
         case None    => acc + (p -> acc.size)
         case Some(_) => acc
@@ -78,24 +78,39 @@ trait Registry[T] {
 }
 
 /**
- * A VertexRegistry store all the points used by a given mesh
- * @param contents A map binding points to indexes, default is the empty map
+ * A VertexRegistry stores all the points used by a given mesh
+ * @param _contents A map binding points to indexes, default is the empty map
  */
-case class VertexRegistry(override val contents: Map[Point, Int] = Map()) extends Registry[Point] {
-  def +(p: Point) = this.copy(addToContents(p))
-  def +(that: VertexRegistry) = this.copy(appendToContents(that.contents))
+class VertexRegistry private (override protected val _contents: Map[Point, Int] = Map()) extends Registry[Point] {
+  def +(p: Point) = new VertexRegistry(addToContents(p))
+  def +(that: VertexRegistry) = new VertexRegistry(appendToContents(that._contents))
 }
+object VertexRegistry { def apply() = new VertexRegistry(Map()) }
 
-case class FaceRegistry(override val contents: Map[Face, Int]= Map())extends Registry[Face] {
-  def +(t: Face) = this.copy(addToContents(t))
-  def +(r: FaceRegistry) = this.copy(appendToContents(r.contents))
+/**
+ * An Edge registry stores all the edges used by a given mesh
+ * @param _contents
+ */
+class EdgeRegistry private (override protected val _contents: Map[Edge, Int]= Map()) extends Registry[Edge] {
+  def +(t: Edge) = new EdgeRegistry(addToContents(t))
+  def +(r: EdgeRegistry): EdgeRegistry = new EdgeRegistry(appendToContents(r._contents))
+}
+object EdgeRegistry { def apply() = new EdgeRegistry(Map()) }
+
+/**
+ *
+ * @param _contents
+ */
+class FaceRegistry private(override protected val _contents: Map[Face, Int]= Map()) extends Registry[Face] {
+  def +(t: Face) = new FaceRegistry(addToContents(t))
+  def +(r: FaceRegistry) = new FaceRegistry(appendToContents(r._contents))
 
   /**
    * Look for a given face, based on its center (a vertex reference)
    * @param center the vertex reference used as index
    * @return None if no faces matched, Some(f) where f is the reference of the matched face elsewhere
    */
-  def lookFor(center: Int): Option[Int] = this.contents.par.find { case (f,i) => f.center == center  } match {
+  def lookFor(center: Int): Option[Int] = this._contents.par.find { case (f,i) => f.center == center  } match {
     case None => None
     case Some((f,i)) => Some(i)
   }
@@ -106,14 +121,10 @@ case class FaceRegistry(override val contents: Map[Face, Int]= Map())extends Reg
    * @param f the new face
    * @return a new FaceRegistry, taking into account the update
    */
-  def update(r: Int, f: Face): FaceRegistry = this.copy(contents = contents - this(r) + (f -> r))
-
+  def update(r: Int, f: Face): FaceRegistry = new FaceRegistry(_contents - this(r) + (f -> r))
 }
+object FaceRegistry { def apply() = new FaceRegistry(Map())}
 
-case class EdgeRegistry(override val contents: Map[Edge, Int]= Map()) extends Registry[Edge] {
-  def +(t: Edge) = this.copy(addToContents(t))
-  def +(r: EdgeRegistry): EdgeRegistry = this.copy(appendToContents(r.contents))
-}
 
 
 
