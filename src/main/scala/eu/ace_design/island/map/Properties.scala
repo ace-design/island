@@ -13,9 +13,9 @@ sealed trait Property[T] {
 
 /**
  * A PropertySet associate to a given index a set of properties
- * @param _contents the internal storage
+ * @param _contents The internal storage used for the property set
  */
-case class PropertySet(_contents: Map[Int, Set[Property[_]]]= Map()) {
+class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
 
   /**
    * The size of this property set (number of indexes)
@@ -54,7 +54,7 @@ case class PropertySet(_contents: Map[Int, Set[Property[_]]]= Map()) {
         }
       }
     }
-    this.copy(_contents = newContents)
+    new PropertySet(newContents)
   }
 
   /**
@@ -67,8 +67,12 @@ case class PropertySet(_contents: Map[Int, Set[Property[_]]]= Map()) {
     case None => false
     case Some(existing) => existing contains p
   }
-
 }
+
+/**
+ * Companion object to mimic case class
+ */
+object PropertySet { def apply() = new PropertySet(Map()) }
 
 /*********************************************
  ** Properties available in the Island game **

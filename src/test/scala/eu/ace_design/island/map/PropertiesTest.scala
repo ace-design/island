@@ -21,9 +21,9 @@ class PropertiesTest extends SpecificationWithJUnit {
     "support checking" in {
       val pSet = empty + (0 -> prop) + (1 -> !prop)
       pSet.size must_== 2
-      pSet.check(0, prop)     must beTrue
+      pSet.check(0, prop)  must beTrue
       pSet.check(0, !prop) must beFalse
-      pSet.check(1, prop)     must beFalse
+      pSet.check(1, prop)  must beFalse
       pSet.check(1, !prop) must beTrue
     }
     "support property update" in {
