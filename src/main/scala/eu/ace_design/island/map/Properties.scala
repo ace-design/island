@@ -31,11 +31,13 @@ class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
   def get(idx: Int): Set[Property[_]] = _contents(idx)
 
   /**
-   * Add a property to a given index, in a functional way. the semantics of the add of the add function is the
-   * following:
+   * Add a property to a given index, in a functional way.
+   *
+   * The semantics of the add of the add function is the following:
    *   - there is no property for this index: initialise the index, and store the property
    *   - there is existing properties, different than the one to add: add it to the set of properties
    *   - a property value exists for this index: replace it by the new one.
+   *
    * @param pair a couple (index -> Property) to be added in the property set
    * @return a new property set, according to the add semantics.
    */
@@ -58,6 +60,13 @@ class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
   }
 
   /**
+   * Add a property to a set of indexes, exploiting the classical '+' operator
+   * @param pair c ouple (SetOfIndexes -> properties)
+   * @return a new PropertySet, according to the add semantic
+   */
+  def bulkAdd(pair: (Set[Int], Property[_])): PropertySet = (this /: pair._1) { (acc, i) => acc + (i -> pair._2) }
+
+  /**
    * Check if a property is associated to a given index
    * @param idx the index to check
    * @param p the property one is looking for
@@ -78,9 +87,13 @@ object PropertySet { def apply() = new PropertySet(Map()) }
  ** Properties available in the Island game **
  *********************************************/
 
+case class IsBorder(override val value: Boolean = true) extends Property[Boolean] {
+  override val key = "isBorder?"
+  def unary_!() = IsBorder(value = ! this.value)
+}
+
 case class IsWater(override val value: Boolean = true) extends Property[Boolean] {
   override val key = "isWater?"
-
   def unary_!() = IsWater(value = ! this.value)
 }
 

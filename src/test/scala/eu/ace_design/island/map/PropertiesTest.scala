@@ -41,6 +41,14 @@ class PropertiesTest extends SpecificationWithJUnit {
       pSet.check(0, prop) must beTrue
       pSet.check(0, h)    must beTrue
     }
+    "support mass assignments" in {
+      val targets = Set(1,2,3,4,5)
+      val pSet = empty  + (1 -> HasForHeight()) bulkAdd (targets -> prop)
+      pSet.size must_== targets.size
+      pSet.get(1) must_== Set(prop, HasForHeight())
+    }
+
+
   }
 
 }
