@@ -4,7 +4,6 @@ import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class PropertiesTest extends SpecificationWithJUnit {
 
   "PropertiesTest Specifications".title
@@ -12,7 +11,8 @@ class PropertiesTest extends SpecificationWithJUnit {
   "A PropertySet" should {
     val empty = PropertySet()
     val prop = IsWater()
-    "be empty when initialized" in { empty.size must_== 0 }
+    "be empty when created for the first time" in { empty.size must_== 0 }
+    "throw an exception while using a non existing index" in { empty.get(42) must throwA[NoSuchElementException] }
     "support indexing of properties" in {
       val pSet = empty + (1 -> prop)
       pSet.size must_== 1
