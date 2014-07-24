@@ -49,7 +49,12 @@ trait Registry[T] {
    */
   def apply(t: T): Option[Int] = _contents.get(t)
 
-  def queryReferences(f: T => Boolean): Set[Int] = (_contents filter { case (t,i) => f(t) }).values.toSet
+  /**
+   * Returns the references matching a given predicate
+   * @param f a function from T to Boolean to be used as a predicate
+   * @return the references of the elements stored in this registry matching f
+   */
+  def queryReferences(f: T => Boolean): Set[Int] = (_contents.par filter { case (t,i) => f(t) }).values.seq.toSet
 
 
   /**
