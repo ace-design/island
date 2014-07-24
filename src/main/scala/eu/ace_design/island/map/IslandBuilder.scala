@@ -8,6 +8,9 @@ import eu.ace_design.island.util.Log
  */
 trait IslandBuilder {
 
+  // The size of the map
+  def size: Int
+
   /**
    * Steps is the sequence (order matters) of processes used to create the map
    */
@@ -68,4 +71,39 @@ object IdentifyBorders extends Process with Log {
     result
   }
 
+}
+
+/**
+ * A face is annotated as Water if it is one of the border of map, or if it involves a number of vertices located in
+ * a water area (according to a given IslandShape) greater than a given threshold
+ *
+ * @param shape the IslandShape used for this Island
+ * @param threshold the threshold (in [0,100]) to decide if a face is a water one
+ */
+case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process with Log {
+  require(threshold >= 0,   "threshold must be in [0,100]")
+  require(threshold <= 100, "threshold must be in [0,100]")
+
+  override def apply(m: IslandMap): IslandMap = {
+    logger.info("Annotating vertices")
+    val isWaterVertex = shape.isWater _
+    val pRefs = m.mesh.vertices.queryReferences(isWaterVertex) // Find all the vertices matching the given shape
+    val vProps = m.vertexProps bulkAdd (pRefs -> IsWater())
+    logger.info("done")
+
+    logger.info("Annotating faces")
+    val isWaterFace: Face => Boolean = { f =>
+      val ref = m.mesh.faces(f).get
+      val isBorder = m.faceProps.check(ref, IsBorder())
+      val vertices = f.vertices(m.mesh.edges)
+      val waterVertices = vertices filter { pRef => vProps.check(pRef, IsWater()) }
+      val isGreaterThanThreshold = (waterVertices.size.toFloat / vertices.size) * 100 > threshold
+      isBorder || isGreaterThanThreshold
+    }
+    val fRefs = m.mesh.faces.queryReferences(isWaterFace)
+    val fProps = m.faceProps bulkAdd (fRefs -> IsWater())
+    logger.info("done")
+    m.copy(vertexProps = vProps, faceProps = fProps)
+
+  }
 }

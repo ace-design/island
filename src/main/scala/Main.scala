@@ -21,7 +21,7 @@ object Main extends App with Log {
   // Instantiate a builder, and process the random sites to create a mesh
   val meshBuilder = new MeshBuilder(MAP_SIZE)
   val mesh = meshBuilder(sites)
-  val mapBuilder = new ConcreteBuilder()
+  val mapBuilder = new ConcreteBuilder(MAP_SIZE)
   val map = mapBuilder(mesh)
 
   logger.info("End of the map generation process")

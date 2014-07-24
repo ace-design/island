@@ -1,7 +1,7 @@
 package eu.ace_design.island.viewer
 
 
-import eu.ace_design.island.map.{IsBorder, IslandMap, Property}
+import eu.ace_design.island.map.{IsWater, IsBorder, IslandMap, Property}
 import java.io.File
 
 
@@ -51,6 +51,15 @@ class SVGViewer extends Viewer  {
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
 
+  object Colors {
+    // classical colors
+    final val BLACK      = new Color(0,   0,   0)
+    final val LIGHT_GRAY = new Color(211, 211, 211)
+    // Extracted from Cynthia Brewer palettes (http://colorbrewer2.org/)
+    final val DARK_BLUE  = new Color(4  , 90 , 141) // 5-class PuBu theme  #5
+    final val LIGHT_BLUE = new Color(116, 169, 207) // 5-class PuBu theme  #3
+  }
+
   /**
    * Syntactic sugar to call the viewer as a function
    * @param m the map one wants to visualize
@@ -70,10 +79,9 @@ class SVGViewer extends Viewer  {
   private def draw(m: IslandMap, g: Graphics2D) {
     // Se rely on a set of function, executed sequentially to draw the map
     // Function must be member of Int x IslandMap x Graphics2D -> Unit
-    val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_))
+    val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_), drawCorners(_,_,_))
     // We go through each function one by one. We apply each f to all the faces stored in the map
-    functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) }
-    }
+    functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
   }
 
   /**
@@ -99,7 +107,7 @@ class SVGViewer extends Viewer  {
 
     // Get the colors associated to this face, and draw it
     val (bgColor, border) = colors(map.faceProps.get(idx))
-    g.setStroke(new BasicStroke(1))
+    g.setStroke(new BasicStroke(0.5f))
     g.setColor(border)
     g.draw(path)
     g.setColor(bgColor)
@@ -112,7 +120,7 @@ class SVGViewer extends Viewer  {
    * @return a couple (bgColor, borderColor) to be used to draw this face
    */
   private def colors(props: Set[Property[_]]): (Color, Color) = {
-    val bg = if(props.contains(IsBorder())) Color.BLACK else Color.WHITE
+    val bg = if(props.contains(IsWater())) Colors.DARK_BLUE else Color.WHITE
     val border = Color.BLACK
     (bg, border)
   }
@@ -125,7 +133,7 @@ class SVGViewer extends Viewer  {
    */
   private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.mesh.faces(idx)
-    g.setColor(Color.BLACK)
+    g.setColor(Colors.LIGHT_GRAY)
     g.setStroke(new BasicStroke(3))
     val center = map.mesh.vertices(f.center)
     g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
@@ -148,6 +156,22 @@ class SVGViewer extends Viewer  {
         val p = map.mesh.vertices(map.mesh.faces(idx).center)
         g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
       }
+    }
+  }
+
+  /**
+   * Draw the corners of each face, coloring water corners in blue and land one in black.
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    g.setStroke(new BasicStroke(3))
+    f.vertices(map.mesh.edges) foreach { ref =>
+      if(map.vertexProps.check(ref, IsWater())) g.setColor(Colors.DARK_BLUE) else g.setColor(Colors.BLACK)
+      val p = map.mesh.vertices(ref)
+      g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
     }
   }
 
