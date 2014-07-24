@@ -11,7 +11,7 @@ class PropertiesTest extends SpecificationWithJUnit {
     val empty = PropertySet()
     val prop = IsWater()
     "be empty when created for the first time" in { empty.size must_== 0 }
-    "throw an exception while using a non existing index" in { empty.get(42) must throwA[NoSuchElementException] }
+    "return the emptySet while using a non existing index" in { empty.get(42) must beEmpty }
     "support indexing of properties" in {
       val pSet = empty + (1 -> prop)
       pSet.size must_== 1

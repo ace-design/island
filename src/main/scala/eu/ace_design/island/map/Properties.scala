@@ -17,7 +17,7 @@ sealed trait Property[T] {
  * A PropertySet associate to a given index a set of properties
  * @param _contents The internal storage used for the property set
  */
-class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
+class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
 
   /**
    * The size of this property set (number of indexes)
@@ -28,9 +28,9 @@ class PropertySet private (val _contents: Map[Int, Set[Property[_]]]) {
   /**
    * Extract the properties associated to a given index
    * @param idx the index to look for
-   * @return the set of properties associated to idx, a NoSuchElementException if idx does not exists
+   * @return the set of properties associated to idx, the empty set if idx does not exists
    */
-  def get(idx: Int): Set[Property[_]] = _contents(idx)
+  def get(idx: Int): Set[Property[_]] = _contents.getOrElse(idx, Set())
 
   /**
    * Add a property to a given index, in a functional way.

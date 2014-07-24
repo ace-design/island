@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom.{Mesh, Face, Edge, Point}
+import eu.ace_design.island.util.Log
 
 /**
  * An IslandBuilder is a sequence of Process used to build an Island map
@@ -48,9 +49,10 @@ sealed trait Process {
  *
  * It annotates the faces with the IsBorder property
  */
-object IdentifyBorders extends Process {
+object IdentifyBorders extends Process with Log {
 
   override def apply(m: IslandMap): IslandMap = {
+    logger.info("Borders computation: started")
     // Extract the points located on the map border
     val isBorderValue: Double => Boolean = { d => d <= 0 || d >= m.mesh.size.get }
     val isBorderVertex: Point => Boolean = { p => isBorderValue(p.x) || isBorderValue(p.y)  }
@@ -61,7 +63,9 @@ object IdentifyBorders extends Process {
     val borderFaces = m.mesh.faces.queryReferences(isBorder)
 
     // Update the properties for the identified faces
-    m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
+    val result = m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
+    logger.info("Borders computation: ended")
+    result
   }
 
 }

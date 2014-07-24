@@ -39,9 +39,6 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
         case None => true must beTrue
       }
     }
-    "Contains as many 'path' as given faces" in {
-      xml \\ "path" must haveSize(mesh.faces.size)
-    }
   }
 
   "The PDF viewer" should {

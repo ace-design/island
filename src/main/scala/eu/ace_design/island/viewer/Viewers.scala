@@ -1,8 +1,8 @@
 package eu.ace_design.island.viewer
 
+
+import eu.ace_design.island.map.{IsBorder, IslandMap, Property}
 import java.io.File
-import eu.ace_design.island.geom.Mesh
-import eu.ace_design.island.map.IslandMap
 
 
 /**
@@ -39,17 +39,23 @@ trait Viewer {
 
 
 /**
- * The SVG viewer relies on the Apache Batik library
+ * The SVG viewer relies on the Apache Batik library (SVG) and the JTS library (to compute the convex hull of a face)
  */
 class SVGViewer extends Viewer  {
-  import java.awt.{Graphics2D,Color, Dimension}
+  import java.awt.{Graphics2D,Color, Dimension,BasicStroke}
   import java.awt.geom.{Line2D, Path2D}
   import org.apache.batik.svggen.SVGGraphics2D
   import org.apache.batik.dom.svg.SVGDOMImplementation
+  import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
 
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
 
+  /**
+   * Syntactic sugar to call the viewer as a function
+   * @param m the map one wants to visualize
+   * @return a File containing the associated representation
+   */
   override def apply(m: IslandMap): File = {
     val paintbrush = initGraphics(m)
     draw(m, paintbrush)
@@ -62,31 +68,88 @@ class SVGViewer extends Viewer  {
    * @param g the Graphics2D object used to draw the mesh
    */
   private def draw(m: IslandMap, g: Graphics2D) {
-    val mesh = m.mesh
-    mesh.faces.values foreach { f =>
-      // Draw the frontier of the polygon
-      val path = new Path2D.Double()
-      f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
-        val start = mesh.vertices(e.p1)
-        val end   = mesh.vertices(e.p2)
-        path.moveTo(start.x, start.y)
-        path.lineTo(end.x, end.y)
-      }
-      g.setPaint(Color.red)
-      g.draw(path)
-      g.setPaint(Color.black)
-      val center = mesh.vertices(f.center)
-      g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
-      f.neighbors match {
-        case None =>
-        case Some(refs) => refs foreach { idx =>
-          val p = mesh.vertices(mesh.faces(idx).center)
-          g.draw(new Line2D.Double(center.x, center.y,p.x, p.y))
-        }
-      }
+    // Se rely on a set of function, executed sequentially to draw the map
+    // Function must be member of Int x IslandMap x Graphics2D -> Unit
+    val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_))
+    // We go through each function one by one. We apply each f to all the faces stored in the map
+    functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) }
     }
   }
 
+  /**
+   * Draw a given face as a polygon on the map. The used colors are computed by the 'colors' function.
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawAFace(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+
+    // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
+    val coords = (f.vertices(map.mesh.edges) map { map.mesh.vertices(_) } map { p => new Coordinate(p.x, p.y) }).toSeq
+    val linear = coords :+ new Coordinate(coords(0).x, coords(0).y)
+    val factory = new GeometryFactory()
+    val convexCoords = factory.createPolygon(linear.toArray).convexHull.getCoordinates
+
+    // Create a path for the Polygon frontier, and fill it according to the computed convex hull
+    val path = new Path2D.Double()
+    path.moveTo(convexCoords(0).x,convexCoords(0).y)
+    convexCoords.slice(1,convexCoords.length) foreach { c => path.lineTo(c.x, c.y) }
+    path.closePath()
+
+    // Get the colors associated to this face, and draw it
+    val (bgColor, border) = colors(map.faceProps.get(idx))
+    g.setStroke(new BasicStroke(1))
+    g.setColor(border)
+    g.draw(path)
+    g.setColor(bgColor)
+    g.fill(path)
+  }
+
+  /**
+   * Identify the colors to be used for a given polygon, based on its face properties
+   * @param props the set of properties associated to this face
+   * @return a couple (bgColor, borderColor) to be used to draw this face
+   */
+  private def colors(props: Set[Property[_]]): (Color, Color) = {
+    val bg = if(props.contains(IsBorder())) Color.BLACK else Color.WHITE
+    val border = Color.BLACK
+    (bg, border)
+  }
+
+  /**
+   * Draw the center of each face as a single black point (width: 3). Mainly used for explanation purpose
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    g.setColor(Color.BLACK)
+    g.setStroke(new BasicStroke(3))
+    val center = map.mesh.vertices(f.center)
+    g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
+  }
+
+  /**
+   * Draw the neighborhood relationship as gray lines between faces' centers. Mainly used for explanation purposes
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    val center = map.mesh.vertices(f.center)
+    g.setColor(Color.LIGHT_GRAY)
+    g.setStroke(new BasicStroke(0.05f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, Array{4.0f}, 0.0f))
+    f.neighbors match {
+      case None =>
+      case Some(refs) => refs foreach { idx =>
+        val p = map.mesh.vertices(map.mesh.faces(idx).center)
+        g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
+      }
+    }
+  }
 
   /**
    * Initialise the graphics2D object used to draw the mesh.

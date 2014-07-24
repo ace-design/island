@@ -7,8 +7,10 @@ import eu.ace_design.island.util.Log
 object Main extends App with Log {
 
   final val OUTPUT_FILE = "./map.pdf"
+  //final val MAP_SIZE = 600
+  //final val NB_FACES = 100
   final val MAP_SIZE = 2048
-  final val NB_FACES = 2000
+  final val NB_FACES = 4000
 
   logger.info("Starting the map generation process")
 
