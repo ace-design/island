@@ -6,7 +6,7 @@ package eu.ace_design.island.map
  **/
 class ConcreteBuilder(override val size: Int) extends IslandBuilder {
 
-  final val ISLAND_SHAPE = CircularShape(size, size.toDouble/2 * 0.85)
+  final val ISLAND_SHAPE = DonutShape(size, size.toDouble/2 * 0.85, size.toDouble/2 * 0.20)
   final val WATER_THRESHOLD = 30  // a face is a water one if 30% of its corners are in a water area
 
   override protected val steps: Seq[Process] =
