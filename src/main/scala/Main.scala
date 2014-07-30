@@ -7,15 +7,18 @@ import eu.ace_design.island.util.Log
 object Main extends App with Log {
 
   final val OUTPUT_FILE = "./map.pdf"
-  final val MAP_SIZE = 800
-  final val NB_FACES = 800
+  final val MAP_SIZE = 100
+  final val NB_FACES = 100
+  //final val MAP_SIZE = 800
+  //final val NB_FACES = 800
   //final val MAP_SIZE = 2048
   //final val NB_FACES = 4000
 
   logger.info("Starting the map generation process")
 
   // Randomly generate the sites used to generate the map
-  val generator = new RelaxedRandomGrid(MAP_SIZE)
+  //val generator = new RelaxedRandomGrid(MAP_SIZE)
+  val generator = new SquaredGrid(MAP_SIZE)
   val sites = generator(NB_FACES)
 
   // Instantiate a builder, and process the random sites to create a mesh

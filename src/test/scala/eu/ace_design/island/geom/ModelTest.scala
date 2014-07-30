@@ -34,6 +34,11 @@ class ModelTest extends SpecificationWithJUnit {
       Point(-1,0) must throwAn[IllegalArgumentException]
       Point(0,-1) must throwAn[IllegalArgumentException]
     }
+    "Compute its distance with respect to another one" in {
+      Point(0,0) --> Point(0,1) must_== 1
+      Point(3,4) --> Point(2,7) must_== Point(2,7) --> Point(3,4)
+      Point(5,7) --> Point(8,3) must_== 5
+    }
   }
 
   "An Edge" should {

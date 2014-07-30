@@ -1,11 +1,10 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.geom.Point
-
 /**
  * An IslandShape is a function used to decide if a vertex (not a face) is located on land or not
  */
 trait IslandShape {
+  import eu.ace_design.island.geom.Point
 
   // the size of the map (used for the normalization of Point's coordinates)
   val size: Int
@@ -22,7 +21,7 @@ trait IslandShape {
    * @param d the coordinate defined in [0, size]
    * @return the associated projection, in [-1, 1]
    */
-  private def project(d: Double): Double = ((d/size) - 0.5) * 2
+  private def project(d: Double): Double = ((d / size.toDouble) - 0.5) * 2
 
   /**
    * Check if a given couple of normalized coordinates is located in a water area, or not.
@@ -50,17 +49,17 @@ trait CircularHelper extends IslandShape {
    * @param r the radius to normalize
    * @return a non-negative integer representing this radius (in [0,1])
    */
-  protected def normalize(r: Double): Double = (r/size) * 2
+  protected def normalize(r: Double): Double = (r/size.toDouble) * 2
 
   /**
-   * Check if a point is located inside (or outside) a circle of given radius
+   * Check if a point is located inside (or outside) a discus of given radius
    * @param x the x (normalized) coordinate of the point
    * @param y the y (normalized) coordinate of the point
    * @param radius the radius of the circle to check
    * @param checker a function (e.g., INSIDE or OUTSIDE) to decide for the point
    * @return the output of the checker when applied to sqrt(x2+y2) and the normalized radius
    */
-  protected def circleComparison(x: Double, y: Double, radius: Double, checker: (Double, Double) => Boolean) = {
+  protected def distanceToCenter(x: Double, y: Double, radius: Double, checker: (Double, Double) => Boolean) = {
     checker(sqrt(pow(x,2) + pow(y,2)), normalize(radius))
   }
 
@@ -77,11 +76,11 @@ trait CircularHelper extends IslandShape {
 }
 
 /**
- * Implements a shape relying on a single circle
+ * Implements a shape relying on a single disk (surface inside a circle, circle not included)
  * @param size an integer representing the size of the map
  * @param radius the radius of the circle
  */
-case class CircularShape(override val size: Int, radius: Double) extends IslandShape with CircularHelper {
+case class DiskShape(override val size: Int, radius: Double) extends IslandShape with CircularHelper {
 
   /**
    * (x,y) is located in water if it is located outside of the circle used to define the shape of the island
@@ -89,7 +88,7 @@ case class CircularShape(override val size: Int, radius: Double) extends IslandS
    * @param y the y coordinate, normalized (\in [-1,1])
    * @return true if this point is in a water area, false elsewhere.
    */
-  override protected def check(x: Double, y: Double): Boolean =  circleComparison(x, y, radius, OUTSIDE)
+  override protected def check(x: Double, y: Double): Boolean =  distanceToCenter(x, y, radius, OUTSIDE)
 }
 
 /**
@@ -107,7 +106,7 @@ case class DonutShape(override val size: Int, radExt: Double, radInt: Double) ex
    * @return true if this point is in a water area, false elsewhere.
    */
   override protected def check(x: Double, y: Double): Boolean = {
-    circleComparison(x, y, radExt, OUTSIDE) || circleComparison(x, y, radInt, INSIDE)
+    distanceToCenter(x, y, radExt, OUTSIDE) || distanceToCenter(x, y, radInt, INSIDE)
   }
 }
 

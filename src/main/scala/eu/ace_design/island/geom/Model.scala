@@ -16,6 +16,13 @@ package eu.ace_design.island.geom
 case class Point(x: Double, y: Double) {
   require(x >= 0, "The x coordinate cannot be negative")
   require(y >= 0, "The y coordinate cannot be negative")
+
+  /**
+   * Compute the distance between two points (as a double)
+   * @param that the other point
+   * @return the distance between this and that, thanks to the Pythagorean theorem
+   */
+  def -->(that: Point): Double = math.sqrt(math.pow(this.x - that.x, 2) + math.pow(this.y - that.y, 2))
 }
 
 /**
