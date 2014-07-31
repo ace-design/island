@@ -2,13 +2,17 @@ package eu.ace_design.island.viewer
 
 
 import eu.ace_design.island.map._
+import eu.ace_design.island.util._
 import java.io.File
 
 
 /**
  * A viewer is an element used to represent a Mesh, processing it into a viewable file
  */
-trait Viewer {
+trait Viewer extends Logger {
+
+  val silo = LogSilos.VIEWER
+
   /**
    * A viewer produces files with a given extension, usually compatible with external viewers.
    * @return the extension to be used
@@ -66,9 +70,12 @@ class SVGViewer extends Viewer  {
    * @return a File containing the associated representation
    */
   override def apply(m: IslandMap): File = {
+    info("Building an SVG document")
     val paintbrush = initGraphics(m)
     draw(m, paintbrush)
-    flush(paintbrush, m.mesh.size)
+    val f = flush(paintbrush, m.mesh.size)
+    debug(s"Storing the document in [${f.toString}]")
+    f
   }
 
   /**
@@ -77,7 +84,7 @@ class SVGViewer extends Viewer  {
    * @param g the Graphics2D object used to draw the mesh
    */
   private def draw(m: IslandMap, g: Graphics2D) {
-    // Se rely on a set of function, executed sequentially to draw the map
+    // we rely on a set of function, executed sequentially to draw the map
     // Function must be member of Int x IslandMap x Graphics2D -> Unit
     val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_), drawCorners(_,_,_))
     // We go through each function one by one. We apply each f to all the faces stored in the map
@@ -107,6 +114,8 @@ class SVGViewer extends Viewer  {
 
     // Get the colors associated to this face, and draw it
     val (bgColor, border) = colors(map.faceProps.get(idx))
+    debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
+
     g.setStroke(new BasicStroke(0.5f))
     g.setColor(border)
     g.draw(path)
@@ -232,6 +241,7 @@ class PDFViewer extends Viewer {
 
     // Running the converter and eventually returning the result
     // Batik has a f*cking System.out.println() instruction in its source => ugly patch
+    info("Converting SVG to PDF")
     System.setOut(new java.io.PrintStream(new java.io.ByteArrayOutputStream()))
     converter.execute()
     System.setOut(new java.io.PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out)))

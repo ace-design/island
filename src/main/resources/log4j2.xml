@@ -13,16 +13,16 @@
           - Names are fully qualified names (i.e., eu.ace_deign.island.*)
           - The name of a Logger associated to an Object ends with a '$' (e.g., Main$ to log the Main object).
           -->
-        <Logger name="eu.ace_design.island.util.Loggers$" level="all" additivity="false">
+        <Logger name="eu.ace_design.Island" level="all" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="eu.ace_design.island.util.Loggers$Mesh" level="info" additivity="false">
+        <Logger name="eu.ace_design.Island/Mesh" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="eu.ace_design.island.util.Loggers$Map" level="info" additivity="false">
+        <Logger name="eu.ace_design.Island/Map" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="eu.ace_design.island.util.Loggers$Viewer" level="all" additivity="false">
+        <Logger name="eu.ace_design.Island/Viewer" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>
