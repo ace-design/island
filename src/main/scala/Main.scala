@@ -11,10 +11,10 @@ object Main extends App with Logger {
   final val OUTPUT_FILE = "./map.pdf"
   //final val MAP_SIZE = 100
   //final val NB_FACES = 100
-  //final val MAP_SIZE = 800
-  //final val NB_FACES = 800
-  final val MAP_SIZE = 2048
-  final val NB_FACES = 4000
+  final val MAP_SIZE = 800
+  final val NB_FACES = 800
+  //final val MAP_SIZE = 2048
+  //final val NB_FACES = 4000
 
   info("Starting the map generation process")
 

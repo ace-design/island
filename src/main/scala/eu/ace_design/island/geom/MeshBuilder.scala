@@ -173,45 +173,44 @@ class MeshBuilder(val size: Int) extends Logger {
     import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
     import scala.collection.JavaConversions._
 
-    info("Building Delaunay triangulation")
-    val builder = new DelaunayTriangulationBuilder()
-    val sites = mesh.faces.values.par map { f =>
-      val center = mesh.vertices(f.center)
-      new Coordinate(center.x, center.y)
+    def buildTriangles(m: Mesh): Seq[Polygon] = {
+      info("Building Delaunay triangulation")
+      val sites = m.faces.values.par map { f =>
+        val center = m.vertices(f.center)
+        new Coordinate(center.x, center.y)
+      }
+      val builder = new DelaunayTriangulationBuilder()
+      builder.setSites(sites.seq)
+      val geom = builder.getTriangles(new GeometryFactory()).asInstanceOf[GeometryCollection]
+      geometryCollectionToPolygonSequence(geom)
     }
-    builder.setSites(sites.seq)
-    val geom = builder.getTriangles(new GeometryFactory()).asInstanceOf[GeometryCollection]
-    val triangles: Seq[Polygon] = geometryCollectionToPolygonSequence(geom)
 
+    type Neighborhood =  Map[Int, Set[Int]]
+
+    def addToNeighbors(key: Int, neighbor: Int, data: Neighborhood): Neighborhood = data.get(key) match {
+      case None => data + (key -> Set(neighbor))
+      case Some(existing) => data - key + (key -> (existing + neighbor))
+    }
+
+    val triangles: Seq[Polygon] = buildTriangles(mesh)
+    val emptyNeighborhood: Neighborhood = Map()
     info("Transforming the Delaunay triangulation into neighborhood relation")
-
-    // Propagate i in xs. For i = 1 and xs = (4,5,6), produces Seq( (1,4), (1,5), (1,6) )
-    def handle(i: Int, xs: Seq[Int]): Seq[(Int,Int)] = xs match {
-      case Seq() => Seq()
-      case Seq(y, ys@_*) => (i -> y) +: handle(i, ys)
-    }
-
-    // Merge a given sequence of map, grouping the references according to the keys (1 -> (2) + 1 -> (3) => 1 -> (2,3))
-    def merge(data: Seq[Map[Int,Set[Int]]]): Map[Int, Set[Int]] = {
-      ((data.par map { _.toList }).flatten.groupBy { _._1 } map { p => p._1 -> (p._2 map { e => e._2}).flatten.toSet.seq}).seq
-    }
-
-    // transforming the set of triangles into neighborhood relationship
-    val raw = triangles.par.map { t =>
-      // We retrieve the associated vertex (coordinates points to faces centers)
-      val faceRefs = (t.getCoordinates map { c => mesh.vertices(Point(c.x, c.y)).get }).distinct
+    val neighborhood = (emptyNeighborhood /: triangles.par) { (acc, t) =>
+      // polygons are "closed", thus the start point is a duplicate of the last one (=> distinct is used)
+      val centerRefs = (t.getCoordinates map { c => mesh.vertices(Point(c.x, c.y)).get }).distinct
       // We transform these center references into faces
-      val faces = faceRefs map { mesh.faces.lookFor(_).get}
-      // for each face, we build a set neighbourhood pairs
-      val neighbors = (faces.distinct map { f => handle(f, faces diff Seq(f)) }).flatten.groupBy { e => e._1 }
-      // we polish the neighbors pairs to store elements like [ref -> Set(neighbor1, neighbor2)]
-      neighbors map { case (k,v) => { k -> v.map { _._2 }.toSet } }
+      val faceRefs = centerRefs map { mesh.faces.lookFor(_).get}
+      // we build the neighborhood pairs based on the triangle contents
+      val pairs = for(i <- faceRefs; j<- faceRefs) yield (i,j)
+      // we update the accumulator wit the pairs
+      (acc /: pairs) { (res,p) => addToNeighbors(p._1, p._2, res) }
     }
-    // We merge the map obtained for each triangle into a global neighborhood one, and build a new FaceRegistry
-    val reg = (mesh.faces /: merge(raw.seq)) { (acc, pair) =>
-      val f = acc(pair._1).copy(neighbors = Some(pair._2))
-      acc.update(pair._1,f)
+
+    info("Updating the FaceRegistry with the neighborhood relation")
+    val updatedFaces = (mesh.faces /: neighborhood.par) { (reg, info) =>
+      val face = reg(info._1).copy(neighbors = Some(info._2))
+      reg.update(info._1, face)
     }
-    mesh.copy(faces = reg)
+    mesh.copy(faces = updatedFaces)
   }
 }
