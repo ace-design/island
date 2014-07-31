@@ -170,6 +170,9 @@ object IdentifyLakesAndOcean extends Process with Logger {
   }
 }
 
+/**
+ * A face is considered as a coast if it is a land one which is connected to at least one ocean face.
+ */
 object IdentifyCoastLine extends Process with Logger {
   val silo = LogSilos.MAP_GEN
 

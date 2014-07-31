@@ -73,7 +73,7 @@ class ProcessTest extends SpecificationWithJUnit {
   }
 
   "The IdentifyLakesAndOcean process" should {
-    "annotate all the  water faces with WaterKind properties" in {
+    "annotate all the water faces with WaterKind properties" in {
       import ExistingWaterKind.{OCEAN, LAKE}
       val donutsFactory = IdentifyWaterArea(shape = DonutShape(SIZE, SIZE.toDouble/2*0.8, SIZE.toDouble/2*0.2),
                                                                threshold = 30)
@@ -83,6 +83,18 @@ class ProcessTest extends SpecificationWithJUnit {
       val oceans = props(Set(WaterKind(OCEAN)))
       val lakes =  props(Set(WaterKind(LAKE)))
       lakes ++ oceans must_== waters
+    }
+  }
+
+  "The IdentifyCoastLine process" should {
+    val shaper = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble/2*0.8), threshold = 30)
+
+    "annotate land faces with an IsCoast tag" in {
+      val map =  IdentifyCoastLine(shaper(entry))
+      val finder = map.faceProps.project(map.mesh.faces) _
+      val land = finder(Set(!IsWater()))
+      val coast = finder(Set(IsCoast()))
+      (coast & land) must_== coast
     }
   }
 }
