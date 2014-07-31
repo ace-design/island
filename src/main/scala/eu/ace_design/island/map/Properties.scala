@@ -95,6 +95,23 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
     val concerned = _contents filter { case (i,existing) => (existing & props) == props } map { _._1 }
     (concerned map { reg(_) }).toSet
   }
+
+  /**
+   * Two property sets are equals if their underlying maps are equals
+   * @param other the object to check equality with
+   * @return this == that <=> this._contents == that._contents
+   */
+  override def equals(other: Any) = other match {
+    case that: PropertySet => this._contents == that._contents
+    case _ => false
+  }
+
+  /**
+   * Hashcode is deleguated to the map one
+   * @return
+   */
+  override def hashCode(): Int = this._contents.hashCode()
+
 }
 
 /**
