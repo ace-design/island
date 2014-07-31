@@ -1,7 +1,7 @@
 package eu.ace_design.island.geom
 
 
-import eu.ace_design.island.util.Log
+import eu.ace_design.island.util.Logger
 /**
  * This file is part of the Island project.
  * @author mosser
@@ -14,7 +14,7 @@ import eu.ace_design.island.util.Log
  *
  * @param size the size of the map (a square of size x size)
  */
-class MeshBuilder(val size: Int) extends Log {
+class MeshBuilder(val size: Int) extends Logger {
   import com.vividsolutions.jts.geom.{Polygon,  GeometryCollection}
 
   /**

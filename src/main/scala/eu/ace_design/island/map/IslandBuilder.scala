@@ -1,7 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.util.Log
+import eu.ace_design.island.util.Logger
 
 /**
  * An IslandBuilder is a sequence of Process used to build an Island map
@@ -53,7 +53,7 @@ sealed trait Process {
  *
  * It annotates the faces with the IsBorder property
  */
-object IdentifyBorders extends Process with Log {
+object IdentifyBorders extends Process with Logger {
 
   override def apply(m: IslandMap): IslandMap = {
     logger.info("Borders computation: started")
@@ -81,7 +81,7 @@ object IdentifyBorders extends Process with Log {
  * @param shape the IslandShape used for this Island
  * @param threshold the threshold (in [0,100]) to decide if a face is a water one
  */
-case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process with Log {
+case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process with Logger {
   require(threshold >= 0,   "threshold must be in [0,100]")
   require(threshold <= 100, "threshold must be in [0,100]")
 
@@ -113,7 +113,7 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
  * A face is considered as an ocean one if it is a water face connected to the borders of the map. Lakes are faces
  * identified as water but not as ocean.
  */
-object IdentifyLakesAndOcean extends Process with Log {
+object IdentifyLakesAndOcean extends Process with Logger {
   import ExistingWaterKind.{OCEAN, LAKE}
 
   override def apply(m: IslandMap): IslandMap = {

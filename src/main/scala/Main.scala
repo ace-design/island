@@ -1,10 +1,10 @@
 import eu.ace_design.island.geom._
 import eu.ace_design.island.map._
 import eu.ace_design.island.viewer._
-import eu.ace_design.island.util.Log
+import eu.ace_design.island.util.Logger
 
 
-object Main extends App with Log {
+object Main extends App with Logger {
 
   final val OUTPUT_FILE = "./map.pdf"
   //final val MAP_SIZE = 100
