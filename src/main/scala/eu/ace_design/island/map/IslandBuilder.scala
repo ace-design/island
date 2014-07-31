@@ -23,6 +23,7 @@ trait IslandBuilder {
    */
   def apply(m: Mesh): IslandMap = {
     require(m.size.isDefined, "Cannot build an island without knowing its size")
+    require(m.size.get == size, "Size of mesh and map must be consistent")
     (IslandMap(m) /: steps) { (map, p) => p(map) }
   }
 }

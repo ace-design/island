@@ -5,6 +5,7 @@ package eu.ace_design.island.map
  */
 trait IslandShape {
   import eu.ace_design.island.geom.Point
+  require(size > 0, "The size of an Island cannot be negative or null")
 
   // the size of the map (used for the normalization of Point's coordinates)
   val size: Int
@@ -81,6 +82,7 @@ trait CircularHelper extends IslandShape {
  * @param radius the radius of the circle
  */
 case class DiskShape(override val size: Int, radius: Double) extends IslandShape with CircularHelper {
+  require(radius > 0, "The disk radius cannot be negative")
 
   /**
    * (x,y) is located in water if it is located outside of the circle used to define the shape of the island
@@ -98,6 +100,9 @@ case class DiskShape(override val size: Int, radius: Double) extends IslandShape
  * @param radInt radius of the internal circle (inner lake)
  */
 case class DonutShape(override val size: Int, radExt: Double, radInt: Double) extends IslandShape with CircularHelper {
+  require(radExt > 0, "The external radius cannot be negative or null")
+  require(radInt > 0, "The internal radius cannot be negative or null")
+  require(radExt > radInt, "The external circle must be bigger than the internal one")
 
   /**
    * (x,y) is located in water if it is located outside of the circle used to define the shape of the island
