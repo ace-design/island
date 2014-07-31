@@ -25,6 +25,9 @@
         <Logger name="eu.ace_design.island.map.IdentifyWaterArea" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="eu.ace_design.island.map.IdentifyLakesAndOcean$" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="eu.ace_design.island.viewer.SVGViewer" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
