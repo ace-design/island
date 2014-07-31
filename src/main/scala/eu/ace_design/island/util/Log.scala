@@ -6,7 +6,7 @@ package eu.ace_design.island.util
  */
 trait Log {
 
-  import org.apache.logging.log4j.LogManager;
+  import org.apache.logging.log4j.LogManager
   import org.apache.logging.log4j.Logger
 
   protected val logger: Logger = LogManager.getLogger(this.getClass.getCanonicalName)
