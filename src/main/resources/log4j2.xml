@@ -16,7 +16,7 @@
         <Logger name="eu.ace_design.Island" level="all" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="eu.ace_design.Island/Mesh" level="info" additivity="false">
+        <Logger name="eu.ace_design.Island/Mesh" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="eu.ace_design.Island/Map" level="info" additivity="false">

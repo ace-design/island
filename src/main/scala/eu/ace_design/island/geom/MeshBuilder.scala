@@ -193,11 +193,11 @@ class MeshBuilder(val size: Int) extends Logger {
 
     // Merge a given sequence of map, grouping the references according to the keys (1 -> (2) + 1 -> (3) => 1 -> (2,3))
     def merge(data: Seq[Map[Int,Set[Int]]]): Map[Int, Set[Int]] = {
-      (data map { _.toList }).flatten.groupBy { _._1 } map { p => p._1 -> (p._2 map { e => e._2}).flatten.toSet}
+      ((data.par map { _.toList }).flatten.groupBy { _._1 } map { p => p._1 -> (p._2 map { e => e._2}).flatten.toSet.seq}).seq
     }
 
     // transforming the set of triangles into neighborhood relationship
-    val raw = triangles.map { t =>
+    val raw = triangles.par.map { t =>
       // We retrieve the associated vertex (coordinates points to faces centers)
       val faceRefs = (t.getCoordinates map { c => mesh.vertices(Point(c.x, c.y)).get }).distinct
       // We transform these center references into faces
@@ -208,7 +208,7 @@ class MeshBuilder(val size: Int) extends Logger {
       neighbors map { case (k,v) => { k -> v.map { _._2 }.toSet } }
     }
     // We merge the map obtained for each triangle into a global neighborhood one, and build a new FaceRegistry
-    val reg = (mesh.faces /: merge(raw)) { (acc, pair) =>
+    val reg = (mesh.faces /: merge(raw.seq)) { (acc, pair) =>
       val f = acc(pair._1).copy(neighbors = Some(pair._2))
       acc.update(pair._1,f)
     }
