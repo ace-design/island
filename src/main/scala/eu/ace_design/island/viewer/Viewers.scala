@@ -62,6 +62,7 @@ class SVGViewer extends Viewer  {
     // Extracted from Cynthia Brewer palettes (http://colorbrewer2.org/)
     final val DARK_BLUE  = new Color(4  , 90 , 141) // 5-class PuBu theme  #5
     final val LIGHT_BLUE = new Color(116, 169, 207) // 5-class PuBu theme  #3
+    final val LIGHT_SAND = new Color(255, 255, 204) // 9-class YlOrRd
   }
 
   /**
@@ -135,6 +136,8 @@ class SVGViewer extends Viewer  {
         Colors.DARK_BLUE
       else if(props.contains(WaterKind(LAKE)))
         Colors.LIGHT_BLUE
+      else if (props.contains(IsCoast()))
+        Colors.LIGHT_SAND
       else
         Color.WHITE
 

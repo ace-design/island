@@ -169,3 +169,22 @@ object IdentifyLakesAndOcean extends Process with Logger {
     loop(init, Set())
   }
 }
+
+/**
+ * A face is considered as a coast if it is a land one which is connected to at least one ocean face.
+ */
+object IdentifyCoastLine extends Process with Logger {
+  val silo = LogSilos.MAP_GEN
+
+  override def apply(m: IslandMap): IslandMap = {
+    info("IdentifyCoastLine / Annotating faces")
+    val finder = m.faceProps.project(m.mesh.faces) _
+    val oceans = finder(Set(WaterKind(ExistingWaterKind.OCEAN))) map { m.mesh.faces(_).get }
+    val land = finder(Set(!IsWater()))
+    val coast = land filter { f => (f.neighbors.get & oceans).nonEmpty } map { m.mesh.faces(_).get }
+
+    debug("Faces tagged as coastline: " + coast.toSeq.sorted.mkString("(",",",")"))
+    val fProps = m.faceProps bulkAdd (coast -> IsCoast())
+    m.copy(faceProps = fProps)
+  }
+}
