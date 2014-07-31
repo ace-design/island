@@ -159,6 +159,13 @@ class MeshBuilder(val size: Int) extends Log {
     loop(poly.getBoundary.getCoordinates map { c => Point(c.x, c.y) })
   }
 
+  /**
+   * Implements the computation of the neighborhood relationship between faces by leveraging a Delaunay triangulation.
+   * It is actually a good enough method to compute neighbors (wrong for border polygons, but we don't care as
+   * we are not using such polygons in our Island - always ocean).
+   * @param mesh the mesh to be used to compute the neighborhood relations
+   * @return a new mesh (faces updated to store their neighbors as an immutable set of face references)
+   */
   def buildDelaunayNeighborhood(mesh: Mesh): Mesh  = {
     import com.vividsolutions.jts.triangulate.DelaunayTriangulationBuilder
     import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
@@ -176,10 +183,13 @@ class MeshBuilder(val size: Int) extends Log {
 
     logger.info("Transforming the Delaunay triangulation into neighborhood relation")
 
+    // Propagate i in xs. For i = 1 and xs = (4,5,6), produces Seq( (1,4), (1,5), (1,6) )
     def handle(i: Int, xs: Seq[Int]): Seq[(Int,Int)] = xs match {
       case Seq() => Seq()
       case Seq(y, ys@_*) => (i -> y) +: handle(i, ys)
     }
+
+    // Merge a given sequence of map, grouping the references according to the keys (1 -> (2) + 1 -> (3) => 1 -> (2,3))
     def merge(data: Seq[Map[Int,Set[Int]]]): Map[Int, Set[Int]] = {
       (data map { _.toList }).flatten.groupBy { _._1 } map { p => p._1 -> (p._2 map { e => e._2}).flatten.toSet}
     }
@@ -195,7 +205,7 @@ class MeshBuilder(val size: Int) extends Log {
       // we polish the neighbors pairs to store elements like [ref -> Set(neighbor1, neighbor2)]
       neighbors map { case (k,v) => { k -> v.map { _._2 }.toSet } }
     }
-    // We merge the map obtained for each triangle into a global neighborhood one, and build a FaceRegistry
+    // We merge the map obtained for each triangle into a global neighborhood one, and build a new FaceRegistry
     val reg = (mesh.faces /: merge(raw)) { (acc, pair) =>
       val f = acc(pair._1).copy(neighbors = Some(pair._2))
       acc.update(pair._1,f)

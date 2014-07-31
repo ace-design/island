@@ -1,7 +1,8 @@
 package eu.ace_design.island.viewer
 
+
+import eu.ace_design.island.map._
 import java.io.File
-import eu.ace_design.island.geom.Mesh
 
 
 /**
@@ -20,11 +21,13 @@ trait Viewer {
    */
   def mimeType: String
   /**
-   * A viewer is a function, transforming a Mesh into a viewable file. Thus, we use Scala syntactic sugar to support it
-   * @param mesh the mesh one wants to visualize
+   * A viewer is a function, transforming an IslandMap into a viewable file.
+   * Thus, we use Scala syntactic sugar to support it
+   *
+   * @param m the map one wants to visualize
    * @return a File containing the associated representation
    */
-  def apply(mesh: Mesh): File
+  def apply(m: IslandMap): File
 
   /**
    * Protected method used to generate a temporary file as an output
@@ -36,59 +39,156 @@ trait Viewer {
 
 
 /**
- * The SVG viewer relies on the Apache Batik library
+ * The SVG viewer relies on the Apache Batik library (SVG) and the JTS library (to compute the convex hull of a face)
  */
 class SVGViewer extends Viewer  {
-  import java.awt.{Graphics2D,Color, Dimension}
+  import java.awt.{Graphics2D,Color, Dimension,BasicStroke}
   import java.awt.geom.{Line2D, Path2D}
   import org.apache.batik.svggen.SVGGraphics2D
   import org.apache.batik.dom.svg.SVGDOMImplementation
+  import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
 
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
 
-  override def apply(mesh: Mesh): File = {
-    val paintbrush = initGraphics(mesh)
-    draw(mesh, paintbrush)
-    flush(paintbrush, mesh.size)
+  object Colors {
+    // classical colors
+    final val BLACK      = new Color(0,   0,   0)
+    final val LIGHT_GRAY = new Color(211, 211, 211)
+    // Extracted from Cynthia Brewer palettes (http://colorbrewer2.org/)
+    final val DARK_BLUE  = new Color(4  , 90 , 141) // 5-class PuBu theme  #5
+    final val LIGHT_BLUE = new Color(116, 169, 207) // 5-class PuBu theme  #3
+  }
+
+  /**
+   * Syntactic sugar to call the viewer as a function
+   * @param m the map one wants to visualize
+   * @return a File containing the associated representation
+   */
+  override def apply(m: IslandMap): File = {
+    val paintbrush = initGraphics(m)
+    draw(m, paintbrush)
+    flush(paintbrush, m.mesh.size)
   }
 
   /**
    * Actually draw a given mesh using a Graphics2D object (side-effect on g)
-   * @param mesh the mesh to draw with g
+   * @param m the map one wants to draw
    * @param g the Graphics2D object used to draw the mesh
    */
-  private def draw(mesh: Mesh, g: Graphics2D) {
-    mesh.faces.contents.keys foreach { f =>
-      // Draw the frontier of the polygon
-      val path = new Path2D.Double()
-      f.edges map { eRef => mesh.edges(eRef) } foreach { e =>
-        val start = mesh.vertices(e.p1)
-        val end   = mesh.vertices(e.p2)
-        path.moveTo(start.x, start.y)
-        path.lineTo(end.x, end.y)
-      }
-      g.setPaint(Color.red)
-      g.draw(path)
-      g.setPaint(Color.black)
-      val center = mesh.vertices(f.center)
-      g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
-      f.neighbors match {
-        case None =>
-        case Some(refs) => refs foreach { idx =>
-          val p = mesh.vertices(mesh.faces(idx).center)
-          g.draw(new Line2D.Double(center.x, center.y,p.x, p.y))
-        }
+  private def draw(m: IslandMap, g: Graphics2D) {
+    // Se rely on a set of function, executed sequentially to draw the map
+    // Function must be member of Int x IslandMap x Graphics2D -> Unit
+    val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_), drawCorners(_,_,_))
+    // We go through each function one by one. We apply each f to all the faces stored in the map
+    functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
+  }
+
+  /**
+   * Draw a given face as a polygon on the map. The used colors are computed by the 'colors' function.
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawAFace(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+
+    // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
+    val coords = (f.vertices(map.mesh.edges) map { map.mesh.vertices(_) } map { p => new Coordinate(p.x, p.y) }).toSeq
+    val linear = coords :+ new Coordinate(coords(0).x, coords(0).y)
+    val factory = new GeometryFactory()
+    val convexCoords = factory.createPolygon(linear.toArray).convexHull.getCoordinates
+
+    // Create a path for the Polygon frontier, and fill it according to the computed convex hull
+    val path = new Path2D.Double()
+    path.moveTo(convexCoords(0).x,convexCoords(0).y)
+    convexCoords.slice(1,convexCoords.length) foreach { c => path.lineTo(c.x, c.y) }
+    path.closePath()
+
+    // Get the colors associated to this face, and draw it
+    val (bgColor, border) = colors(map.faceProps.get(idx))
+    g.setStroke(new BasicStroke(0.5f))
+    g.setColor(border)
+    g.draw(path)
+    g.setColor(bgColor)
+    g.fill(path)
+  }
+
+  /**
+   * Identify the colors to be used for a given polygon, based on its face properties
+   * @param props the set of properties associated to this face
+   * @return a couple (bgColor, borderColor) to be used to draw this face
+   */
+  private def colors(props: Set[Property[_]]): (Color, Color) = {
+    import ExistingWaterKind._
+
+    val background = if(props.contains(WaterKind(OCEAN)))
+        Colors.DARK_BLUE
+      else if(props.contains(WaterKind(LAKE)))
+        Colors.LIGHT_BLUE
+      else
+        Color.WHITE
+
+    val border = Color.BLACK
+    (background, border)
+  }
+
+  /**
+   * Draw the center of each face as a single black point (width: 3). Mainly used for explanation purpose
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    g.setColor(Colors.LIGHT_GRAY)
+    g.setStroke(new BasicStroke(3))
+    val center = map.mesh.vertices(f.center)
+    g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
+  }
+
+  /**
+   * Draw the neighborhood relationship as gray lines between faces' centers. Mainly used for explanation purposes
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    val center = map.mesh.vertices(f.center)
+    g.setColor(Color.LIGHT_GRAY)
+    g.setStroke(new BasicStroke(0.05f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, Array{4.0f}, 0.0f))
+    f.neighbors match {
+      case None =>
+      case Some(refs) => refs foreach { idx =>
+        val p = map.mesh.vertices(map.mesh.faces(idx).center)
+        g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
       }
     }
   }
 
+  /**
+   * Draw the corners of each face, coloring water corners in blue and land one in black.
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
+  private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.mesh.faces(idx)
+    g.setStroke(new BasicStroke(3))
+    f.vertices(map.mesh.edges) foreach { ref =>
+      if(map.vertexProps.check(ref, IsWater())) g.setColor(Colors.DARK_BLUE) else g.setColor(Colors.BLACK)
+      val p = map.mesh.vertices(ref)
+      g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
+    }
+  }
 
   /**
    * Initialise the graphics2D object used to draw the mesh.
    * @return
    */
-  private def initGraphics(mesh: Mesh): SVGGraphics2D = {
+  private def initGraphics(m: IslandMap): SVGGraphics2D = {
+    val mesh = m.mesh
     val domImpl = SVGDOMImplementation.getDOMImplementation
     val document = domImpl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null)
     val r = new SVGGraphics2D(document)
@@ -118,11 +218,11 @@ class PDFViewer extends Viewer {
   override val extension: String = "pdf"
   override val mimeType: String = "application/pdf"
 
-  override def apply(mesh: Mesh): File = {
+  override def apply(m: IslandMap): File = {
     val result = initOutput
 
     // We first create an SVG file with the SVG viewer:
-    val svgFile = (new SVGViewer())(mesh)
+    val svgFile = (new SVGViewer())(m)
 
     // We leverage the Batik rasterizer
     val converter = new SVGConverter()
