@@ -33,7 +33,8 @@ object Main extends App with Logger {
     final val WATER_THRESHOLD = 30
     override def size: Int = MAP_SIZE
     override protected val steps: Seq[Process] = Seq(
-      IdentifyBorders, IdentifyWaterArea(ISLAND_SHAPE, WATER_THRESHOLD), IdentifyLakesAndOcean
+      IdentifyBorders, IdentifyWaterArea(ISLAND_SHAPE, WATER_THRESHOLD),
+      IdentifyLakesAndOcean, IdentifyCoastLine
     )
   }
   val map = mapBuilder(mesh)

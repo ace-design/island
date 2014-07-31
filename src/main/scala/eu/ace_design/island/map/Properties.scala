@@ -146,3 +146,8 @@ object ExistingWaterKind extends Enumeration {
   type ExistingWaterKind = Value
   val OCEAN, LAKE = Value
 }
+
+case class IsCoast(override val value: Boolean = true) extends Property[Boolean] {
+override val key = "isCoast?"
+def unary_!() = IsCoast(value = ! this.value)
+}
