@@ -1,7 +1,7 @@
 package eu.ace_design.island.geom
 
 
-import eu.ace_design.island.util.Logger
+import eu.ace_design.island.util.{LogSilos, Logger}
 /**
  * This file is part of the Island project.
  * @author mosser
@@ -15,6 +15,8 @@ import eu.ace_design.island.util.Logger
  * @param size the size of the map (a square of size x size)
  */
 class MeshBuilder(val size: Int) extends Logger {
+  val silo = LogSilos.MESH_GEN
+
   import com.vividsolutions.jts.geom.{Polygon,  GeometryCollection}
 
   /**
@@ -43,7 +45,7 @@ class MeshBuilder(val size: Int) extends Logger {
     val coordinates = sites.par map { p => new Coordinate(p.x, p.y) }
 
     // Instantiate a DiagramBuilder, associated to the computed coordinates.
-    logger.info("Generating Voronoi diagram")
+    info("Generating Voronoi diagram")
     val builder = new VoronoiDiagramBuilder()
     builder.setSites(coordinates.seq)
     //builder.setClipEnvelope(new Envelope(0,size,0,size))
@@ -65,7 +67,7 @@ class MeshBuilder(val size: Int) extends Logger {
    */
   private def buildPolygons(geometry: GeometryCollection): Seq[Polygon] = {
     import com.vividsolutions.jts.geom.Coordinate
-    logger.info("Building polygons")
+    info("Building polygons")
     val rect = geometry.getFactory.createPolygon(Array(new Coordinate(0,0), new Coordinate(0,size),
                                                        new Coordinate(size, size), new Coordinate(size, 0),
                                                        new Coordinate(0,0)))
@@ -93,7 +95,7 @@ class MeshBuilder(val size: Int) extends Logger {
    * @return  A vertex registry containing all the vertices in init + the one defined in the given polygons
    */
   private def buildVertexRegistry(polygons: Seq[Polygon]): VertexRegistry = {
-    logger.info("Building VertexRegistry")
+    info("Building VertexRegistry")
     (VertexRegistry() /: polygons.par) { (r, poly) =>
       val coordinates = poly.getBoundary.getCoordinates
       val points = coordinates map { c => Point(c.x, c.y) }
@@ -119,7 +121,7 @@ class MeshBuilder(val size: Int) extends Logger {
    * @return the associated EdgeRegistry
    */
   private def buildEdgeRegistry(polygons: Seq[Polygon], vertices: VertexRegistry): EdgeRegistry = {
-    logger.info("Building EdgeRegistry")
+    info("Building EdgeRegistry")
     (EdgeRegistry() /: polygons.par) { (r, poly) =>
       val edges = extractEdges(vertices, poly)
       edges.foldLeft(r) { (reg, e) => reg + e }
@@ -135,7 +137,7 @@ class MeshBuilder(val size: Int) extends Logger {
    * @return a FaceRegistry
    */
   private def buildFaceRegistry(polygons: Seq[Polygon], vReg: VertexRegistry, eReg: EdgeRegistry): FaceRegistry = {
-    logger.info("Building Face Registry")
+    info("Building Face Registry")
     (FaceRegistry() /: polygons.par) { (reg, poly) =>
       val centerRef = vReg(getCentroid(poly)).get
       val edgeRefs = extractEdges(vReg, poly) map { e => eReg(e).get }
@@ -150,7 +152,7 @@ class MeshBuilder(val size: Int) extends Logger {
    * @return the associated sequence of edges
    */
   private def extractEdges(vReg: VertexRegistry, poly: Polygon): Seq[Edge] = {
-    logger.trace(s"Extracting edges for $poly")
+    trace(s"Extracting edges for $poly")
     def loop(points: Array[Point]): Seq[Edge] = points match {
       case Array() => Seq()
       case Array(p) => Seq()
@@ -171,7 +173,7 @@ class MeshBuilder(val size: Int) extends Logger {
     import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
     import scala.collection.JavaConversions._
 
-    logger.info("Building Delaunay triangulation")
+    info("Building Delaunay triangulation")
     val builder = new DelaunayTriangulationBuilder()
     val sites = mesh.faces.values.par map { f =>
       val center = mesh.vertices(f.center)
@@ -181,7 +183,7 @@ class MeshBuilder(val size: Int) extends Logger {
     val geom = builder.getTriangles(new GeometryFactory()).asInstanceOf[GeometryCollection]
     val triangles: Seq[Polygon] = geometryCollectionToPolygonSequence(geom)
 
-    logger.info("Transforming the Delaunay triangulation into neighborhood relation")
+    info("Transforming the Delaunay triangulation into neighborhood relation")
 
     // Propagate i in xs. For i = 1 and xs = (4,5,6), produces Seq( (1,4), (1,5), (1,6) )
     def handle(i: Int, xs: Seq[Int]): Seq[(Int,Int)] = xs match {

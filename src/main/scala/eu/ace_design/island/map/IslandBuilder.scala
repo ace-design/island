@@ -1,7 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.util.Logger
+import eu.ace_design.island.util.{LogSilos, Logger}
 
 /**
  * An IslandBuilder is a sequence of Process used to build an Island map
@@ -54,9 +54,10 @@ sealed trait Process {
  * It annotates the faces with the IsBorder property
  */
 object IdentifyBorders extends Process with Logger {
+  val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
-    logger.info("Borders computation: started")
+    info("IdentifyBorders / Annotating faces")
     // Extract the points located on the map border
     val isBorderValue: Double => Boolean = { d => d <= 0 || d >= m.mesh.size.get }
     val isBorderVertex: Point => Boolean = { p => isBorderValue(p.x) || isBorderValue(p.y)  }
@@ -65,11 +66,10 @@ object IdentifyBorders extends Process with Logger {
     // Identify the faces that involve such points
     val isBorder: Face => Boolean = { f => (f.vertices(m.mesh.edges) & borderVertices).nonEmpty }
     val borderFaces = m.mesh.faces.queryReferences(isBorder)
+    debug("Faces tagged as border: " + borderFaces.toSeq.sorted.mkString("(",",",")") )
 
     // Update the properties for the identified faces
-    val result = m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
-    logger.info("Borders computation: ended")
-    result
+    m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
   }
 
 }
@@ -85,14 +85,15 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
   require(threshold >= 0,   "threshold must be in [0,100]")
   require(threshold <= 100, "threshold must be in [0,100]")
 
+  val silo = LogSilos.MAP_GEN
+
   override def apply(m: IslandMap): IslandMap = {
-    logger.info("Annotating vertices")
+    info("IdentifyWaterArea / Annotating vertices")
     val isWaterVertex = shape.isWater _
     val pRefs = m.mesh.vertices.queryReferences(isWaterVertex) // Find all the vertices matching the given shape
     val vProps = m.vertexProps bulkAdd (pRefs -> IsWater())
-    logger.info("done")
 
-    logger.info("Annotating faces")
+    info("IdentifyWaterArea / Annotating faces")
     val isWaterFace: Face => Boolean = { f =>
       val ref = m.mesh.faces(f).get
       val isBorder = m.faceProps.check(ref, IsBorder())
@@ -103,8 +104,10 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
     }
     val waterFaceRefs = m.mesh.faces.queryReferences(isWaterFace)
     val landFaceRefs = m.mesh.faces.references diff waterFaceRefs
+
+    debug("Faces tagged as water: " + waterFaceRefs.toSeq.sorted.mkString("(",",",")"))
+    debug("Faces tagged as land: " + landFaceRefs.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (waterFaceRefs -> IsWater()) bulkAdd (landFaceRefs -> !IsWater())
-    logger.info("done")
     m.copy(vertexProps = vProps, faceProps = fProps)
   }
 }
@@ -116,14 +119,17 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
 object IdentifyLakesAndOcean extends Process with Logger {
   import ExistingWaterKind.{OCEAN, LAKE}
 
+  val silo = LogSilos.MAP_GEN
+
   override def apply(m: IslandMap): IslandMap = {
-    logger.info("Annotating faces")
+    info("IdentifyLakesAndOcean / Annotating faces")
     val borders = getRefs(m, IsBorder())
     val oceans = propagate(borders, m.faceProps, m.mesh.faces, IsWater())
     val water = getRefs(m, IsWater())
     val lakes = water diff oceans
+    debug("Faces tagged as ocean: " + oceans.toSeq.sorted.mkString("(",",",")"))
+    debug("Faces tagged as lake: "  + lakes.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (oceans -> WaterKind(OCEAN)) bulkAdd (lakes -> WaterKind(LAKE))
-    logger.info("done")
     m.copy(faceProps = fProps)
   }
 

@@ -1,20 +1,22 @@
 import eu.ace_design.island.geom._
 import eu.ace_design.island.map._
 import eu.ace_design.island.viewer._
-import eu.ace_design.island.util.Logger
+import eu.ace_design.island.util.{LogSilos, Logger}
 
 
 object Main extends App with Logger {
 
+  val silo = LogSilos.ROOT
+
   final val OUTPUT_FILE = "./map.pdf"
   //final val MAP_SIZE = 100
   //final val NB_FACES = 100
-  //final val MAP_SIZE = 800
-  //final val NB_FACES = 800
-  final val MAP_SIZE = 2048
-  final val NB_FACES = 4000
+  final val MAP_SIZE = 800
+  final val NB_FACES = 800
+  //final val MAP_SIZE = 2048
+  //final val NB_FACES = 4000
 
-  logger.info("Starting the map generation process")
+  info("Starting the map generation process")
 
   // Randomly generate the sites used to generate the map
   val generator = new RelaxedRandomGrid(MAP_SIZE)
@@ -36,12 +38,12 @@ object Main extends App with Logger {
   }
   val map = mapBuilder(mesh)
 
-  logger.info("End of the map generation process")
+  info("End of the map generation process")
 
-  logger.info("Starting the transformation into PDF")
+  info("Starting the transformation into PDF")
   val transformer = new PDFViewer()
   val result = transformer(map)
   result.renameTo(new java.io.File(OUTPUT_FILE))
 
-  logger.info("PDF file generated!")
+  info("PDF file generated!")
 }
