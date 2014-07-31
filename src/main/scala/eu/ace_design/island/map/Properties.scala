@@ -107,7 +107,7 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
   }
 
   /**
-   * Hashcode is deleguated to the map one
+   * HashCode is delegated to the map one
    * @return
    */
   override def hashCode(): Int = this._contents.hashCode()
@@ -135,4 +135,14 @@ case class IsWater(override val value: Boolean = true) extends Property[Boolean]
 
 case class HasForHeight(override val value: Double = 0.0) extends Property[Double] {
   override val key = "height"
+}
+
+case class WaterKind(override val value: ExistingWaterKind.ExistingWaterKind)
+  extends Property[ExistingWaterKind.ExistingWaterKind] {
+  override val key = "waterKind"
+}
+
+object ExistingWaterKind extends Enumeration {
+  type ExistingWaterKind = Value
+  val OCEAN, LAKE = Value
 }

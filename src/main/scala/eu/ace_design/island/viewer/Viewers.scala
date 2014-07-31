@@ -1,7 +1,7 @@
 package eu.ace_design.island.viewer
 
 
-import eu.ace_design.island.map.{IsWater, IsBorder, IslandMap, Property}
+import eu.ace_design.island.map._
 import java.io.File
 
 
@@ -120,9 +120,17 @@ class SVGViewer extends Viewer  {
    * @return a couple (bgColor, borderColor) to be used to draw this face
    */
   private def colors(props: Set[Property[_]]): (Color, Color) = {
-    val bg = if(props.contains(IsWater())) Colors.DARK_BLUE else Color.WHITE
+    import ExistingWaterKind._
+
+    val background = if(props.contains(WaterKind(OCEAN)))
+        Colors.DARK_BLUE
+      else if(props.contains(WaterKind(LAKE)))
+        Colors.LIGHT_BLUE
+      else
+        Color.WHITE
+
     val border = Color.BLACK
-    (bg, border)
+    (background, border)
   }
 
   /**
