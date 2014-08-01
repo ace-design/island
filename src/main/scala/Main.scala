@@ -29,7 +29,9 @@ object Main extends App with Logger {
 
   // Instantiate an Island Builder, and build the map on the previously created mesh
   val mapBuilder = new IslandBuilder {
-    final val ISLAND_SHAPE = DonutShape(size, size.toDouble/2 * 0.85, size.toDouble/2 * 0.20)
+    //final val ISLAND_SHAPE = DiskShape(size, size.toDouble/2 * 0.85)
+    //final val ISLAND_SHAPE = DonutShape(size, size.toDouble/2 * 0.85, size.toDouble/2 * 0.20)
+    final val ISLAND_SHAPE = RadialShape(size, 1.07)
     final val WATER_THRESHOLD = 30
     override def size: Int = MAP_SIZE
     override protected val steps: Seq[Process] = Seq(
