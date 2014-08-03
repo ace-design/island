@@ -194,6 +194,14 @@ object IdentifyCoastLine extends Process with Logger {
     debug("Faces tagged as coastline: " + coast.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (coast -> IsCoast())
 
-    m.copy(faceProps = fProps)
+    info("IdentifyCoastLine / Annotating vertices")
+    // coast vertices are involved in both coast and ocean faces
+    val verticesInvolvedInOceanFaces = (oceans map { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten
+    val verticesInvolvedInCoastFaces = (coast map  { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten
+    val coastVertices = verticesInvolvedInCoastFaces & verticesInvolvedInOceanFaces
+    debug("Vertices tagged as coastline: " + coastVertices.toSeq.sorted.mkString("(",",",")"))
+    val vProps = m.vertexProps bulkAdd (coastVertices -> IsCoast())
+
+    m.copy(faceProps = fProps, vertexProps = vProps)
   }
 }

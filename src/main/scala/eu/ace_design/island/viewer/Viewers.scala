@@ -195,7 +195,12 @@ class SVGViewer extends Viewer  {
     val f = map.mesh.faces(idx)
     g.setStroke(new BasicStroke(3))
     f.vertices(map.mesh.edges) foreach { ref =>
-      if(map.vertexProps.check(ref, IsWater())) g.setColor(Colors.DARK_BLUE) else g.setColor(Colors.BLACK)
+      if(map.vertexProps.check(ref, IsWater()))
+        g.setColor(Colors.DARK_BLUE)
+      else if (map.vertexProps.check(ref, IsCoast()))
+        g.setColor(Colors.LIGHT_SAND)
+      else
+        g.setColor(Colors.BLACK)
       val p = map.mesh.vertices(ref)
       g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
     }
