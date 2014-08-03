@@ -9,18 +9,17 @@ object Main extends App with Logger {
   val silo = LogSilos.ROOT
 
   final val OUTPUT_FILE = "./map.pdf"
-  //final val MAP_SIZE = 100
-  //final val NB_FACES = 100
-  final val MAP_SIZE = 800
-  final val NB_FACES = 800
-  //final val MAP_SIZE = 2048
-  //final val NB_FACES = 4000
+  final val size = Sizes.MEDIUM
+
+  final val MAP_SIZE = size._1
+  final val NB_FACES = size._2
 
   info("Starting the map generation process")
 
   // Randomly generate the sites used to generate the map
-  val generator = new RelaxedRandomGrid(MAP_SIZE)
   //val generator = new SquaredGrid(MAP_SIZE)
+  //val generator = new RandomGrid(MAP_SIZE)
+  val generator = new RelaxedRandomGrid(MAP_SIZE)
   val sites = generator(NB_FACES)
 
   // Instantiate a mesh builder, and process the random sites to create a mesh
@@ -49,4 +48,12 @@ object Main extends App with Logger {
   result.renameTo(new java.io.File(OUTPUT_FILE))
 
   info("PDF file generated!")
+}
+
+object Sizes {
+
+  val SMALL = (100, 100)
+  val MEDIUM = (625, 625)
+  val LARGE = (2048, 4096)
+
 }
