@@ -174,7 +174,7 @@ class MeshBuilder(val size: Int) extends Logger {
     import scala.collection.JavaConversions._
 
     def buildTriangles(m: Mesh): Seq[Polygon] = {
-      info("Building Delaunay triangulation")
+      info("Building Delaunay triangulation for neighborhood")
       val sites = m.faces.values.par map { f =>
         val center = m.vertices(f.center)
         new Coordinate(center.x, center.y)
@@ -194,7 +194,7 @@ class MeshBuilder(val size: Int) extends Logger {
 
     val triangles: Seq[Polygon] = buildTriangles(mesh)
     val emptyNeighborhood: Neighborhood = Map()
-    info("Transforming the Delaunay triangulation into neighborhood relation")
+    info("Processing the Delaunay triangulation ("+triangles.length+" triangles)")
     val neighborhood = (emptyNeighborhood /: triangles.par) { (acc, t) =>
       // polygons are "closed", thus the start point is a duplicate of the last one (=> distinct is used)
       val centerRefs = (t.getCoordinates map { c => mesh.vertices(Point(c.x, c.y)).get }).distinct

@@ -58,11 +58,12 @@ class SVGViewer extends Viewer  {
   object Colors {
     // classical colors
     final val BLACK      = new Color(0,   0,   0)
+    final val WHITE      = new Color(255, 255, 255)
     final val LIGHT_GRAY = new Color(211, 211, 211)
     // Extracted from Cynthia Brewer palettes (http://colorbrewer2.org/)
     final val DARK_BLUE  = new Color(4  , 90 , 141) // 5-class PuBu theme  #5
     final val LIGHT_BLUE = new Color(116, 169, 207) // 5-class PuBu theme  #3
-    final val LIGHT_SAND = new Color(255, 255, 204) // 9-class YlOrRd
+    final val LIGHT_SAND = new Color(255, 255, 204) // 9-class YlOrRd theme #1
   }
 
   /**
@@ -87,7 +88,12 @@ class SVGViewer extends Viewer  {
   private def draw(m: IslandMap, g: Graphics2D) {
     // we rely on a set of function, executed sequentially to draw the map
     // Function must be member of Int x IslandMap x Graphics2D -> Unit
-    val functions = Seq(drawAFace(_,_,_), drawNeighbors(_,_,_), drawCenters(_,_,_), drawCorners(_,_,_))
+    val functions = Seq(
+      drawAFace(_,_,_),
+      drawNeighbors(_,_,_),
+      drawCenters(_,_,_),
+      drawCorners(_,_,_)
+    )
     // We go through each function one by one. We apply each f to all the faces stored in the map
     functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
   }
@@ -139,9 +145,9 @@ class SVGViewer extends Viewer  {
       else if (props.contains(IsCoast()))
         Colors.LIGHT_SAND
       else
-        Color.WHITE
+        Colors.WHITE
 
-    val border = Color.BLACK
+    val border = Colors.BLACK
     (background, border)
   }
 
@@ -189,7 +195,12 @@ class SVGViewer extends Viewer  {
     val f = map.mesh.faces(idx)
     g.setStroke(new BasicStroke(3))
     f.vertices(map.mesh.edges) foreach { ref =>
-      if(map.vertexProps.check(ref, IsWater())) g.setColor(Colors.DARK_BLUE) else g.setColor(Colors.BLACK)
+      if(map.vertexProps.check(ref, IsWater()))
+        g.setColor(Colors.DARK_BLUE)
+      else if (map.vertexProps.check(ref, IsCoast()))
+        g.setColor(Colors.LIGHT_SAND)
+      else
+        g.setColor(Colors.BLACK)
       val p = map.mesh.vertices(ref)
       g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
     }

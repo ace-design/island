@@ -1,5 +1,7 @@
 package eu.ace_design.island.map
 
+import eu.ace_design.island.util.{LogSilos, Logger}
+
 /**
  * An IslandShape is a function used to decide if a vertex (not a face) is located on land or not
  */
@@ -121,10 +123,32 @@ case class DonutShape(override val size: Int, radExt: Double, radInt: Double) ex
   *******************/
 
 /**
- * This function implements a RadialShape, inspired by what was initially defined by Amit Patel in
- * https://github.com/amitp/mapgen2/blob/master/Map.as (see makeRadial)
+ * Re-implementation (and slight adaptation) of the algorithm designed by Amit Patel in
+ * https://github.com/amitp/mapgen2/blob/master/Map.as (see makeRadial)   [MIT License]
  */
-case class RadialShape(override val size: Int) extends IslandShape {
-  // TODO Implement it  !!
-  override protected def check(x: Double, y: Double): Boolean = ???
+case class RadialShape(override val size: Int, factor: Double) extends IslandShape with Logger {
+  val silo = LogSilos.MAP_GEN
+
+  import scala.util.Random
+  import scala.math.{abs, atan2, cos, max, pow, sin, sqrt, Pi}
+
+  private val random = new Random()
+  private val bumps: Int = random.nextInt(5) + 1          // random number between 1 and 6
+  val startAngle: Double = random.nextDouble() * 2 * Pi   // random double between 0 and 2π
+  val dipAngle: Double   = random.nextDouble() * 2 * Pi     // random double between 0 and 2π
+  val dipWidth: Double = 0.2 + (random.nextDouble() * 0.5)
+
+  override protected def check(x: Double, y: Double): Boolean = {
+    val angle = atan2(x,y)
+    val length = 0.5 * (max(abs(x), abs(y)) + sqrt(pow(x,2) + pow(y,2)))
+
+    val threshold: Boolean = abs(angle - dipAngle) < dipWidth ||
+      abs(angle - dipAngle + 2 * Pi) < dipWidth ||
+      abs(angle - dipAngle - 2 * Pi) < dipWidth
+
+    val r1 = if (threshold) 0.2 else 0.5 + 0.4 * sin(startAngle + bumps * angle + cos((bumps + 3) * angle))
+    val r2 = if (threshold) 0.2 else 0.7 - 0.2 * sin(startAngle + bumps * angle - sin((bumps + 2) * angle))
+
+    !(length < r1 || (length > r1 * factor && length < r2))
+  }
 }

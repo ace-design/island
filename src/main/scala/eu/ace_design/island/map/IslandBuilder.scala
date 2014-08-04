@@ -88,26 +88,34 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
   val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
-    info("IdentifyWaterArea / Annotating vertices")
+    info("IdentifyWaterArea / Creating the shape")
     val isWaterVertex = shape.isWater _
     val pRefs = m.mesh.vertices.queryReferences(isWaterVertex) // Find all the vertices matching the given shape
-    val vProps = m.vertexProps bulkAdd (pRefs -> IsWater())
 
     info("IdentifyWaterArea / Annotating faces")
     val isWaterFace: Face => Boolean = { f =>
       val ref = m.mesh.faces(f).get
       val isBorder = m.faceProps.check(ref, IsBorder())
       val vertices = f.vertices(m.mesh.edges)
-      val waterVertices = vertices filter { pRef => vProps.check(pRef, IsWater()) }
+      val waterVertices = vertices filter { r => pRefs.contains(r) }
       val isGreaterThanThreshold = (waterVertices.size.toFloat / vertices.size) * 100 > threshold
       isBorder || isGreaterThanThreshold
     }
     val waterFaceRefs = m.mesh.faces.queryReferences(isWaterFace)
     val landFaceRefs = m.mesh.faces.references diff waterFaceRefs
-
     debug("Faces tagged as water: " + waterFaceRefs.toSeq.sorted.mkString("(",",",")"))
     debug("Faces tagged as land: " + landFaceRefs.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (waterFaceRefs -> IsWater()) bulkAdd (landFaceRefs -> !IsWater())
+
+    info("IdentifyWaterArea / Annotating vertices based on faces")
+    // Interesting vertices are all the vertices not used as the center of a given face.
+    val exceptCenters = m.mesh.vertices.references diff (m.mesh.faces.values map { _.center })
+    // Land vertices are the one involved in a land faces. All the other are water
+    val landVertices = (landFaceRefs map { m.mesh.faces(_).vertices(m.mesh.edges) }).flatten
+    val waterVertices = exceptCenters diff landVertices
+    // Others are water (excepting the centers of the faces)
+    val vProps = m.vertexProps bulkAdd (waterVertices -> IsWater()) bulkAdd (landVertices -> !IsWater())
+
     m.copy(vertexProps = vProps, faceProps = fProps)
   }
 }
@@ -134,7 +142,7 @@ object IdentifyLakesAndOcean extends Process with Logger {
   }
 
   /**
-   * Returns the ste of references to the faces holding a given property
+   * Returns the set of references to the faces holding a given property
    * @param m the map containing the faces
    * @param prop the property one is looking for
    * @return the set of integer references for such faces
@@ -185,6 +193,15 @@ object IdentifyCoastLine extends Process with Logger {
 
     debug("Faces tagged as coastline: " + coast.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (coast -> IsCoast())
-    m.copy(faceProps = fProps)
+
+    info("IdentifyCoastLine / Annotating vertices")
+    // coast vertices are involved in both coast and ocean faces
+    val verticesInvolvedInOceanFaces = (oceans map { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten
+    val verticesInvolvedInCoastFaces = (coast map  { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten
+    val coastVertices = verticesInvolvedInCoastFaces & verticesInvolvedInOceanFaces
+    debug("Vertices tagged as coastline: " + coastVertices.toSeq.sorted.mkString("(",",",")"))
+    val vProps = m.vertexProps bulkAdd (coastVertices -> IsCoast())
+
+    m.copy(faceProps = fProps, vertexProps = vProps)
   }
 }
