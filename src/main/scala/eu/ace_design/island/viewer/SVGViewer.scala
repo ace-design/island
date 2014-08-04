@@ -1,46 +1,7 @@
 package eu.ace_design.island.viewer
 
-
-import eu.ace_design.island.map._
-import eu.ace_design.island.util._
 import java.io.File
-
-
-/**
- * A viewer is an element used to represent a Mesh, processing it into a viewable file
- */
-trait Viewer extends Logger {
-
-  val silo = LogSilos.VIEWER
-
-  /**
-   * A viewer produces files with a given extension, usually compatible with external viewers.
-   * @return the extension to be used
-   */
-  def extension: String
-
-  /**
-   * The MIME type used by this viewer (for the processed output file)
-   * @return  a valid MIME type
-   */
-  def mimeType: String
-  /**
-   * A viewer is a function, transforming an IslandMap into a viewable file.
-   * Thus, we use Scala syntactic sugar to support it
-   *
-   * @param m the map one wants to visualize
-   * @return a File containing the associated representation
-   */
-  def apply(m: IslandMap): File
-
-  /**
-   * Protected method used to generate a temporary file as an output
-   * @return
-   */
-  protected def initOutput: File = File.createTempFile("island-viewer-", "."+extension)
-
-}
-
+import eu.ace_design.island.map._
 
 /**
  * The SVG viewer relies on the Apache Batik library (SVG) and the JTS library (to compute the convex hull of a face)
@@ -139,13 +100,13 @@ class SVGViewer extends Viewer  {
     import ExistingWaterKind._
 
     val background = if(props.contains(WaterKind(OCEAN)))
-        Colors.DARK_BLUE
-      else if(props.contains(WaterKind(LAKE)))
-        Colors.LIGHT_BLUE
-      else if (props.contains(IsCoast()))
-        Colors.LIGHT_SAND
-      else
-        Colors.WHITE
+      Colors.DARK_BLUE
+    else if(props.contains(WaterKind(LAKE)))
+      Colors.LIGHT_BLUE
+    else if (props.contains(IsCoast()))
+      Colors.LIGHT_SAND
+    else
+      Colors.WHITE
 
     val border = Colors.BLACK
     (background, border)
@@ -233,33 +194,4 @@ class SVGViewer extends Viewer  {
     svg2D.stream(result.getAbsolutePath, true) // true means "use CSS".
     result
   }
-}
-
-class PDFViewer extends Viewer {
-  import org.apache.batik.apps.rasterizer.{DestinationType, SVGConverter}
-
-  override val extension: String = "pdf"
-  override val mimeType: String = "application/pdf"
-
-  override def apply(m: IslandMap): File = {
-    val result = initOutput
-
-    // We first create an SVG file with the SVG viewer:
-    val svgFile = (new SVGViewer())(m)
-
-    // We leverage the Batik rasterizer
-    val converter = new SVGConverter()
-    converter.setDestinationType(DestinationType.PDF)
-    converter.setSources(Array(svgFile.getAbsolutePath))
-    converter.setDst(result)
-
-    // Running the converter and eventually returning the result
-    // Batik has a f*cking System.out.println() instruction in its source => ugly patch
-    info("Converting SVG to PDF")
-    System.setOut(new java.io.PrintStream(new java.io.ByteArrayOutputStream()))
-    converter.execute()
-    System.setOut(new java.io.PrintStream(new java.io.FileOutputStream(java.io.FileDescriptor.out)))
-    result
-  }
-
 }
