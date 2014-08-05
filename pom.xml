@@ -183,6 +183,7 @@
                             <args>
                                 <arg>-deprecation</arg>
                                 <arg>-dependencyfile</arg>
+                                <arg>-feature</arg>
                                 <arg>${project.build.directory}/.scala_dependencies</arg>
                             </args>
                         </configuration>
