@@ -10,6 +10,7 @@ import eu.ace_design.island.viewer._
  * @author mosser (05/08/2014, 14:43)
  **/
 trait DiSLand {
+  import scala.language.implicitConversions
 
   // TODO fix issue in size propagation
   private object defaults {
