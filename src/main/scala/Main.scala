@@ -31,6 +31,7 @@ object Main extends App with Logger {
 
   // Instantiate an Island Builder, and build the map on the previously created mesh
   val mapBuilder = new IslandBuilder {
+    import processes._
     //final val ISLAND_SHAPE = DiskShape(size, size.toDouble/2 * 0.85)
     //final val ISLAND_SHAPE = DonutShape(size, size.toDouble/2 * 0.85, size.toDouble/2 * 0.20)
     final val ISLAND_SHAPE = RadialShape(size, 1.87)
