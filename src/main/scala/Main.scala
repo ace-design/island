@@ -8,8 +8,8 @@ object Main extends App with Logger {
 
   val silo = LogSilos.ROOT
 
-  final val OUTPUT_FILE = "./map.pdf"
-  final val size = Sizes.MEDIUM
+  final val OUTPUT_FILE = "./map"
+  final val size = Sizes.SMALL
 
   final val MAP_SIZE = size._1
   final val NB_FACES = size._2
@@ -45,7 +45,11 @@ object Main extends App with Logger {
   info("Starting the transformation into PDF")
   val transformer = new PDFViewer()
   val result = transformer(map)
-  result.renameTo(new java.io.File(OUTPUT_FILE))
+  result.renameTo(new java.io.File(OUTPUT_FILE+".pdf"))
+
+  val toOBJ = new OBJViewer()
+  val objfile = toOBJ(map)
+  objfile.renameTo(new java.io.File(OUTPUT_FILE+".obj"))
 
   info("PDF file generated!")
 }
