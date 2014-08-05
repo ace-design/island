@@ -23,7 +23,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
     val xml = scala.xml.XML.loadFile(file)
 
     "use 'svg' as extension" in { toSVG.extension must_== "svg" }
-    "process a mesh into a file" in {
+    "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
@@ -45,12 +45,25 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
     val toPDF = new PDFViewer()
     val file = toPDF(map)
     "use 'pdf' as extension" in { toPDF.extension must_== "pdf" }
-    "process a mesh into a file" in {
+    "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as a PDF" in {
       tika.detect(file.getAbsolutePath) must_== toPDF.mimeType
+    }
+  }
+
+  "The OBJ viewer" should {
+    val toObj = new OBJViewer()
+    val file = toObj(map)
+    "uses obj as extension" in { toObj.extension must_== "obj" }
+    "process a map into a file" in {
+      file must beAFile
+      file must beReadable
+    }
+    "create a file recognized as a plain text" in {
+      tika.detect(file.getAbsolutePath) must_== toObj.mimeType
     }
   }
 }
