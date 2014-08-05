@@ -4,6 +4,9 @@ import eu.ace_design.island.viewer._
 import eu.ace_design.island.util.{LogSilos, Logger}
 
 
+
+
+
 object Main extends App with Logger {
 
   val silo = LogSilos.ROOT
