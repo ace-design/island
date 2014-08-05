@@ -1,5 +1,6 @@
 package eu.ace_design.island.viewer
 
+import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.IslandMap
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
@@ -57,6 +58,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "The OBJ viewer" should {
     val toObj = new OBJViewer()
     val file = toObj(map)
+    val contents = scala.io.Source.fromFile(file).getLines().toSeq
     "uses obj as extension" in { toObj.extension must_== "obj" }
     "process a map into a file" in {
       file must beAFile
@@ -64,6 +66,21 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
     }
     "create a file recognized as a plain text" in {
       tika.detect(file.getAbsolutePath) must_== toObj.mimeType
+    }
+    "contain each stored vertex" in {
+      def isValid(data: Seq[String]) = {  // v $x $y $z
+        data must haveSize(4)
+        data(0) must_== "v"
+        map.mesh.vertices(Point(data(1).toDouble, data(2).toDouble)) must beSome
+      }
+      val vertices = contents filter { s => s.startsWith("v") }
+      vertices foreach { s => isValid(s.split(" ")) }
+      vertices must haveSize(map.mesh.vertices.size)
+    }
+    "contain the same number of faces" in {
+      // WARNING this test is an over simplification of what should be done (check the contents of each face)
+      val faces = contents filter { s => s.startsWith("f") }
+      faces must haveSize(map.mesh.faces.size)
     }
   }
 }
