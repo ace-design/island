@@ -20,5 +20,6 @@ project/plugins/project/
 .idea/
 *.iml
 *.iws
-sandbox.sc
+*.sc
 *.pdf
+*.obj
