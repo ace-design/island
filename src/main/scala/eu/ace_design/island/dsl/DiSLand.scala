@@ -14,10 +14,7 @@ trait DiSLand {
   import scala.language.implicitConversions
 
 
-  /**
-   * This keyword initialise a default configuration for a map
-   * @return
-   */
+  // This keyword initialise a default configuration for a map
   def createIsland = Configuration()
 
   /**
@@ -27,12 +24,13 @@ trait DiSLand {
    */
   implicit protected def config2map(c: Configuration): IslandMap = c.toMap
 
-  type PointGeneratorDirective = (Int,Int) => Set[Point]
+
+  protected type PointGeneratorDirective = (Int,Int) => Set[Point]
   protected val smoothly: PointGeneratorDirective = (size, faces) => (new RelaxedRandomGrid(size))(faces)
   protected val randomly: PointGeneratorDirective = (size, faces) => (new RandomGrid(size))(faces)
   protected val squarely: PointGeneratorDirective = (size, faces) => (new SquaredGrid(size))(faces)
 
-  type ShapeDirective = (Int, Int) => Process
+  protected type ShapeDirective = (Int, Int) => Process
   protected def disk(surface: Percentage): ShapeDirective = (size, threshold) => {
     IdentifyWaterArea(new DiskShape(size, size.toDouble/2 * surface.value), threshold)
   }
@@ -82,14 +80,9 @@ trait DiSLand {
         override def size: Int = mapSize
         override protected val steps: Seq[Process] = shape(mapSize, waterThreshold) +: process
       }
-      val map = mapBuilder(mesh)
-      map
+      mapBuilder(mesh)
     }
-
   }
-
-  // val out = outputFormat(map)
-  // out.renameTo(new java.io.File(outputFile+"."+outputFormat.extension))
 
   /**
    * Syntactic sugar to supports construction such as 100.faces
@@ -107,7 +100,19 @@ trait DiSLand {
   protected val svg = new SVGViewer()
   protected val obj = new OBJViewer()
 
+  protected type OutputFileFormatter = IslandMap => (String, java.io.File)
+  implicit def stringToEnrichedString(s: String) = new EnrichedString(s)
+  protected class EnrichedString(s: String) {
+    def as(viewer: Viewer): OutputFileFormatter  = (map) => (s"$s.${viewer.extension}", viewer(map))
+  }
 
+  implicit def islandMapToEnrichedIslandMap(m: IslandMap) = new EnrichedIslandMap(m)
+  protected class EnrichedIslandMap(map: IslandMap) {
+    def ->(out: IslandMap => (String, java.io.File)) {
+      val result = out(map)
+      result._2.renameTo(new java.io.File(result._1))
+    }
+  }
 
 
 }
