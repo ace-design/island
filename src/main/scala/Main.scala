@@ -9,6 +9,7 @@ object Main extends App with Logger {
   val silo = LogSilos.ROOT
 
   final val OUTPUT_FILE = "./map.pdf"
+
   final val size = Sizes.MEDIUM
 
   final val MAP_SIZE = size._1
