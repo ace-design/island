@@ -1,7 +1,7 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.geom.{Face, Point}
-import eu.ace_design.island.map.{IsBorder, IslandMap}
+import eu.ace_design.island.map.{IsBorder, IsWater, IslandMap}
 import eu.ace_design.island.util.{LogSilos, Logger}
 
 /**
@@ -25,7 +25,7 @@ object IdentifyBorders extends Process with Logger {
     debug("Faces tagged as border: " + borderFaces.toSeq.sorted.mkString("(",",",")") )
 
     // Update the properties for the identified faces
-    m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
+    m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) bulkAdd (borderFaces -> IsWater()))
   }
 
 }

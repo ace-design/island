@@ -10,7 +10,7 @@ object Main extends App with Logger with DiSLand {
 
   val silo = LogSilos.ROOT
 
-  val small = createIsland withSize 400 having 400.faces
+  val small = createIsland shapedAs disk(surface= 80.percent) withSize 400 having 800.faces
   export(small)
 
   val medium = createIsland shapedAs radial(factor = 1.37) withSize 800 having 600.faces

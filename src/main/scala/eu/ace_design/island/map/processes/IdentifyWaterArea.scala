@@ -15,7 +15,7 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
   require(threshold >= 0, "threshold must be in [0,100]")
   require(threshold <= 100, "threshold must be in [0,100]")
 
-  val silo = LogSilos.MAP_GEN
+  override val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
     info("IdentifyWaterArea / Creating the shape")
@@ -25,11 +25,9 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
     info("IdentifyWaterArea / Annotating faces")
     val isWaterFace: Face => Boolean = { f =>
       val ref = m.mesh.faces(f).get
-      val isBorder = m.faceProps.check(ref, IsBorder())
       val vertices = f.vertices(m.mesh.edges)
       val waterVertices = vertices filter { r => pRefs.contains(r)}
-      val isGreaterThanThreshold = (waterVertices.size.toFloat / vertices.size) * 100 > threshold
-      isBorder || isGreaterThanThreshold
+      (waterVertices.size.toFloat / vertices.size) * 100 > threshold
     }
     val waterFaceRefs = m.mesh.faces.queryReferences(isWaterFace)
     val landFaceRefs = m.mesh.faces.references diff waterFaceRefs
@@ -37,20 +35,26 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
     debug("Faces tagged as land: " + landFaceRefs.toSeq.sorted.mkString("(", ",", ")"))
     val fProps = m.faceProps bulkAdd (waterFaceRefs -> IsWater()) bulkAdd (landFaceRefs -> !IsWater())
 
-    info("IdentifyWaterArea / Annotating vertices based on faces")
-    // Interesting vertices are all the vertices not used as the center of a given face.
-    val exceptCenters = m.mesh.vertices.references diff (m.mesh.faces.values map {
-      _.center
-    })
-    // Land vertices are the one involved in a land faces. All the other are water
-    val landVertices = (landFaceRefs map {
-      m.mesh.faces(_).vertices(m.mesh.edges)
-    }).flatten
-    val waterVertices = exceptCenters diff landVertices
-    // Others are water (excepting the centers of the faces)
-    val vProps = m.vertexProps bulkAdd (waterVertices -> IsWater()) bulkAdd (landVertices -> !IsWater())
-
-    m.copy(vertexProps = vProps, faceProps = fProps)
+    m.copy(faceProps = fProps)
   }
 }
 
+
+object AlignVertexWaterBasedOnFaces extends Process with Logger {
+
+  override val silo = LogSilos.MAP_GEN
+
+  override def apply(m: IslandMap): IslandMap = {
+    info("IdentifyWaterArea / Annotating vertices based on faces")
+    // Interesting vertices are all the vertices not used as the center of a given face.
+    val exceptCenters = m.mesh.vertices.references diff (m.mesh.faces.values map { _.center })
+    val landFaceRefs = m.faceProps.project(m.mesh.faces)(Set(IsWater(false))) map { f => m.mesh.faces(f).get }
+    // Land vertices are the one involved in a land faces. All the other are water
+    val landVertices = (landFaceRefs map { idx: Int => m.mesh.faces(idx).vertices(m.mesh.edges) }).flatten
+    val waterVertices = exceptCenters diff landVertices
+    // Others are water (excepting the centers of the faces)
+    val vProps = m.vertexProps bulkAdd (waterVertices -> IsWater()) bulkAdd (landVertices -> !IsWater())
+    m.copy(vertexProps = vProps)
+
+  }
+}

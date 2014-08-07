@@ -53,11 +53,13 @@ trait DiSLand {
   }
 
   // Syntactic sugar to access builder processes as keywords
-  protected val borders: Process        = IdentifyBorders
-  protected val lakesAndOceans: Process = IdentifyLakesAndOcean
-  protected val coastLine: Process      = IdentifyCoastLine
+  protected val borders: Process            = IdentifyBorders
+  protected val lakesAndOceans: Process     = IdentifyLakesAndOcean
+  protected val coastLine: Process          = IdentifyCoastLine
+  protected val alignWaterVertices: Process = AlignVertexWaterBasedOnFaces
+
   // the default process used to build island
-  protected val defaultProcess = Seq(borders, lakesAndOceans, coastLine)
+  protected val defaultProcess = Seq(borders, alignWaterVertices, lakesAndOceans, coastLine)
 
   /**
    * A configuration contains all the information (variation point configuration) needed to build a Map
