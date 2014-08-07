@@ -115,6 +115,12 @@
             <artifactId>log4j-core</artifactId>
             <version>2.0</version>
         </dependency>
+        <!-- JSON is used for serialization purpose and game interaction with the players -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20140107</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>

@@ -83,6 +83,20 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
       faces must haveSize(map.mesh.faces.size)
     }
   }
+
+
+  "the JSON viewer" should {
+    val toJson = new JsonViewer()
+    val file = toJson(map)
+    "use json as extension" in { toJson.extension must_== "json" }
+    "process a map into a file" in {
+      file must beAFile
+      file must beReadable
+    }
+    "create a file recognized as a json" in {
+      tika.detect(file.getAbsolutePath) must_== toJson.mimeType
+    }
+  }
 }
 
 /**
