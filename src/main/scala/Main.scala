@@ -12,13 +12,13 @@ object Main extends App with Logger with DiSLand {
 
 
   val small = createIsland shapedAs disk(surface= 80.percent) withSize 400 having 800.faces
-  //export(small)
+  export(small)
 
   val medium = createIsland shapedAs radial(factor = 1.37) withSize 800 having 600.faces
   //export(medium)
 
   val large = createIsland shapedAs radial(factor = 1.50) withSize 2048 having 4096.faces
-  export(large)
+  //export(large)
 
 
   private def export(m: IslandMap, name: String = "./map") {
