@@ -12,6 +12,7 @@ object Main extends App with Logger with DiSLand {
   // Creating the map
   val medium: IslandMap = createIsland shapedAs radial(factor = 1.37) withSize 800 having 600.faces
   medium -> ("./map" as pdf)
+  medium -> ("./map" as obj)
 
 }
 
