@@ -10,4 +10,20 @@ It leverages [map generation techniques](http://www-cs-students.stanford.edu/~am
 
 This game is developed at Université Nice-Sophia Antipolis, and used in the Polytech'Nice Sophia curriculum. From a research point of view, it is also exploited to support the teaching of variability modelling at the graduate level. 
 
-Continuous integration is supported by [Drone.io](https://drone.io/github.com/ace-design/island/latest).
+#### Technical Information
+
+Continuous integration is supported by [Drone.io](https://drone.io/github.com/ace-design/island/latest). Build is handled by [Maven](http://maven.apache.org/). The main engine is written in [Scala](http://www.scala-lang.org/), and tested on Java 8. Units tests are written using the [Specs2](http://etorreborre.github.io/specs2/) framework.
+
+#### Compiling the engine
+
+Simply `clone` the git repository, and use `mvn package` to build the JAR file. The `Main.scala` file shows several example for map generation.
+
+#### Contributors
+
+* Antoine Pultier, SINTEF (Web GUI design and implementation)
+
+#### References, sources
+
+* [Polygonal Map Generation for Games](http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/)
+* [Génération procédurale de cartes #1](http://linuxfr.org/news/je-cree-mon-jeu-video-e10-generation-procedurale-de-carte-partie-1) (FR)
+* [Génération procédurale de cartes #2](http://linuxfr.org/news/je-cree-mon-jeu-video-e11-generation-procedurale-de-carte-partie-2) (FR)
