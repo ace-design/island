@@ -32,6 +32,8 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
    */
   def get(idx: Int): Set[Property[_]] = _contents.getOrElse(idx, Set())
 
+  def references: Set[Int] = _contents.keys.toSet
+
   /**
    * Add a property to a given index, in a functional way.
    *
@@ -148,6 +150,6 @@ object ExistingWaterKind extends Enumeration {
 }
 
 case class IsCoast(override val value: Boolean = true) extends Property[Boolean] {
-override val key = "isCoast?"
-def unary_!() = IsCoast(value = ! this.value)
+  override val key = "isCoast?"
+  def unary_!() = IsCoast(value = ! this.value)
 }
