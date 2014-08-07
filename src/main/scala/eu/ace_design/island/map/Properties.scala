@@ -126,12 +126,12 @@ object PropertySet { def apply() = new PropertySet(Map()) }
  *********************************************/
 
 case class IsBorder(override val value: Boolean = true) extends Property[Boolean] {
-  override val key = "isBorder?"
+  override val key = "isBorder"
   def unary_!() = IsBorder(value = ! this.value)
 }
 
 case class IsWater(override val value: Boolean = true) extends Property[Boolean] {
-  override val key = "isWater?"
+  override val key = "isWater"
   def unary_!() = IsWater(value = ! this.value)
 }
 
@@ -150,6 +150,6 @@ object ExistingWaterKind extends Enumeration {
 }
 
 case class IsCoast(override val value: Boolean = true) extends Property[Boolean] {
-  override val key = "isCoast?"
+  override val key = "isCoast"
   def unary_!() = IsCoast(value = ! this.value)
 }
