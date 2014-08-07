@@ -10,7 +10,7 @@ object IdentifyCoastLine extends processes.Process with Logger {
   val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
-    info("IdentifyCoastLine / Annotating faces")
+    info("Annotating faces")
     val finder = m.faceProps.project(m.mesh.faces) _
     val oceans = finder(Set(WaterKind(ExistingWaterKind.OCEAN))) map { m.mesh.faces(_).get }
     val land = finder(Set(!IsWater()))
@@ -19,7 +19,7 @@ object IdentifyCoastLine extends processes.Process with Logger {
     debug("Faces tagged as coastline: " + coast.toSeq.sorted.mkString("(",",",")"))
     val fProps = m.faceProps bulkAdd (coast -> IsCoast())
 
-    info("IdentifyCoastLine / Annotating vertices")
+    info("Annotating vertices")
     // coast vertices are involved in both coast and ocean faces
     val verticesInvolvedInOceanFaces = (oceans map { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten
     val verticesInvolvedInCoastFaces = (coast map  { r => m.mesh.faces(r).vertices(m.mesh.edges)  }).flatten

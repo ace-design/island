@@ -14,7 +14,7 @@ object IdentifyLakesAndOcean extends processes.Process with Logger {
   val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
-    info("IdentifyLakesAndOcean / Annotating faces")
+    info("Annotating faces")
     val borders = getRefs(m, IsBorder())
     val oceans = propagate(borders, m.faceProps, m.mesh.faces, IsWater())
     val water = getRefs(m, IsWater())

@@ -13,7 +13,7 @@ object IdentifyBorders extends Process with Logger {
   val silo = LogSilos.MAP_GEN
 
   override def apply(m: IslandMap): IslandMap = {
-    info("IdentifyBorders / Annotating faces")
+    info("Annotating faces")
     // Extract the points located on the map border
     val isBorderValue: Double => Boolean = { d => d <= 0 || d >= m.mesh.size.get }
     val isBorderVertex: Point => Boolean = { p => isBorderValue(p.x) || isBorderValue(p.y)  }
