@@ -4,7 +4,6 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.IslandMap
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
-import java.nio.file.{Path, Files, Paths}
 
 
 class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatchers {
@@ -81,6 +80,20 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
       // WARNING this test is an over simplification of what should be done (check the contents of each face)
       val faces = contents filter { s => s.startsWith("f") }
       faces must haveSize(map.mesh.faces.size)
+    }
+  }
+
+
+  "the JSON viewer" should {
+    val toJson = new JsonViewer()
+    val file = toJson(map)
+    "use json as extension" in { toJson.extension must_== "json" }
+    "process a map into a file" in {
+      file must beAFile
+      file must beReadable
+    }
+    "create a file recognized as a json" in {
+      tika.detect(file.getAbsolutePath) must_== toJson.mimeType
     }
   }
 }
