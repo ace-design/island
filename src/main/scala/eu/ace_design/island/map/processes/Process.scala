@@ -1,13 +1,16 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.util.{LogSilos, Logger}
 
 /**
  * A process works on a map to produce an updated map, based on its semantics. To be used as a Step in a builder.
  *
  * Remark: This trait is sealed, and cannot be implemented outside of this file.
  */
-trait Process {
+trait Process extends Logger {
+
+  override val silo = LogSilos.MAP_GEN
 
   /**
    * This function literally apply this steps on a given map, producing a new one that contains the properties

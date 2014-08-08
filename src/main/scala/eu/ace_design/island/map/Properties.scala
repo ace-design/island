@@ -98,6 +98,15 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
     (concerned map { reg(_) }).toSet
   }
 
+
+  def getValue[T](ref: Int, p: Property[T]): T = _contents.get(ref) match {
+    case None => throw new IllegalArgumentException("ref must exists!")
+    case Some(existing) => existing find { e => e.key == p.key} match {
+      case None =>  throw new IllegalArgumentException("No value stored for this property")
+      case Some(prop) => prop.asInstanceOf[Property[T]].value
+    }
+  }
+
   /**
    * Two property sets are equals if their underlying maps are equals
    * @param other the object to check equality with

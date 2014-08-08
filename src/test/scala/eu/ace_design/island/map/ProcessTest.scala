@@ -1,6 +1,6 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.geom.{MeshBuilder, SquaredGrid}
+import eu.ace_design.island.geom.{MeshBuilder, SquaredGrid, Point}
 import eu.ace_design.island.map.processes._
 import org.specs2.mutable._
 
@@ -19,10 +19,15 @@ class ProcessTest extends SpecificationWithJUnit {
   val entry = IslandMap(mesh)
 
   "The IdentifyBorders process" should {
+    val updated = IdentifyBorders(entry)
     "annotate with IsBorder the faces that touch the external boundary" in {
-      val updated = IdentifyBorders(entry)
-      updated.vertexProps.size must_== 0
       updated.faceProps.size must_== 4 * (math.sqrt(FACES).toInt - 1)
+    }
+    "annotate as border the points that touches the edge of the map" in {
+      val borderPoints = updated.vertexProps.project(updated.mesh.vertices)(Set(IsBorder()))
+      val check = (p: Point) => p.x == 0 || p.x == updated.mesh.size.get || p.y == 0 || p.y == updated.mesh.size.get
+      borderPoints foreach { check(_) must beTrue }
+      updated.vertexProps.size must beGreaterThan(0)
     }
   }
 

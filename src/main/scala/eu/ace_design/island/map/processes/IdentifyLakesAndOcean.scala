@@ -8,10 +8,9 @@ import eu.ace_design.island.util.{LogSilos, Logger}
  * A face is considered as an ocean one if it is a water face connected to the borders of the map. Lakes are faces
  * identified as water but not as ocean.
  */
-object IdentifyLakesAndOcean extends processes.Process with Logger {
-  import ExistingWaterKind.{OCEAN, LAKE}
+object IdentifyLakesAndOcean extends Process {
 
-  val silo = LogSilos.MAP_GEN
+  import ExistingWaterKind.{OCEAN, LAKE}
 
   override def apply(m: IslandMap): IslandMap = {
     info("Annotating faces")

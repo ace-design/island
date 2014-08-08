@@ -6,8 +6,7 @@ import eu.ace_design.island.util.{LogSilos, Logger}
 /**
  * A face is considered as a coast if it is a land one which is connected to at least one ocean face.
  */
-object IdentifyCoastLine extends processes.Process with Logger {
-  val silo = LogSilos.MAP_GEN
+object IdentifyCoastLine extends Process {
 
   override def apply(m: IslandMap): IslandMap = {
     info("Annotating faces")
