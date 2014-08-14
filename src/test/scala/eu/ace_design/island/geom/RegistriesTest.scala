@@ -133,6 +133,14 @@ class RegistriesTest extends SpecificationWithJUnit {
       eReg.values  must contain(e1,e2,e3).exactly
       eRegP.values must_== Set(e4)
     }
+    "support the definition of an adjacency relationship" in {
+      def checkTriangle(p: Point, ps: (Point, Point)) = {
+        eReg getAdjacencyFor vRegP(p).get must containTheSameElementsAs(Seq(vRegP(ps._1).get,vRegP(ps._2).get))
+      }
+      checkTriangle(p3, (p4,p5))
+      checkTriangle(p4, (p3,p5))
+      checkTriangle(p5, (p4,p3))
+    }
   }
 
   "A Face Registry" should {

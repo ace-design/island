@@ -7,6 +7,14 @@ import eu.ace_design.island.util.{LogSilos, Logger}
 /**
  * A face is considered as an ocean one if it is a water face connected to the borders of the map. Lakes are faces
  * identified as water but not as ocean.
+ *
+ * Pre-conditions:
+ *   - Faces touching the edge of the map are identified as "IsBorder(true)"
+ *   - Faces are identified as "IsWater(b)", with b in {true, false}.
+ *
+ * Post-conditions:
+ *   - Water faces connected to the border by a path are annotated as "WaterKind(OCEAN)"
+ *   - Water faces which are not ocean ones are annotated as "WaterKind(LAKE)"
  */
 object IdentifyLakesAndOcean extends Process {
 

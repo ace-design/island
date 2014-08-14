@@ -4,9 +4,15 @@ import eu.ace_design.island.geom.{Face, Point}
 import eu.ace_design.island.map.{IsBorder, IsWater, IslandMap}
 
 /**
- * This process identify the faces considered as "borders", i.e., touching the external boundaries of the map
+ * This process identify the faces considered as "borders", i.e., touching the external boundaries of the map. As we
+ * are building an island, border faces are also considered as Water faces.
  *
- * It annotates the faces with the IsBorder property
+ * Pre-conditions:
+ *   - None
+ *
+ * Post-conditions:
+ *   - Border faces that touches the edge of the map are annotated as IsBorder(true). Others are not impacted
+ *   - Vertices touching the edge of the map are annotated as IsBorder(true). Others are not impacted.
  */
 object IdentifyBorders extends Process  {
 

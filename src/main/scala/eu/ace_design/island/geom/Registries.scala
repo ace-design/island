@@ -104,12 +104,12 @@ class EdgeRegistry private (override protected val _contents: Map[Edge, Int]= Ma
   def +(r: EdgeRegistry): EdgeRegistry = new EdgeRegistry(appendToContents(r._contents))
 
   /**
-   * Compute the adjacent vertex for a givne one. A vertex v' is adjacent to a vertex v since an edge involving
+   * Compute the adjacent vertices for a given one. A vertex v' is adjacent to a vertex v since an edge involving
    * v and v' exists.
    * @param pRef the point to check
    * @return the set of adjacent vertices
    */
-  def adjacents(pRef: Int): Set[Int] = {
+  def getAdjacencyFor(pRef: Int): Set[Int] = {
     val matched = _contents.par filter { case (edge, ref) => edge involves pRef } map { case (e,r) => e }
     (matched map { e => Seq(e.p1, e.p2) }).flatten.seq.toSet - pRef
   }
@@ -119,7 +119,7 @@ class EdgeRegistry private (override protected val _contents: Map[Edge, Int]= Ma
 object EdgeRegistry { def apply() = new EdgeRegistry(Map()) }
 
 /**
- *
+ * A face registry stores all the faces used in this map
  * @param _contents
  */
 class FaceRegistry private(override protected val _contents: Map[Face, Int]= Map()) extends Registry[Face] {
