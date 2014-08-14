@@ -106,13 +106,24 @@ class ProcessTest extends SpecificationWithJUnit {
   }
 
   "The IdentifyCoastLine process" should {
-    val shaper = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+    val preconditions : IslandMap => IslandMap = { m =>
+      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+      IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts,30)(IdentifyBorders(m))))
+    }
+    val updated = IdentifyCoastLine(preconditions(entry))
 
     "annotate land faces with an IsCoast tag" in {
-      val map = IdentifyCoastLine(shaper(entry))
-      val finder = map.faceProps.project(map.mesh.faces) _
+      val finder = updated.faceProps.project(updated.mesh.faces) _
       val land = finder(Set(!IsWater()))
       val coast = finder(Set(IsCoast()))
+      coast must not(beEmpty)
+      (coast & land) must_== coast
+    }
+    "Annotate land vertices with the IsCoast tag" in {
+      val finder = updated.vertexProps.project(updated.mesh.vertices) _
+      val coast = finder(Set(IsCoast()))
+      val land = finder(Set(!IsWater()))
+      coast must not(beEmpty)
       (coast & land) must_== coast
     }
   }

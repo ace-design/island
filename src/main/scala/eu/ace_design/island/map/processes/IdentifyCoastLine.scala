@@ -4,7 +4,17 @@ import eu.ace_design.island.map._
 import eu.ace_design.island.util.{LogSilos, Logger}
 
 /**
- * A face is considered as a coast if it is a land one which is connected to at least one ocean face.
+ * A face is considered as a coast if it is a land one which is connected to at least one ocean face. A vertex is a
+ * coast one if it is involved in both a land face and an ocean one.
+ *
+ * Pre-conditions:
+ *   - Faces are annotated as IsWater(b) (b in {true, false}) and WaterKind(OCEAN)
+ *   - Vertices are aligned with the face annotations
+ *
+ * Post-conditions:
+ *   - Faces identified as coast ones are annotated as IsCoast(true). (others not impacted)
+ *   - Vertices identified as coast are annotated as IsCoast(true). (others not impacted)
+ *
  */
 object IdentifyCoastLine extends Process {
 
