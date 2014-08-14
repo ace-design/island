@@ -19,7 +19,7 @@ class ProcessTest extends SpecificationWithJUnit {
   val entry = IslandMap(mesh)
 
   "The IdentifyBorders process" should {
-    val updated = IdentifyBorders(entry)
+    val updated = IdentifyBorders(entry)  // no pre-conditions
     val borderPoints = updated.vertexProps.project(updated.mesh.vertices)(Set(IsBorder()))
     val borderFaces  = updated.faceProps.project(updated.mesh.faces)(Set(IsBorder()))
 
@@ -55,22 +55,35 @@ class ProcessTest extends SpecificationWithJUnit {
 
   "The IdentifyWaterArea process" should {
     val process = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+    val updated = process(entry)   // no pre-conditions
 
     "annotate all the faces with IsWater properties" in {
-      val updated = process(entry)
       val props = updated.faceProps.project(updated.mesh.faces) _
       val waters = props(Set(IsWater()))
       val lands = props(Set(!IsWater()))
       waters ++ lands must_== mesh.faces.values
     }
+  }
 
-    "consider border as water areas" in {
-      val map = process(IdentifyBorders(entry))
-      val props = map.faceProps.project(map.mesh.faces) _
-      val borders = props(Set(IsBorder()))
-      val waters = props(Set(IsWater()))
-      borders & waters must_== borders
+  "The AlignVertexWaterBasedOnFaces process" should {
+    val precondition = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+    val updated = AlignVertexWaterBasedOnFaces(precondition(entry))
+    val fProps = updated.faceProps.project(updated.mesh.faces) _
+    //val vProps = updated.vertexProps.project(updated.mesh.vertices) _
+    "consider vertices involved in land faces as land" in {
+      val vertices = fProps(Set(!IsWater())) flatMap { _.vertices(updated.mesh.edges) }
+      vertices map { updated.vertexProps.check(_,!IsWater()) } must contain(beTrue)
     }
+    "align faces' center to their associated face" in {
+      val faces = fProps(Set(!IsWater()))
+      faces foreach { f =>
+        val ref = updated.mesh.faces(f).get
+        val faceVal = updated.faceProps.getValue(ref,IsWater())
+        updated.vertexProps.check(f.center, IsWater(faceVal)) must beTrue
+      }
+      true must beTrue
+    }
+
   }
 
   "The IdentifyLakesAndOcean process" should {

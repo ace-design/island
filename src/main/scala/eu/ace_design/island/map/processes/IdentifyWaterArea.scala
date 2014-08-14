@@ -55,7 +55,6 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
  *
  * Post-conditions:
  *   - Vertices involved in the borders of a land face are always considered as land (=> !IsWater())
- *   - Other vertices involved in borders are identified as water (=> IsWater)
  *   - Vertices involved in face centers are aligned with their related face
  */
 object AlignVertexWaterBasedOnFaces extends Process with Logger {
@@ -68,13 +67,17 @@ object AlignVertexWaterBasedOnFaces extends Process with Logger {
     val exceptCenters = m.mesh.vertices.references diff (m.mesh.faces.values map { _.center })
     val landFaceRefs = m.faceProps.project(m.mesh.faces)(Set(!IsWater())) map { f => m.mesh.faces(f).get }
     // Land vertices are the one involved in a land faces. All the other are water
-    val landVertices = (landFaceRefs map { idx: Int => m.mesh.faces(idx).vertices(m.mesh.edges) }).flatten
-    val waterVertices = exceptCenters diff landVertices
+    val landVertices = landFaceRefs flatMap { idx: Int => m.mesh.faces(idx).vertices(m.mesh.edges) }
     // Others are water (excepting the centers of the faces)
+    val waterVertices = exceptCenters diff landVertices
     debug("Vertices tagged as water: " + waterVertices.toSeq.sorted.mkString("(", ",", ")"))
     debug("Vertices tagged as land: " + landVertices.toSeq.sorted.mkString("(", ",", ")"))
     val vProps = m.vertexProps bulkAdd (waterVertices -> IsWater()) bulkAdd (landVertices -> !IsWater())
-    m.copy(vertexProps = vProps)
-
+    // aligning face centers with the surrounding face
+    val finalPSet = (vProps /: m.mesh.faces.values) { (acc, f) =>
+      val fVal =  m.faceProps.getValue(m.mesh.faces(f).get, IsWater()) // the value for this face
+      acc + (f.center -> IsWater(fVal))
+    }
+    m.copy(vertexProps = finalPSet)
   }
 }
