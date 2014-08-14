@@ -44,6 +44,13 @@ class ProcessTest extends SpecificationWithJUnit {
       otherPoints foreach { ref => updated.vertexProps.get(ref) must_== entry.vertexProps.get(ref) }
       true must beTrue // to return a spec fragment and thus allow compilation.
     }
+    "automatically consider border elements (faces and vertices) as water ones" in {
+      val faceRefs = borderFaces map { updated.mesh.faces(_).get }
+      val verticesRefs = borderPoints map { updated.mesh.vertices(_).get }
+      faceRefs foreach { updated.faceProps.check(_, IsWater()) must beTrue }
+      verticesRefs foreach { updated.vertexProps.check(_, IsWater()) must beTrue }
+      true must beTrue
+    }
   }
 
   "The IdentifyWaterArea process" should {

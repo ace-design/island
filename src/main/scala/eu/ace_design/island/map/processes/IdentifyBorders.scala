@@ -11,8 +11,10 @@ import eu.ace_design.island.map.{IsBorder, IsWater, IslandMap}
  *   - None
  *
  * Post-conditions:
- *   - Border faces that touches the edge of the map are annotated as IsBorder(true). Others are not impacted
- *   - Vertices touching the edge of the map are annotated as IsBorder(true). Others are not impacted.
+ *   - Border faces that touches the edge of the map are annotated as IsBorder(true) and IsWater(true).
+ *     Others are not impacted
+ *   - Vertices touching the edge of the map are annotated as IsBorder(true), and IsWater(true).
+ *     Others are not impacted.
  */
 object IdentifyBorders extends Process  {
 
@@ -30,7 +32,7 @@ object IdentifyBorders extends Process  {
 
     // Update the properties for the identified faces and vertices
     val fProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) bulkAdd (borderFaces -> IsWater())
-    val vProps = m.vertexProps bulkAdd(borderVertices -> IsBorder())
+    val vProps = m.vertexProps bulkAdd(borderVertices -> IsBorder()) bulkAdd (borderVertices -> IsWater())
     m.copy(faceProps = fProps, vertexProps = vProps)
   }
 
