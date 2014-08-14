@@ -135,7 +135,27 @@ class ProcessTest extends SpecificationWithJUnit {
   }
 
   "The DistanceToCoast process" should {
-
+    val preconditions: IslandMap => IslandMap = { m =>
+      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+      IdentifyCoastLine(IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))
+    }
+    val updated = MinimalDistanceToCoast(preconditions(entry))
+    val props = updated.vertexProps.project(updated.mesh.vertices) _
+    "consider coastal vertices as lowest distance (0)" in {
+      val coast = props(Set(IsCoast())) map {
+        updated.mesh.vertices(_).get
+      }
+      coast foreach {
+        updated.vertexProps.getValue(_, DistanceToCoast()) must_== 0
+      }
+      true must beTrue
+    }
+    "computes relative distances (in [0,1])" in {
+      val land = props(Set(!IsWater())) map { updated.mesh.vertices(_).get  }
+      val distances = land map { updated.vertexProps.getValue(_, DistanceToCoast()) }
+      distances foreach { d => d must beGreaterThanOrEqualTo(0.0) and (d must beLessThanOrEqualTo(1.0))} // d in [0,1]
+      true must beTrue
+    }
   }
 
   "The AssignElevation process" should {
