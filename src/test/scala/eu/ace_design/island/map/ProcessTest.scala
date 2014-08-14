@@ -20,14 +20,29 @@ class ProcessTest extends SpecificationWithJUnit {
 
   "The IdentifyBorders process" should {
     val updated = IdentifyBorders(entry)
+    val borderPoints = updated.vertexProps.project(updated.mesh.vertices)(Set(IsBorder()))
+    val borderFaces  = updated.faceProps.project(updated.mesh.faces)(Set(IsBorder()))
+
     "annotate with IsBorder the faces that touch the external boundary" in {
+      // This trick only work because we are using a grid-based generator
       updated.faceProps.size must_== 4 * (math.sqrt(FACES).toInt - 1)
     }
-    "annotate as border the points that touches the edge of the map" in {
-      val borderPoints = updated.vertexProps.project(updated.mesh.vertices)(Set(IsBorder()))
+    "annotate as border the points that touch the edge of the map" in {
       val check = (p: Point) => p.x == 0 || p.x == updated.mesh.size.get || p.y == 0 || p.y == updated.mesh.size.get
       borderPoints foreach { check(_) must beTrue }
       updated.vertexProps.size must beGreaterThan(0)
+    }
+    "leave faces that are not border one unchanged" in {
+      val refs = borderFaces map { updated.mesh.faces(_).get }
+      val otherFaces = updated.mesh.faces.references diff refs
+      otherFaces foreach { ref => updated.faceProps.get(ref) must_== entry.faceProps.get(ref) }
+      true must beTrue // to return a spec fragment and thus allow compilation.
+    }
+    "leave vertices that are not borders unchanged" in {
+      val refs = borderPoints map { updated.mesh.vertices(_).get }
+      val otherPoints = updated.mesh.vertices.references diff refs
+      otherPoints foreach { ref => updated.vertexProps.get(ref) must_== entry.vertexProps.get(ref) }
+      true must beTrue // to return a spec fragment and thus allow compilation.
     }
   }
 
@@ -76,4 +91,26 @@ class ProcessTest extends SpecificationWithJUnit {
       (coast & land) must_== coast
     }
   }
+
+  "The AssignElevation process" should {
+    val shaper = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+
+    val map = AssignElevation(entry)
+    "annotate ocean points with a 0 elevation" in {
+      val props = map.vertexProps.project(map.mesh.vertices) _
+      val oceans = props(Set(WaterKind(ExistingWaterKind.OCEAN))) map { map.mesh.vertices(_).get }
+      oceans foreach { map.vertexProps.check(_, HasForHeight(0)) must beTrue }
+      true must beTrue // glitch to allow implicit conversion (thus compilation). real test is above.
+    }
+    "annotate coastline with a minimal elevation (0.1)" in {
+      true must beTrue
+    }
+  }
+
+
+
+
+
+
+
 }
