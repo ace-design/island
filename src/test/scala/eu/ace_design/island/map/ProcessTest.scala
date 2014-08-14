@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom.{MeshBuilder, SquaredGrid, Point}
+
 import eu.ace_design.island.map.processes._
 import org.specs2.mutable._
 
@@ -87,17 +88,21 @@ class ProcessTest extends SpecificationWithJUnit {
   }
 
   "The IdentifyLakesAndOcean process" should {
-    "annotate all the water faces with WaterKind properties" in {
-      import eu.ace_design.island.map.ExistingWaterKind.{LAKE, OCEAN}
-      val donutsFactory = IdentifyWaterArea(shape = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2),
-        threshold = 30)
-      val updated = IdentifyLakesAndOcean(donutsFactory(entry))
-      val props = updated.faceProps.project(updated.mesh.faces) _
-      val waters = props(Set(IsWater()))
-      val oceans = props(Set(WaterKind(OCEAN)))
-      val lakes = props(Set(WaterKind(LAKE)))
-      lakes ++ oceans must_== waters
+    import eu.ace_design.island.map.ExistingWaterKind._
+    // preconditions:  only works on faces => neglect AlignVertex...  Requires borders and IdentifyWaterArea
+    val preconditions : IslandMap => IslandMap = { m =>
+      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+      IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
     }
+    val updated = IdentifyLakesAndOcean(preconditions(entry))
+    val props = updated.faceProps.project(updated.mesh.faces) _
+    val waters = props(Set(IsWater()))
+    val oceans = props(Set(WaterKind(OCEAN)))
+    val lakes = props(Set(WaterKind(LAKE)))
+
+    "annotate all the water faces with WaterKind properties" in { lakes ++ oceans must_== waters }
+    "identify the external ocean" in { oceans.size must be greaterThan 0 }
+    "identify the central lake of this donuts-shaped island" in { lakes.size  must be greaterThan 0 }
   }
 
   "The IdentifyCoastLine process" should {
