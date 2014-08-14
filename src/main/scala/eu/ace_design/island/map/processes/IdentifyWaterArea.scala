@@ -56,6 +56,7 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
  * Post-conditions:
  *   - Vertices involved in the borders of a land face are always considered as land (=> !IsWater())
  *   - Vertices involved in face centers are aligned with their related face
+ *   - All vertices in the map are annotated as water OR land
  */
 object AlignVertexWaterBasedOnFaces extends Process with Logger {
 

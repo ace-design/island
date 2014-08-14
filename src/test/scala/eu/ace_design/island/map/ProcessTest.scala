@@ -70,7 +70,7 @@ class ProcessTest extends SpecificationWithJUnit {
     val precondition = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
     val updated = AlignVertexWaterBasedOnFaces(precondition(entry))
     val fProps = updated.faceProps.project(updated.mesh.faces) _
-    //val vProps = updated.vertexProps.project(updated.mesh.vertices) _
+    val vProps = updated.vertexProps.project(updated.mesh.vertices) _
     "consider vertices involved in land faces as land" in {
       val vertices = fProps(Set(!IsWater())) flatMap { _.vertices(updated.mesh.edges) }
       vertices map { updated.vertexProps.check(_,!IsWater()) } must contain(beTrue)
@@ -83,6 +83,12 @@ class ProcessTest extends SpecificationWithJUnit {
         updated.vertexProps.check(f.center, IsWater(faceVal)) must beTrue
       }
       true must beTrue
+    }
+    "tag all vertices defined in the map" in {
+      val vertices = updated.mesh.vertices.values
+      val landVertices  = vProps(Set(!IsWater()))
+      val waterVertices = vProps(Set(IsWater()))
+      (landVertices ++ waterVertices) must_== vertices
     }
 
   }
@@ -126,6 +132,10 @@ class ProcessTest extends SpecificationWithJUnit {
       coast must not(beEmpty)
       (coast & land) must_== coast
     }
+  }
+
+  "The DistanceToCoast process" should {
+
   }
 
   "The AssignElevation process" should {
