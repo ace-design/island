@@ -51,7 +51,7 @@ class SVGViewer extends Viewer  {
     // Function must be member of Int x IslandMap x Graphics2D -> Unit
     val functions = Seq(
       drawAFace(_,_,_),
-      drawNeighbors(_,_,_),
+      //drawNeighbors(_,_,_),
       drawCenters(_,_,_),
       drawCorners(_,_,_)
     )
@@ -84,8 +84,8 @@ class SVGViewer extends Viewer  {
     val (bgColor, border) = colors(map.faceProps.get(idx))
     debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
 
-    g.setStroke(new BasicStroke(0.5f))
-    g.setColor(border)
+    g.setStroke(new BasicStroke(0.1f))
+    g.setColor(bgColor)
     g.draw(path)
     g.setColor(bgColor)
     g.fill(path)
@@ -121,7 +121,7 @@ class SVGViewer extends Viewer  {
   private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.mesh.faces(idx)
     g.setColor(Colors.LIGHT_GRAY)
-    g.setStroke(new BasicStroke(3))
+    g.setStroke(new BasicStroke(1))
     val center = map.mesh.vertices(f.center)
     g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
   }
@@ -154,7 +154,7 @@ class SVGViewer extends Viewer  {
    */
   private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.mesh.faces(idx)
-    g.setStroke(new BasicStroke(3))
+    g.setStroke(new BasicStroke(1))
     f.vertices(map.mesh.edges) foreach { ref =>
       if(map.vertexProps.check(ref, IsWater()))
         g.setColor(Colors.DARK_BLUE)

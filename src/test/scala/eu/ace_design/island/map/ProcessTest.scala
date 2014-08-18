@@ -142,18 +142,13 @@ class ProcessTest extends SpecificationWithJUnit {
     val updated = MinimalDistanceToCoast(preconditions(entry))
     val props = updated.vertexProps.project(updated.mesh.vertices) _
     "consider coastal vertices as lowest distance (0)" in {
-      val coast = props(Set(IsCoast())) map {
-        updated.mesh.vertices(_).get
-      }
-      coast foreach {
-        updated.vertexProps.getValue(_, DistanceToCoast()) must_== 0
-      }
+      val coast = props(Set(IsCoast())) map { updated.mesh.vertices(_).get }
+      coast foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must_== 0 }
       true must beTrue
     }
-    "computes relative distances (in [0,1])" in {
+    "assign a distance to each land vertices" in {
       val land = props(Set(!IsWater())) map { updated.mesh.vertices(_).get  }
-      val distances = land map { updated.vertexProps.getValue(_, DistanceToCoast()) }
-      distances foreach { d => d must beGreaterThanOrEqualTo(0.0) and (d must beLessThanOrEqualTo(1.0))} // d in [0,1]
+      land foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must be greaterThanOrEqualTo(0.0) }
       true must beTrue
     }
   }
