@@ -55,6 +55,31 @@ class PropertiesTest extends SpecificationWithJUnit {
       projected(Set(IsWater()))         must    contain(Point(0.0,0.0), Point(1.0,1.0)).exactly
       projected(Set(IsWater(), HasForHeight(100))) must_== Set(Point(0.0,0.0))
     }
+    "Support restriction" in {
+      val pSet = empty +
+                 (1 -> DistanceToCoast(3.3)) + (1-> HasForHeight(3.4)) +
+                 (2 -> IsBorder()) +
+                 (3 -> DistanceToCoast(2))
+
+      val waters    = pSet restrictedTo IsWater()
+      waters must beEmpty
+
+      val borders   = pSet restrictedTo IsBorder()
+      borders must haveSize(1); borders must havePair(2 -> true)
+
+      val heights   = pSet restrictedTo HasForHeight()
+      heights must haveSize(1); heights must havePair(1 -> 3.4)
+
+      val distances = pSet restrictedTo DistanceToCoast()
+      distances must haveSize(2); distances must havePairs(1 -> 3.3, 3 -> 2)
+    }
+    "support value retrieval for a given reference" in {
+      val pSet = empty + (1 -> DistanceToCoast(3.3)) + (1-> HasForHeight(3.4))
+      pSet.getValue(0, IsWater()) must throwAn[IllegalArgumentException]
+      pSet.getValue(1, IsWater()) must throwAn[IllegalArgumentException]
+      pSet.getValue(1, DistanceToCoast()) must_== 3.3
+      pSet.getValue(1, HasForHeight()) must_== 3.4
+    }
 
   }
 

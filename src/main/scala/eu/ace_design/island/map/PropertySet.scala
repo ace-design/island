@@ -88,6 +88,27 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
   }
 
 
+  /**
+   * Transform a property set into a map that binds keys to value of a given property (e.g., elevation map)
+   * @param p  the property one is looking for (any instance, we rely on its key)
+   * @tparam T the type of the property
+   * @return a map containing all the elements annotated with p bound to their value (as a T)
+   */
+  def restrictedTo[T](p: Property[T]): Map[Int, T] = {
+    _contents filter { // keeping only the relevant pairs
+      case (k, properties) => properties exists( _.key == p.key)
+    }  map {           // projecting the pairs to their values
+      case (k, properties) => k -> getValue(k, p)
+    }
+  }
+
+  /**
+   * Return the value stored for a given property
+   * @param ref the reference key to be used for the search
+   * @param p the property one is looking for (can be any instance, as the search use the property key)
+   * @tparam T the type of this property, conditioning the return type of this getter
+   * @return the value of p for ref (as a T), an IllegalArgumentException elsewhere
+   */
   def getValue[T](ref: Int, p: Property[T]): T = _contents.get(ref) match {
     case None => throw new IllegalArgumentException("ref must exists!")
     case Some(existing) => existing find { e => e.key == p.key} match {

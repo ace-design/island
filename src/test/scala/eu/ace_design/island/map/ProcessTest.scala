@@ -155,8 +155,8 @@ class ProcessTest extends SpecificationWithJUnit {
 
   "The AssignElevation process" should {
     val shaper = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
-
-    val map = AssignElevation(entry)
+    val elevator = AssignElevation(ElevationFunctions.identity)
+    val map = elevator(entry)
     "annotate ocean points with a 0 elevation" in {
       val props = map.vertexProps.project(map.mesh.vertices) _
       val oceans = props(Set(WaterKind(ExistingWaterKind.OCEAN))) map { map.mesh.vertices(_).get }
