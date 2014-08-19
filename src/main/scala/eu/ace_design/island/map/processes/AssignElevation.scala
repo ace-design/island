@@ -1,7 +1,21 @@
 package eu.ace_design.island.map.processes
 
-import eu.ace_design.island.geom.EdgeRegistry
+import eu.ace_design.island.geom.{Face, EdgeRegistry}
 import eu.ace_design.island.map._
+
+
+object ElevationFunctions {
+
+  type ElevationFunction =  Map[Int,Double] => Map[Int,Double]
+
+  def identity: ElevationFunction = m => m
+
+  def peak(summit: Int): ElevationFunction = distances => {
+    val max = distances.values.max
+    distances map { case (key, distance) => key -> distance / max * summit }
+  }
+
+}
 
 
 /**
@@ -14,7 +28,8 @@ import eu.ace_design.island.map._
  *   - The map contains "DistanceToCoast(d)" annotations for each land (i.e., !ocean) vertices.
  *
  * Post-conditions:
- *   - All vertices are  tagged with "HasForHeight(h)", where h is the elevation.
+ *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
+ *     to be at the sea level by default (HasForHeight(0.0))
  */
 case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Process {
 
@@ -33,28 +48,72 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
     }).toMap
 
     info("Adjusting inner lakes to make it flat")
-    val fProps =  m.faceProps.project(m.mesh.faces) _
-    val lakes = fProps(Set(WaterKind(ExistingWaterKind.LAKE))) flatMap { f => f.vertices(m.mesh.edges) + f.center }
-    val adjustment: Map[Int, Double] =  (lakes map { _ -> 400.0 }).toMap     // TODO FIX THIS
+    val lakeFaces = m.faceProps.project(m.mesh.faces)(Set(WaterKind(ExistingWaterKind.LAKE)))
+    val adjustment = adjust(lakeFaces, m, cornersElevation)
 
     info("Updating the property sets")
-    val elevations = cornersElevation ++ centersElevation  ++ adjustment
-    val updatedVertProps = (m.vertexProps /: elevations) { (acc, pair) => acc + (pair._1 -> HasForHeight(pair._2)) }
-    //println(oceans)
-    m.copy(vertexProps = updatedVertProps)
+    val elevations = cornersElevation ++ centersElevation  ++ adjustment // the final elevations to be used
+    val props = (m.vertexProps /: elevations) { (acc, pair) => acc + (pair._1 -> HasForHeight(pair._2)) }
+    m.copy(vertexProps = props)
   }
+
+
+  /**
+   * The adjustment function for inner lakes. It takes as input the set of lakes, and returns a map where vertices
+   * involved in an inner lake is bound to a more "normal" elevation (lakes are supposed to be flat ...)
+   * @param lakes the set of faces identified as lakes in the current map
+   * @param m the Island map
+   * @return the adjustment map to be used to flatten the lakes.
+   */
+  private def adjust(lakes: Set[Face], m: IslandMap, elevations: Map[Int, Double]): Map[Int, Double] = {
+    val clusters: Set[Set[Face]] = buildClusters(lakes, m)
+    val adjustments = clusters map { setToMinHeight(_, m, elevations) }
+    (Map[Int,Double]() /: adjustments) { (acc, map) => acc ++ map }
+  }
+
+  /**
+   * Build clusters of the "inputs" lake set, identifying the different lakes that might exists inside an island
+   * @param inputs
+   * @param m
+   * @return
+   */
+  private def buildClusters(inputs: Set[Face], m: IslandMap): Set[Set[Face]] = {
+    def loop(ins: Set[Face], acc: Set[Set[Face]]): Set[Set[Face]] = ins.headOption match {
+      case None => acc   // no more work to be done, return the accumulator
+      case Some(face) => acc.flatten contains face match { // is this particular face already handled?
+        case true  => loop(ins.tail, acc)  // yes, so move on to the next one
+        case false => { // No, this face is not already handled => handle it and move to the next one!
+          val faceRef = m.mesh.faces(face).get
+          val surroundingLake = getLake(faceRef, m)
+          val involvedFaces = surroundingLake map { ref => m.mesh.faces(ref) }
+            loop(ins.tail, acc + involvedFaces)
+        }
+      }
+    }
+    loop(inputs, Set()) // starting the internal cluster building function
+  }
+
+  private def getLake(f: Int, m: IslandMap): Set[Int] = {
+    def loop(faces: Set[Int], acc: Set[Int]): Set[Int] = faces.headOption match {
+      case None => acc
+      case Some(ref) => {
+        val face = m.mesh.faces(ref)
+        val relevant = face.neighbors.get filter { fRef =>
+          m.faceProps.check(fRef, WaterKind(ExistingWaterKind.LAKE)) && !(acc contains fRef)
+        }
+        loop(faces.tail ++ relevant, acc + ref)
+      }
+    }
+    loop(Set(f), Set())
+  }
+
+  private def setToMinHeight(lake: Set[Face], m: IslandMap, existing: Map[Int, Double]): Map[Int, Double] = {
+    val vertices = lake flatMap { l => l.vertices(m.mesh.edges) }
+    val minHeight = (vertices map { existing.getOrElse(_, Double.PositiveInfinity) }).min
+    (vertices map { _ -> minHeight }).toMap
+  }
+
 }
 
 
-object ElevationFunctions {
 
-  type ElevationFunction =  Map[Int,Double] => Map[Int,Double]
-
-  def identity: ElevationFunction = m => m
-
-  def peak(summit: Int): ElevationFunction = distances => {
-    val max = distances.values.max
-    distances map { case (key, distance) => key -> distance / max * summit }
-  }
-
-}
