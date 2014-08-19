@@ -48,8 +48,10 @@ class ModelTest extends SpecificationWithJUnit {
       e.p2 must_== 1
     }
     "reject two equivalent references" in { Edge(1,1) must throwAn[IllegalArgumentException] }
-    "be constructed in any order (non-directional)" in {
-      Edge(1,2) must_== Edge(2,1)
+    "be constructed in any order (non-directional)" in { Edge(1,2) must_== Edge(2,1) }
+    "know when it involves a given vertex" in {
+      Edge(0,1) involves 1 must beTrue
+      Edge(0,1) involves 2 must beFalse
     }
   }
 

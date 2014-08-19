@@ -18,12 +18,29 @@ class PropertiesTest extends SpecificationWithJUnit {
       pSet.get(1) must_== Set(prop)
     }
     "support checking" in {
-      val pSet = empty + (0 -> prop) + (1 -> !prop)
-      pSet.size must_== 2
+      val pSet = empty + (0 -> prop) + (1 -> !prop) + (2 -> DistanceToCoast(0.3))
+      pSet.size must_== 3
+      // positive checking
       pSet.check(0, prop)  must beTrue
       pSet.check(0, !prop) must beFalse
+      // negative checking
       pSet.check(1, prop)  must beFalse
       pSet.check(1, !prop) must beTrue
+      // no property => negative answer
+      pSet.check(2, prop) must beFalse
+      pSet.check(2, !prop) must beFalse
+      // non-boolean properties
+      pSet.check(2, DistanceToCoast(0.3)) must beTrue
+      pSet.check(2, DistanceToCoast(3.4)) must beFalse
+      pSet.check(2, HasForHeight(0.0)) must beFalse
+    }
+    "support annotation checking (agnostic of value)" in {
+      val pSet = empty + (0 -> prop) + (1 -> DistanceToCoast(0.3))
+      pSet.isAnnotatedAs(0, prop) must beTrue
+      pSet.isAnnotatedAs(1, prop) must beFalse
+      pSet.isAnnotatedAs(0, DistanceToCoast()) must beFalse
+      pSet.isAnnotatedAs(1, DistanceToCoast()) must beTrue
+      pSet.isAnnotatedAs(2, prop) must beFalse
     }
     "support property update" in {
       val pSet = empty + (0 -> prop)
@@ -54,6 +71,31 @@ class PropertiesTest extends SpecificationWithJUnit {
       projected(Set(IsBorder()))        must_== Set(Point(3.0,3.0))
       projected(Set(IsWater()))         must    contain(Point(0.0,0.0), Point(1.0,1.0)).exactly
       projected(Set(IsWater(), HasForHeight(100))) must_== Set(Point(0.0,0.0))
+    }
+    "Support restriction" in {
+      val pSet = empty +
+                 (1 -> DistanceToCoast(3.3)) + (1-> HasForHeight(3.4)) +
+                 (2 -> IsBorder()) +
+                 (3 -> DistanceToCoast(2))
+
+      val waters    = pSet restrictedTo IsWater()
+      waters must beEmpty
+
+      val borders   = pSet restrictedTo IsBorder()
+      borders must haveSize(1); borders must havePair(2 -> true)
+
+      val heights   = pSet restrictedTo HasForHeight()
+      heights must haveSize(1); heights must havePair(1 -> 3.4)
+
+      val distances = pSet restrictedTo DistanceToCoast()
+      distances must haveSize(2); distances must havePairs(1 -> 3.3, 3 -> 2)
+    }
+    "support value retrieval for a given reference" in {
+      val pSet = empty + (1 -> DistanceToCoast(3.3)) + (1-> HasForHeight(3.4))
+      pSet.getValue(0, IsWater()) must throwAn[IllegalArgumentException]
+      pSet.getValue(1, IsWater()) must throwAn[IllegalArgumentException]
+      pSet.getValue(1, DistanceToCoast()) must_== 3.3
+      pSet.getValue(1, HasForHeight()) must_== 3.4
     }
 
   }

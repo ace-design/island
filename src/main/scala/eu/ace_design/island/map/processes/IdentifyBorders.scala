@@ -1,19 +1,25 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.geom.{Face, Point}
-import eu.ace_design.island.map.{IsBorder, IslandMap}
-import eu.ace_design.island.util.{LogSilos, Logger}
+import eu.ace_design.island.map.{IsBorder, IsWater, IslandMap}
 
 /**
- * This process identify the faces considered as "borders", i.e., touching the external boundaries of the map
+ * This process identify the faces considered as "borders", i.e., touching the external boundaries of the map. As we
+ * are building an island, border faces are also considered as Water faces.
  *
- * It annotates the faces with the IsBorder property
+ * Pre-conditions:
+ *   - None
+ *
+ * Post-conditions:
+ *   - Border faces that touches the edge of the map are annotated as IsBorder(true) and IsWater(true).
+ *     Others are not impacted
+ *   - Vertices touching the edge of the map are annotated as IsBorder(true), and IsWater(true).
+ *     Others are not impacted.
  */
-object IdentifyBorders extends Process with Logger {
-  val silo = LogSilos.MAP_GEN
+object IdentifyBorders extends Process  {
 
   override def apply(m: IslandMap): IslandMap = {
-    info("IdentifyBorders / Annotating faces")
+    info("Annotating faces")
     // Extract the points located on the map border
     val isBorderValue: Double => Boolean = { d => d <= 0 || d >= m.mesh.size.get }
     val isBorderVertex: Point => Boolean = { p => isBorderValue(p.x) || isBorderValue(p.y)  }
@@ -24,8 +30,10 @@ object IdentifyBorders extends Process with Logger {
     val borderFaces = m.mesh.faces.queryReferences(isBorder)
     debug("Faces tagged as border: " + borderFaces.toSeq.sorted.mkString("(",",",")") )
 
-    // Update the properties for the identified faces
-    m.copy(faceProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) )
+    // Update the properties for the identified faces and vertices
+    val fProps = m.faceProps bulkAdd (borderFaces -> IsBorder()) bulkAdd (borderFaces -> IsWater())
+    val vProps = m.vertexProps bulkAdd(borderVertices -> IsBorder()) bulkAdd (borderVertices -> IsWater())
+    m.copy(faceProps = fProps, vertexProps = vProps)
   }
 
 }

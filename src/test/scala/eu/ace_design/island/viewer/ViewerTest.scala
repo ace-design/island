@@ -4,7 +4,6 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.IslandMap
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
-import java.nio.file.{Path, Files, Paths}
 
 
 class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatchers {

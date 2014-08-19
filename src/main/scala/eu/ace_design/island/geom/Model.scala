@@ -38,6 +38,13 @@ class Edge(val p1: Int, val p2: Int) {
   require(p1 != p2, "Vertices references must be different")
 
   /**
+   * Checks if this edge involve a given point (as p1 or p2)
+   * @param pRef the point to check
+   * @return true it pRef is involved in this, false elsewhere.
+   */
+  def involves(pRef: Int): Boolean = this.p1 == pRef || this.p2 == pRef
+
+  /**
    * Two edges are equals since they point to the same vertices, in any order (Edge(p,p') == Edge(p',p)).
    * @param other  an object to be tested for equality with this.
    * @return

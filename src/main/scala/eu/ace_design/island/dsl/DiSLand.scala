@@ -52,12 +52,32 @@ trait DiSLand {
     IdentifyWaterArea(new RadialShape(size, factor), threshold)
   }
 
-  // Syntactic sugar to access builder processes as keywords
-  protected val borders: Process        = IdentifyBorders
-  protected val lakesAndOceans: Process = IdentifyLakesAndOcean
-  protected val coastLine: Process      = IdentifyCoastLine
+  /**
+   * functions as syntactical element o build elevation fuctions for the build process
+   */
+  def whereDistanceIsHeight: Process = AssignElevation(ElevationFunctions.identity)
+  def withCulminatingPeak(i: Int): Process = AssignElevation(ElevationFunctions.peak(i))
+
+  /**
+   * Syntactic sugar to access builder processes as keywords
+   */
+
+  protected val borders: Process            = IdentifyBorders
+  protected val lakesAndOceans: Process     = IdentifyLakesAndOcean
+  protected val coastLine: Process          = IdentifyCoastLine
+  protected val alignWaterVertices: Process = AlignVertexWaterBasedOnFaces
+  protected val distanceToCoast: Process    = MinimalDistanceToCoast
+
+
   // the default process used to build island
-  protected val defaultProcess = Seq(borders, lakesAndOceans, coastLine)
+  protected val defaultProcess = Seq(
+    borders,
+    alignWaterVertices,
+    lakesAndOceans,
+    coastLine,
+    distanceToCoast,
+    whereDistanceIsHeight
+  )
 
   /**
    * A configuration contains all the information (variation point configuration) needed to build a Map
@@ -76,11 +96,11 @@ trait DiSLand {
 
     // The different keywords to be used to update the configuration with specific values
 
-    def withSize(s: Int) = this.copy(mapSize = s)
-    def having(f: Int) = this.copy(faces = f)
+    def withSize(s: Int)      = this.copy(mapSize = s)
+    def having(f: Int)        = this.copy(faces = f)
     def withThreshold(t: Int) = this.copy(waterThreshold = t)
     def distributed(dir: PointGeneratorDirective) = this.copy(generator = dir)
-    def shapedAs(s: ShapeDirective) = this.copy(shape = s)
+    def shapedAs(s: ShapeDirective)  = this.copy(shape = s)
     def builtWith(seq: Seq[Process]) = this.copy(process = seq)
 
     /**
@@ -113,9 +133,6 @@ trait DiSLand {
    */
   protected class Percentage(val i: Int) { require(i >=0 && i <= 100); val percent = this; def value = i.toDouble/100 }
   implicit protected def integerToPercentage(i: Int) = new Percentage(i)
-
-  // syntactic sugar to use pre-existing viewers as keywords
-
 
   /**
    * Syntactic elements to support the "island -> ("fileName" as outputFormat) construction
