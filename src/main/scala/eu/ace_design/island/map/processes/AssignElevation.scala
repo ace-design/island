@@ -73,11 +73,12 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
 
   /**
    * Build clusters of the "inputs" lake set, identifying the different lakes that might exists inside an island
-   * @param inputs
-   * @param m
-   * @return
+   * @param inputs the set of faces identified as a lake in the island
+   * @param m the map
+   * @return a set of lakes (i.e., set of faces involved in a given lake)
    */
   private def buildClusters(inputs: Set[Face], m: IslandMap): Set[Set[Face]] = {
+    // recursive function to properly build the cluster
     def loop(ins: Set[Face], acc: Set[Set[Face]]): Set[Set[Face]] = ins.headOption match {
       case None => acc   // no more work to be done, return the accumulator
       case Some(face) => acc.flatten contains face match { // is this particular face already handled?
@@ -93,6 +94,12 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
     loop(inputs, Set()) // starting the internal cluster building function
   }
 
+  /**
+   * For a given face reference, identify its surrounding lake, i.e., its lake neighbors (transitive closure)
+   * @param f the face reference to investigate
+   * @param m the map to use
+   * @return a set of face references (including f) that are part of the same lake (connected together)
+   */
   private def getLake(f: Int, m: IslandMap): Set[Int] = {
     def loop(faces: Set[Int], acc: Set[Int]): Set[Int] = faces.headOption match {
       case None => acc
@@ -107,10 +114,17 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
     loop(Set(f), Set())
   }
 
+  /**
+   * Put the elevation of the vertices involved in its given faces to the minimal one.
+   * @param lake the set of face identified as a lake
+   * @param m the map to be used to find the vertices involved in the faces (through the edges)
+   * @param existing the existing elevation for the vertices that are not in lakes
+   * @return a map binding each vertices involved in the lake (as corner) to the minimal elevation of this lake
+   */
   private def setToMinHeight(lake: Set[Face], m: IslandMap, existing: Map[Int, Double]): Map[Int, Double] = {
-    val vertices = lake flatMap { l => l.vertices(m.mesh.edges) }
-    val minHeight = (vertices map { existing.getOrElse(_, Double.PositiveInfinity) }).min
-    (vertices map { _ -> minHeight }).toMap
+    val verts = lake flatMap { l => l.vertices(m.mesh.edges) }
+    val minHeight = (verts map { existing.getOrElse(_, Double.PositiveInfinity) }).min // the Esle should never happen
+    (verts map { _ -> minHeight }).toMap
   }
 
 }
