@@ -154,16 +154,34 @@ class ProcessTest extends SpecificationWithJUnit {
   }
 
   "The AssignElevation process" should {
-    val shaper = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
-    val elevator = AssignElevation(ElevationFunctions.identity)
-    val map = elevator(entry)
-    "annotate ocean points with a 0 elevation" in {
-      val props = map.vertexProps.project(map.mesh.vertices) _
-      val oceans = props(Set(WaterKind(ExistingWaterKind.OCEAN))) map { map.mesh.vertices(_).get }
-      oceans foreach { map.vertexProps.check(_, HasForHeight(0)) must beTrue }
+    val preconditions: IslandMap => IslandMap = { m =>
+      val donuts = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)// DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+      MinimalDistanceToCoast(
+        IdentifyCoastLine(
+          IdentifyLakesAndOcean(
+            AlignVertexWaterBasedOnFaces(
+              IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
+    }
+    val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
+    val vProps = updated.vertexProps.project(updated.mesh.vertices) _
+    val fProps = updated.faceProps.project(updated.mesh.faces) _
+
+    val coastline = vProps(Set(IsCoast())) map { updated.mesh.vertices(_).get }
+    import ExistingWaterKind._
+    val raw = fProps(Set(WaterKind(OCEAN))) flatMap { f => f.vertices(updated.mesh.edges) + f.center }
+    val oceans = raw diff coastline // taking all the vertices involved in oceans, removing coastline
+
+    "not annotate ocean vertices with elevation annotation" in {
+      oceans foreach { updated.vertexProps.isAnnotatedAs(_, HasForHeight()) must beFalse }
       true must beTrue // glitch to allow implicit conversion (thus compilation). real test is above.
     }
-    "annotate coastline with a minimal elevation (0.1)" in {
+    "give an elevation >= 0 to any vertex that is not in the ocean " in {
+      val land = updated.mesh.vertices.references diff oceans
+      land must not be empty
+      land foreach { l =>
+        updated.vertexProps.isAnnotatedAs(l, HasForHeight()) must beTrue
+        updated.vertexProps.getValue(l, HasForHeight()) must beGreaterThanOrEqualTo(0.0)
+      }
       true must beTrue
     }
   }

@@ -18,12 +18,29 @@ class PropertiesTest extends SpecificationWithJUnit {
       pSet.get(1) must_== Set(prop)
     }
     "support checking" in {
-      val pSet = empty + (0 -> prop) + (1 -> !prop)
-      pSet.size must_== 2
+      val pSet = empty + (0 -> prop) + (1 -> !prop) + (2 -> DistanceToCoast(0.3))
+      pSet.size must_== 3
+      // positive checking
       pSet.check(0, prop)  must beTrue
       pSet.check(0, !prop) must beFalse
+      // negative checking
       pSet.check(1, prop)  must beFalse
       pSet.check(1, !prop) must beTrue
+      // no property => negative answer
+      pSet.check(2, prop) must beFalse
+      pSet.check(2, !prop) must beFalse
+      // non-boolean properties
+      pSet.check(2, DistanceToCoast(0.3)) must beTrue
+      pSet.check(2, DistanceToCoast(3.4)) must beFalse
+      pSet.check(2, HasForHeight(0.0)) must beFalse
+    }
+    "support annotation checking (agnostic of value)" in {
+      val pSet = empty + (0 -> prop) + (1 -> DistanceToCoast(0.3))
+      pSet.isAnnotatedAs(0, prop) must beTrue
+      pSet.isAnnotatedAs(1, prop) must beFalse
+      pSet.isAnnotatedAs(0, DistanceToCoast()) must beFalse
+      pSet.isAnnotatedAs(1, DistanceToCoast()) must beTrue
+      pSet.isAnnotatedAs(2, prop) must beFalse
     }
     "support property update" in {
       val pSet = empty + (0 -> prop)

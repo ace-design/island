@@ -1,6 +1,7 @@
 package eu.ace_design.island.viewer
 
 import eu.ace_design.island.geom._
+import eu.ace_design.island.map.{HasForHeight, PropertySet}
 
 /**
  * Helpers to factorize code shared by the JSON and OBJ viewers
@@ -12,10 +13,15 @@ object ViewerHelpers {
    * @param mesh the mesh to process
    * @return a tuple-based representation of each points
    */
-  def buildVertices(mesh: Mesh): Seq[(Double, Double, Double)] = {
+  def buildVertices(mesh: Mesh, props: PropertySet): Seq[(Double, Double, Double)] = {
     // TODO support the z coordinates exploiting the properties!
     for(idx <- 0 until mesh.vertices.size)
-    yield (mesh.vertices(idx).x, mesh.vertices(idx).y, 0.0)
+      yield {
+        val x: Double = mesh.vertices(idx).x
+        val y: Double = mesh.vertices(idx).y
+        val z: Double = try { props.getValue(idx, HasForHeight()) } catch { case e: IllegalArgumentException => 0.0 }
+        (x, y, z)
+      }
   }
 
   /**

@@ -19,7 +19,7 @@ class JsonViewer extends Viewer with Logger {
   override def apply(m: IslandMap): File = {
 
     info("Building JSON file")
-    val vertices = buildVertices(m.mesh)
+    val vertices = buildVertices(m.mesh, m.vertexProps)
     val faces = buildFaces(m.mesh)
     val vProps = buildProperties(m.vertexProps)
     val fProps = buildProperties(m.faceProps)
@@ -47,9 +47,9 @@ class JsonViewer extends Viewer with Logger {
   }
 
 
-  private def buildVertices(mesh: Mesh): JSONArray = {
+  private def buildVertices(mesh: Mesh, vProps: PropertySet): JSONArray = {
     info("Building vertices index")
-    val data = ViewerHelpers.buildVertices(mesh) map { c => new JSONArray().put(c._1).put(c._2).put(c._3) }
+    val data = ViewerHelpers.buildVertices(mesh, vProps) map { c => new JSONArray().put(c._1).put(c._2).put(c._3) }
     (new JSONArray() /: data) { (acc, vertex) => acc.put(vertex) }
   }
 

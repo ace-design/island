@@ -52,12 +52,22 @@ trait DiSLand {
     IdentifyWaterArea(new RadialShape(size, factor), threshold)
   }
 
-  // Syntactic sugar to access builder processes as keywords
+  /**
+   * functions as syntactical element o build elevation fuctions for the build process
+   */
+  def whereDistanceIsHeight: Process = AssignElevation(ElevationFunctions.identity)
+  def withCulminatingPeak(i: Int): Process = AssignElevation(ElevationFunctions.peak(i))
+
+  /**
+   * Syntactic sugar to access builder processes as keywords
+   */
+
   protected val borders: Process            = IdentifyBorders
   protected val lakesAndOceans: Process     = IdentifyLakesAndOcean
   protected val coastLine: Process          = IdentifyCoastLine
   protected val alignWaterVertices: Process = AlignVertexWaterBasedOnFaces
   protected val distanceToCoast: Process    = MinimalDistanceToCoast
+
 
   // the default process used to build island
   protected val defaultProcess = Seq(
@@ -65,7 +75,8 @@ trait DiSLand {
     alignWaterVertices,
     lakesAndOceans,
     coastLine,
-    distanceToCoast
+    distanceToCoast,
+    whereDistanceIsHeight
   )
 
   /**

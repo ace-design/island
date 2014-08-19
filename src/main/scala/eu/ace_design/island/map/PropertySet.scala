@@ -118,6 +118,17 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
   }
 
   /**
+   * Check if a given index is annotated with a given property (any instance, we rely on the type)
+   * @param ref the index reference one is looking for
+   * @param p the property (any instance) one is looking for
+   * @return true is the properties stored for index ref contains an instance of p, false elsewhere
+   */
+  def isAnnotatedAs(ref: Int, p: Property[_]): Boolean = _contents.get(ref) match {
+    case None => false
+    case Some(properties) => properties exists { _.key == p.key}
+  }
+
+  /**
    * Two property sets are equals if their underlying maps are equals
    * @param other the object to check equality with
    * @return this == that <=> this._contents == that._contents
