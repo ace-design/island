@@ -28,7 +28,7 @@ trait Logger {
 
   // A logger is connected to a given silo (to be configured in 'resources/log4j2.xml'). The silo is statically
   // chosen at compilation time, as this variable must be specified (override val) in the targeted class
-  val silo: Kind
+  protected val silo: Kind
 
   // the name of the target class, used to generate useful message. Object ending $ (scala convention) are removed.
   val name = {
@@ -40,20 +40,25 @@ trait Logger {
    ** Functions used to propagate the message to log to the good logger. By default, to the one associated to our silo.
    **/
 
-  def trace(msg: String, s: Kind = silo) { Loggers(s) trace s"[$name] $msg" }
-  def debug(msg: String, s: Kind = silo) { Loggers(s) debug s"[$name] $msg" }
-  def info (msg: String, s: Kind = silo) { Loggers(s) info  s"[$name] $msg"  }
-  def warn (msg: String, s: Kind = silo) { Loggers(s) warn  s"[$name] $msg"  }
-  def error(msg: String, s: Kind = silo) { Loggers(s) error s"[$name] $msg" }
-  def fatal(msg: String, s: Kind = silo) { Loggers(s) fatal s"[$name] $msg" }
+  def trace(msg: => String, s: Kind = silo) { if (logger(s).isTraceEnabled) { logger(s) trace s"[$name] $msg" } }
+  def debug(msg: => String, s: Kind = silo) { if (logger(s).isDebugEnabled) { logger(s) debug s"[$name] $msg" } }
+  def info (msg: => String, s: Kind = silo) { if (logger(s).isInfoEnabled)  { logger(s) info  s"[$name] $msg" } }
+  def warn (msg: => String, s: Kind = silo) { if (logger(s).isWarnEnabled)  { logger(s) warn  s"[$name] $msg" } }
+  def error(msg: => String, s: Kind = silo) { if (logger(s).isErrorEnabled) { logger(s) error s"[$name] $msg" } }
+  def fatal(msg: => String, s: Kind = silo) { if (logger(s).isFatalEnabled) { logger(s) fatal s"[$name] $msg" } }
+
+  protected def logger(s: Kind) = Loggers(s)
+
 }
+
+
 
 /**
  * the different silos available in the application, defined as a static enumeration
  */
 object LogSilos extends Enumeration {
   type Kind = Value
-  val ROOT, MESH_GEN, MAP_GEN, VIEWER = Value
+  val ROOT, MESH_GEN, MAP_GEN, VIEWER, TEST = Value
 }
 
 /**
@@ -75,7 +80,8 @@ object Loggers {
     ROOT     -> _root,
     MESH_GEN -> LogManager.getLogger(s"$PREFIX/Mesh"),
     MAP_GEN  -> LogManager.getLogger(s"$PREFIX/Map"),
-    VIEWER   -> LogManager.getLogger(s"$PREFIX/Viewer")
+    VIEWER   -> LogManager.getLogger(s"$PREFIX/Viewer"),
+    TEST     -> LogManager.getLogger(s"$PREFIX/Test")
   )
 }
 
