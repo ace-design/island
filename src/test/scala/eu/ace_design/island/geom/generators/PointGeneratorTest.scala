@@ -1,13 +1,10 @@
-package eu.ace_design.island.geom
+package eu.ace_design.island.geom.generators
 
+import eu.ace_design.island.geom.Point
 import org.specs2.mutable._
 
 /**
  * This file is part of the island project.
- *
- * WARNING: The syntax highlighter of IntelliJ 13.1 indicates compilation error in this class. This is a bug in the
- * highlighter, this file is absolutely valid w.r.t. to the scala grammar and the Specs2 framework.
- *
  * @author mosser (22/06/2014, 19:28)
  */
 
@@ -39,17 +36,20 @@ class PointGeneratorTest extends SpecificationWithJUnit {
     }
   }
 
+  def isOk(set: Set[Double]) = set foreach { elem =>
+    elem must be_>=(0.0)
+    elem must be_<=(GRID_SIZE.asInstanceOf[Double])
+
+  }
+
   "A RandomGrid generator" should {
     val g = new RandomGrid(GRID_SIZE)
     "generate the appropriate number of points" in { g(4) must haveSize(4) }
     "generates points in the given space" in {
       val points = g(10)
-      val xs: Set[Double] = points map { _.x }
-      xs must contain(be_>=(0.0)).forall
-      xs must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
-      val ys: Set[Double] = points map { _.y }
-      ys must contain ( be_>=(0.0) ).forall
-      ys must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
+      isOk(points map { _.x })
+      isOk(points map { _.y })
+      true must beTrue
     }
   }
 
@@ -58,12 +58,9 @@ class PointGeneratorTest extends SpecificationWithJUnit {
     "generate the appropriate number of points" in { g(4) must haveSize(4) }
     "generates points in the given space" in {
       val points = g(10)
-      val xs: Set[Double] = points map { _.x }
-      xs must contain(be_>=(0.0)).forall
-      xs must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
-      val ys: Set[Double] = points map { _.y }
-      ys must contain ( be_>=(0.0) ).forall
-      ys must contain ( be_<=(GRID_SIZE.asInstanceOf[Double]) ).forall
+      isOk(points map { _.x })
+      isOk(points map { _.y })
+      true must beTrue
     }
   }
 

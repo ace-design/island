@@ -1,6 +1,7 @@
 package eu.ace_design.island.dsl
 
 import eu.ace_design.island.geom._
+import eu.ace_design.island.geom.generators.{SquaredGrid, RelaxedRandomGrid, RandomGrid}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
 import eu.ace_design.island.viewer._
@@ -53,7 +54,7 @@ trait DiSLand {
   }
 
   /**
-   * functions as syntactical element o build elevation fuctions for the build process
+   * functions as syntactical element to build elevation functions for the build process
    */
   def whereDistanceIsHeight: Process = AssignElevation(ElevationFunctions.identity)
   def withCulminatingPeak(i: Int): Process = AssignElevation(ElevationFunctions.peak(i))

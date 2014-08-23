@@ -10,6 +10,6 @@ import eu.ace_design.island.geom.Mesh
  */
 case class IslandMap(mesh: Mesh,
                      faceProps: PropertySet = PropertySet(),
-                     vertexProps: PropertySet = PropertySet() ) {
+                     vertexProps: PropertySet = PropertySet()) {
 
 }
