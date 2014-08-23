@@ -51,6 +51,12 @@ class PointGeneratorTest extends SpecificationWithJUnit {
       isOk(points map { _.y })
       true must beTrue
     }
+    "generate reproducible data sets" in {
+      val seed = 123456789
+      val g1 = new RandomGrid(GRID_SIZE, new scala.util.Random(seed))
+      val g2 = new RandomGrid(GRID_SIZE, new scala.util.Random(seed))
+      g1(10) must_== g2(10)
+    }
   }
 
   "A RelaxedRandomGrid generator" should {
@@ -61,6 +67,12 @@ class PointGeneratorTest extends SpecificationWithJUnit {
       isOk(points map { _.x })
       isOk(points map { _.y })
       true must beTrue
+    }
+    "generate reproducible data sets" in {
+      val seed: Long = 1234567890
+      val g1 = new RelaxedRandomGrid(size = GRID_SIZE, random = new scala.util.Random(seed))
+      val g2 = new RelaxedRandomGrid(size = GRID_SIZE, random = new scala.util.Random(seed))
+      g1(10) must_== g2(10)
     }
   }
 

@@ -18,8 +18,8 @@ import scala.util.Random
  * @param random the random generator to be used (by default, instantiating a new one)
  */
 class RelaxedRandomGrid(override val size: Int,
-                        val factor: Int = 5,
-                        override val random: Random = new Random()) extends RandomPointGenerator {
+                        override val random: Random = new Random(),
+                        val factor: Int = 5) extends RandomPointGenerator {
 
   import com.vividsolutions.jts.geom.{Coordinate, CoordinateFilter, GeometryCollection, GeometryFactory}
   import com.vividsolutions.jts.triangulate.VoronoiDiagramBuilder
@@ -28,7 +28,6 @@ class RelaxedRandomGrid(override val size: Int,
 
 
   override protected def run(n: Int): Set[Point] = {
-    val random = new Random()
     val distribution = for (i <- 1 to n) yield Point(random.nextDouble() * size, random.nextDouble() * size)
     smooth(distribution, factor).toSet
   }
