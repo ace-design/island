@@ -58,8 +58,13 @@ class SVGViewer extends Viewer  {
     // We go through each function one by one. We apply each f to all the faces stored in the map
     functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
     // We display the map UUID
-    g.setColor(Colors.BLACK)
-    g.drawString("64236166-165d-47f0-a4fd-ed2c443ffxxx", 15, 15)
+    m.uuid match {
+      case None =>
+      case Some(uuid) => {
+        g.setColor(Colors.BLACK)
+        g.drawString(s"seed: $uuid", 5, m.mesh.size.get - 5)
+      }
+    }
   }
 
   /**

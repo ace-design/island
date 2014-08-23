@@ -124,7 +124,7 @@ trait DiSLand {
         override def size: Int = mapSize
         override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: process
       }
-      mapBuilder(mesh)
+      mapBuilder(mesh).copy(uuid = Some(uuid))
     }
   }
 
