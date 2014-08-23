@@ -38,22 +38,23 @@ trait DiSLand {
 
   /**
    * A shape directive relies on the map size and the water threshold to be used to determine water faces.
+   * Random parameter (based on the configuration UUID) is used when random shape are used in the map.
    */
-  protected type ShapeDirective = (Int, Int) => Process
+  protected type ShapeDirective = (Int, Int, Random) => Process
 
   // The disk shape is defined as "disk(surface = 80.percent)"
-  protected def disk(surface: Percentage): ShapeDirective = (size, threshold) => {
+  protected def disk(surface: Percentage): ShapeDirective = (size, threshold, _) => {
     IdentifyWaterArea(new DiskShape(size, size.toDouble/2 * surface.value), threshold)
   }
 
   // the donut shape is defined as "donut(external = 80.percent, lake = 10.percent)"
-  protected def donut(external: Percentage, lake: Percentage): ShapeDirective = (size, threshold) => {
+  protected def donut(external: Percentage, lake: Percentage): ShapeDirective = (size, threshold, _) => {
     IdentifyWaterArea(new DonutShape(size, size.toDouble/2 * external.value, size.toDouble/2 * lake.value), threshold)
   }
 
   // the radial shape is defined as "radial(factor = 1.57)"
-  protected def radial(factor: Double): ShapeDirective = (size, threshold) => {
-    IdentifyWaterArea(new RadialShape(size, factor), threshold)
+  protected def radial(factor: Double): ShapeDirective = (size, threshold, random) => {
+    IdentifyWaterArea(new RadialShape(size, factor, random), threshold)
   }
 
   /**
@@ -121,7 +122,7 @@ trait DiSLand {
       val mesh = meshBuilder(sites)
       val mapBuilder = new IslandBuilder {
         override def size: Int = mapSize
-        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold) +: process
+        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: process
       }
       mapBuilder(mesh)
     }

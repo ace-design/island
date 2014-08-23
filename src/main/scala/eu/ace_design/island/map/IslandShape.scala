@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.util.{LogSilos, Logger}
+import scala.util.Random
 
 /**
  * An IslandShape is a function used to decide if a vertex (not a face) is located on land or not
@@ -126,13 +127,15 @@ case class DonutShape(override val size: Int, radExt: Double, radInt: Double) ex
  * Re-implementation (and slight adaptation) of the algorithm designed by Amit Patel in
  * https://github.com/amitp/mapgen2/blob/master/Map.as (see makeRadial)   [MIT License]
  */
-case class RadialShape(override val size: Int, factor: Double) extends IslandShape with Logger {
+case class RadialShape(override val size: Int,
+                       factor: Double,
+                       random: Random = new Random()) extends IslandShape with Logger {
+
   val silo = LogSilos.MAP_GEN
 
-  import scala.util.Random
+
   import scala.math.{abs, atan2, cos, max, pow, sin, sqrt, Pi}
 
-  private val random = new Random()
   private val bumps: Int = random.nextInt(5) + 1          // random number between 1 and 6
   val startAngle: Double = random.nextDouble() * 2 * Pi   // random double between 0 and 2π
   val dipAngle: Double   = random.nextDouble() * 2 * Pi     // random double between 0 and 2π

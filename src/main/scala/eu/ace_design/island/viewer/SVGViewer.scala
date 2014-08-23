@@ -57,6 +57,9 @@ class SVGViewer extends Viewer  {
     )
     // We go through each function one by one. We apply each f to all the faces stored in the map
     functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
+    // We display the map UUID
+    g.setColor(Colors.BLACK)
+    g.drawString("64236166-165d-47f0-a4fd-ed2c443ffxxx", 15, 15)
   }
 
   /**
@@ -85,7 +88,7 @@ class SVGViewer extends Viewer  {
     debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
 
     g.setStroke(new BasicStroke(0.1f))
-    g.setColor(bgColor)
+    g.setColor(border)
     g.draw(path)
     g.setColor(bgColor)
     g.fill(path)
