@@ -1,9 +1,12 @@
 package eu.ace_design.island.dsl
 
 import eu.ace_design.island.geom._
+import eu.ace_design.island.geom.generators.{SquaredGrid, RelaxedRandomGrid, RandomGrid}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
 import eu.ace_design.island.viewer._
+import java.util.UUID
+import scala.util.Random
 
 /**
  * This trait implements the different syntactic construction to be used to build an Island.
@@ -26,34 +29,36 @@ trait DiSLand {
 
   /**
    * A PointGeneratorDirective uses the map size and the number of expected faces to distribute points on the grid.
+   * For random grids, it also uses a random point generator (initialized thanks to the UUID in the configuration)
    */
-  protected type PointGeneratorDirective = (Int,Int) => Set[Point]
-  protected val smoothly: PointGeneratorDirective = (size, faces) => (new RelaxedRandomGrid(size))(faces)
-  protected val randomly: PointGeneratorDirective = (size, faces) => (new RandomGrid(size))(faces)
-  protected val squarely: PointGeneratorDirective = (size, faces) => (new SquaredGrid(size))(faces)
+  protected type PointGeneratorDirective = (Int, Int, Random) => Set[Point]
+  protected val smoothly: PointGeneratorDirective = (size, faces, rnd) => (new RelaxedRandomGrid(size,rnd))(faces)
+  protected val randomly: PointGeneratorDirective = (size, faces, rnd) => (new RandomGrid(size, rnd))(faces)
+  protected val squarely: PointGeneratorDirective = (size, faces, _) => (new SquaredGrid(size))(faces)
 
   /**
    * A shape directive relies on the map size and the water threshold to be used to determine water faces.
+   * Random parameter (based on the configuration UUID) is used when random shape are used in the map.
    */
-  protected type ShapeDirective = (Int, Int) => Process
+  protected type ShapeDirective = (Int, Int, Random) => Process
 
   // The disk shape is defined as "disk(surface = 80.percent)"
-  protected def disk(surface: Percentage): ShapeDirective = (size, threshold) => {
+  protected def disk(surface: Percentage): ShapeDirective = (size, threshold, _) => {
     IdentifyWaterArea(new DiskShape(size, size.toDouble/2 * surface.value), threshold)
   }
 
   // the donut shape is defined as "donut(external = 80.percent, lake = 10.percent)"
-  protected def donut(external: Percentage, lake: Percentage): ShapeDirective = (size, threshold) => {
+  protected def donut(external: Percentage, lake: Percentage): ShapeDirective = (size, threshold, _) => {
     IdentifyWaterArea(new DonutShape(size, size.toDouble/2 * external.value, size.toDouble/2 * lake.value), threshold)
   }
 
   // the radial shape is defined as "radial(factor = 1.57)"
-  protected def radial(factor: Double): ShapeDirective = (size, threshold) => {
-    IdentifyWaterArea(new RadialShape(size, factor), threshold)
+  protected def radial(factor: Double): ShapeDirective = (size, threshold, random) => {
+    IdentifyWaterArea(new RadialShape(size, factor, random), threshold)
   }
 
   /**
-   * functions as syntactical element o build elevation fuctions for the build process
+   * functions as syntactical element to build elevation functions for the build process
    */
   def whereDistanceIsHeight: Process = AssignElevation(ElevationFunctions.identity)
   def withCulminatingPeak(i: Int): Process = AssignElevation(ElevationFunctions.peak(i))
@@ -86,13 +91,15 @@ trait DiSLand {
    * @param waterThreshold percentage of vertices tagged as water to consider a face as water
    * @param generator the point generator to be used to create the faces
    * @param process the sequence of process to be used to properly build the island
+   * @param uuid an unique identifier (a Java UUID) used to initialize the random generator (if used)
    */
   protected case class Configuration(mapSize: Int        = 1024,
                                      faces: Int          = 1000,
                                      waterThreshold: Int = 30,
                                      generator: PointGeneratorDirective = smoothly,
-                                     shape: ShapeDirective = radial(1.87),
-                                     process: Seq[Process] = defaultProcess) {
+                                     shape: ShapeDirective = radial(1.27),
+                                     process: Seq[Process] = defaultProcess,
+                                     uuid: String          = UUID.randomUUID.toString) {
 
     // The different keywords to be used to update the configuration with specific values
 
@@ -102,20 +109,22 @@ trait DiSLand {
     def distributed(dir: PointGeneratorDirective) = this.copy(generator = dir)
     def shapedAs(s: ShapeDirective)  = this.copy(shape = s)
     def builtWith(seq: Seq[Process]) = this.copy(process = seq)
+    def usingSeed(s: String) = this.copy(uuid = s)
 
     /**
      * Transform this very specific configuration into an Island map
      * @return the map built using this configuration
      */
     def toMap: IslandMap = {
-      val sites = generator(mapSize, faces)
+      val random = new Random(UUID.fromString(uuid).getMostSignificantBits)
+      val sites = generator(mapSize, faces, random)
       val meshBuilder = new MeshBuilder(mapSize)
       val mesh = meshBuilder(sites)
       val mapBuilder = new IslandBuilder {
         override def size: Int = mapSize
-        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold) +: process
+        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: process
       }
-      mapBuilder(mesh)
+      mapBuilder(mesh).copy(uuid = Some(uuid))
     }
   }
 

@@ -1,5 +1,7 @@
 package eu.ace_design.island.geom
 
+import java.util.UUID
+
 /**
  * This file is part of the island project. It is designed to be INDEPENDENT of any geometrical library.
  * It contains the different data structures and interfaces used to implement the Map geometry. Data structures are
@@ -99,17 +101,14 @@ case class Face(center: Int, edges: Seq[Int], neighbors: Option[Set[Int]] = None
 /**
  * A Mesh contains the vertices, edges and faces associated to a given map
  * @param vertices the vertex registry  (default the empty one)
+ * @param uuid an unique identifier used to identify this mesh
  */
 case class Mesh(
   vertices: VertexRegistry = VertexRegistry(),
   edges:    EdgeRegistry   = EdgeRegistry(),
   faces:    FaceRegistry   = FaceRegistry(),
-  size: Option[Int] = None) {
-
-
-  def +(that: Mesh): Mesh = Mesh(vertices = this.vertices + that.vertices,
-                                 edges = this.edges + that.edges,
-                                 faces = this.faces + that.faces)
+  size: Option[Int] = None,
+  uuid: UUID = UUID.randomUUID) {
 
   /**
    * Clip a given mesh by specifying its size (this is purely for information purpose, and supposed consistent with the

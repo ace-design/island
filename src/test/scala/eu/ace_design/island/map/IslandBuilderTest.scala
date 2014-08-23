@@ -1,9 +1,8 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.map.processes._
 import org.specs2.mock.Mockito
 import org.specs2.mutable._
-import eu.ace_design.island.geom.{Mesh, MeshBuilder, SquaredGrid}
+import eu.ace_design.island.geom.Mesh
 
 class IslandBuilderTest extends SpecificationWithJUnit with Mockito {
 
@@ -12,8 +11,8 @@ class IslandBuilderTest extends SpecificationWithJUnit with Mockito {
   "The IslandBuilder" should {
 
     val m = IslandMap(Mesh(size = Some(300)), PropertySet(), PropertySet())
-    val p1 = mock[processes.Process]; p1.apply(m) answers { im => im.asInstanceOf[IslandMap]}
-    val p2 = mock[processes.Process]; p2.apply(m) answers { im => im.asInstanceOf[IslandMap]}
+    val p1 = mock[processes.Process]; p1.apply(m) answers { im => m.asInstanceOf[IslandMap]}
+    val p2 = mock[processes.Process]; p2.apply(m) answers { im => m.asInstanceOf[IslandMap]}
 
     case class MockedBuilder(override val size: Int) extends IslandBuilder { val steps = Seq(p1, p2) }
 

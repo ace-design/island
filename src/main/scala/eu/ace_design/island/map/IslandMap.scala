@@ -7,9 +7,11 @@ import eu.ace_design.island.geom.Mesh
  * @param mesh the geometrical mesh used
  * @param faceProps a propertySet associated to the faces stored in mesh
  * @param vertexProps a propertySet associated to the vertices stored in mesh
+ * @param uuid if given, it contains the UUID used to initialise the random generator
  */
 case class IslandMap(mesh: Mesh,
-                     faceProps: PropertySet = PropertySet(),
-                     vertexProps: PropertySet = PropertySet() ) {
+                     faceProps: PropertySet   = PropertySet(),
+                     vertexProps: PropertySet = PropertySet(),
+                     uuid: Option[String]     = None) {
 
 }

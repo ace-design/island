@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.geom.{MeshBuilder, SquaredGrid, Point}
+import eu.ace_design.island.geom.generators.SquaredGrid
+import eu.ace_design.island.geom.{MeshBuilder, Point}
 
 import eu.ace_design.island.map.processes._
 import org.specs2.mutable._
