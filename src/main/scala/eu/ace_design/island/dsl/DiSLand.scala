@@ -60,8 +60,9 @@ trait DiSLand {
   /**
    * functions as syntactical element to build elevation functions for the build process
    */
-  def whereDistanceIsHeight: Process = AssignElevation(ElevationFunctions.identity)
-  def withCulminatingPeak(i: Int): Process = AssignElevation(ElevationFunctions.peak(i))
+  def whereDistanceIsHeight: Process                       = AssignElevation(ElevationFunctions.identity)
+  def withCulminatingPeak(i: Int): Process                 = AssignElevation(ElevationFunctions.peak(i))
+  def withElevationRedistribution(factor: Double): Process = AssignElevation(ElevationFunctions.redistribute(factor))
 
   /**
    * Syntactic sugar to access builder processes as keywords
@@ -81,7 +82,7 @@ trait DiSLand {
     lakesAndOceans,
     coastLine,
     distanceToCoast,
-    whereDistanceIsHeight
+    withElevationRedistribution(factor = 0.5)
   )
 
   /**
