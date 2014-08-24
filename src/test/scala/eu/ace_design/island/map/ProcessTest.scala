@@ -187,6 +187,36 @@ class ProcessTest extends SpecificationWithJUnit {
     }
   }
 
+  "The ElevationFunctions library" should {
+    val distances = (for(i <- 0 until 100) yield (i -> i*2.0)).toMap
+
+    "define the identity function" in {
+      val result = ElevationFunctions.identity(distances)
+      result.toSet must_== distances.toSet
+    }
+
+    "define the peak function that re-scale the elevation" in {
+      val summit = 2706 // Lets build the "Monte Cinto", Corsica highest mountain
+      val result = ElevationFunctions.peak(summit)(distances)
+      result foreach { case (k,v) =>
+          distances.get(k) must beSome
+          v must beLessThanOrEqualTo(summit.toDouble)
+      }
+      result must haveValue(summit.toDouble)
+      result must haveSize(distances.size)
+    }
+
+    "define the redistribute function to redistribute the elevation based on a cumulative function" in {
+      val factor = 0.5 ; val max = distances.values.max
+      val result = ElevationFunctions.redistribute(factor)(distances)
+      result foreach { case (k,v) =>
+        distances.get(k) must beSome
+        v must beLessThanOrEqualTo(factor * max)
+      }
+      result must haveSize(distances.size)
+    }
+
+  }
 
 
 
