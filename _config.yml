@@ -1,4 +1,4 @@
 name: Island
 markdown: redcarpet
-pygments: true
+highlighter: pygments
 baseurl: /island
