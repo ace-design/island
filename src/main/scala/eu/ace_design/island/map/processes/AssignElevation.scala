@@ -15,6 +15,19 @@ object ElevationFunctions {
     distances map { case (key, distance) => key -> distance / max * summit }
   }
 
+
+  def redistribute(factor: Double): ElevationFunction = distances => {
+    val max = distances.values.max * factor
+    val sorted = distances.toSeq.sortBy(_._2)
+    val yMax = sorted.length
+    val redistributed = for(index <- 0 until yMax)
+      yield {
+        val y = index.toDouble / yMax ; val x = 1 - math.sqrt(1-y)
+        sorted(index)._1 -> x * max
+    }
+    redistributed.toMap
+  }
+
 }
 
 
