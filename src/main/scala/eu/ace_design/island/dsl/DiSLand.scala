@@ -82,7 +82,7 @@ trait DiSLand {
     lakesAndOceans,
     coastLine,
     distanceToCoast,
-    withElevationRedistribution(factor = 0.33)
+    withElevationRedistribution(factor = 0.5)
   )
 
   /**

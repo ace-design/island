@@ -3,28 +3,66 @@ package eu.ace_design.island.map.processes
 import eu.ace_design.island.geom.{Face, EdgeRegistry}
 import eu.ace_design.island.map._
 
-
+/**
+ * This object defines several elevation function used to assign the elevation (z coordinate) of each point
+ */
 object ElevationFunctions {
 
+  // An elevation functions transforms a map of VertexRef -> DistanceToCoast into a map VertexRef -> Height
   type ElevationFunction =  Map[Int,Double] => Map[Int,Double]
 
+  /**
+   * The identity function consider that the elevation of a point is equivalent to its distance to the coastline
+   * @return the elevation map
+   */
   def identity: ElevationFunction = m => m
 
+  /**
+   * The peak function works like the identity one, and allows one to specify the elevation of the culminating point
+   * @param summit the maximal elevation
+   * @return the elevation map
+   */
   def peak(summit: Int): ElevationFunction = distances => {
     val max = distances.values.max
     distances map { case (key, distance) => key -> distance / max * summit }
   }
 
-
-  def redistribute(factor: Double): ElevationFunction = distances => {
-    val max = distances.values.max * factor
-    val sorted = distances.toSeq.sortBy(_._2)
+  /**
+   * This algorithm is used to redistribute the elevations according to the y = 1 - (1-x)^2 function.
+   * (see http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/)
+   *
+   * The idea is to sort the points based on their distance to the coast. The redistribution function reshape the island
+   * by defining the number of points having an elevation lesser than s given one. In this function, y is the number of
+   * points handled, and x is the associated elevation. We rely on a normalized function, i.e., (x,y) \in [0,1]^2
+   *
+   * By sorting the distance map, we know the y value, assimilated to the position of the point in the sorted list. It
+   * is then our responsibility to find the x, which maps to the elevation to be assigned to the associated points. I
+   * must admit it looks like magic at first sight, but it is quite logic after all (Read Patel's blog post to see an
+   * illustration).
+   *
+   * y = 1  - (1-x)^2
+   *   = 2x - x^2
+   * => - x^2 +2x - y = 0
+   *
+   * A y is known, this is a simple quadratic equation.  delta = 4 - 4y, and as y \in [0,1], delta > 0 \forall y
+   * It admits 2 solutions :
+   * s = (2 ± sqrt(4 - 4y) ) / 2  = (2 ± sqrt(4(1 - y)) ) / 2
+   *   = (2 ± 2.sqrt(1 - y)) / 2  = 2 (1 ± sqrt(1 - y)) / 2
+   *   = (1 ± sqrt(1 - y))        As (x,y) \in [0,1]^2, the only solution is (1 - sqrt(1 - y))
+   *
+   * Like Patel, we use a glitch (replacing 1 by 1.1) in s to strengthen the slopes a little bit.
+   *
+   * @param factor a factor used to rescale the slopes of the island
+   * @return the elevation map
+   */
+  def redistribute(factor: Double = 1): ElevationFunction = distances => {
+    val max = distances.values.max * factor; val sorted = distances.toSeq.sortBy(_._2)
     val yMax = sorted.length
     val redistributed = for(index <- 0 until yMax)
       yield {
-        val y = index.toDouble / yMax ; val x = 1 - math.sqrt(1-y)
-        sorted(index)._1 -> x * max
-    }
+        val y = index.toDouble / yMax ; val x = 1.1 - math.sqrt(1.1-y)
+        sorted(index)._1 -> max * (if (x >=1) 1 else x)
+      }
     redistributed.toMap
   }
 
@@ -52,7 +90,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
     val distances = (m.vertexProps restrictedTo DistanceToCoast()) filter { case (k,_) => corners contains k }
     val cornersElevation = phi(distances)
 
-    info("Computing faces' center elevations")
+    info("Computing faces' center elevations as the average of the involved vertices' elevation")
     val land = m.faceProps.project(m.mesh.faces)(Set(!IsWater()))
     val centersElevation: Map[Int, Double] = (land map { face =>
       val corners = face.vertices(m.mesh.edges)
@@ -60,7 +98,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
       face.center -> sum / corners.size
     }).toMap
 
-    info("Adjusting inner lakes to make it flat")
+    info("Adjusting inner lakes to make them flat")
     val lakeFaces = m.faceProps.project(m.mesh.faces)(Set(WaterKind(ExistingWaterKind.LAKE)))
     val adjustment = adjust(lakeFaces, m, cornersElevation)
 
@@ -136,7 +174,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
    */
   private def setToMinHeight(lake: Set[Face], m: IslandMap, existing: Map[Int, Double]): Map[Int, Double] = {
     val verts = lake flatMap { l => l.vertices(m.mesh.edges) }
-    val minHeight = (verts map { existing.getOrElse(_, Double.PositiveInfinity) }).min // the Esle should never happen
+    val minHeight = (verts map { existing.getOrElse(_, Double.PositiveInfinity) }).min // the else should never happen
     (verts map { _ -> minHeight }).toMap
   }
 
