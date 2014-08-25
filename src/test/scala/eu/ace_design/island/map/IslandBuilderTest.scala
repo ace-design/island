@@ -10,7 +10,7 @@ class IslandBuilderTest extends SpecificationWithJUnit with Mockito {
 
   "The IslandBuilder" should {
 
-    val m = IslandMap(Mesh(size = Some(300)), PropertySet(), PropertySet())
+    val m = IslandMap(Mesh(size = Some(300)))
     val p1 = mock[processes.Process]; p1.apply(m) answers { im => m.asInstanceOf[IslandMap]}
     val p2 = mock[processes.Process]; p2.apply(m) answers { im => m.asInstanceOf[IslandMap]}
 
