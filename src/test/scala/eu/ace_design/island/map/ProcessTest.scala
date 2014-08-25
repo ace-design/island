@@ -22,33 +22,33 @@ class ProcessTest extends SpecificationWithJUnit {
 
   "The IdentifyBorders process" should {
     val updated = IdentifyBorders(entry)  // no pre-conditions
-    val borderPoints = updated.vertexProps.project(updated.mesh.vertices)(Set(IsBorder()))
-    val borderFaces  = updated.faceProps.project(updated.mesh.faces)(Set(IsBorder()))
+    val borderPoints = updated.findVerticesWith(Set(IsBorder()))
+    val borderFaces  = updated.findFacesWith(Set(IsBorder()))
 
     "annotate with IsBorder the faces that touch the external boundary" in {
       // This trick only work because we are using a grid-based generator
       updated.faceProps.size must_== 4 * (math.sqrt(FACES).toInt - 1)
     }
     "annotate as border the points that touch the edge of the map" in {
-      val check = (p: Point) => p.x == 0 || p.x == updated.mesh.size.get || p.y == 0 || p.y == updated.mesh.size.get
+      val check = (p: Point) => p.x == 0 || p.x == updated.size || p.y == 0 || p.y == updated.size
       borderPoints foreach { check(_) must beTrue }
       updated.vertexProps.size must beGreaterThan(0)
     }
     "leave faces that are not border one unchanged" in {
-      val refs = borderFaces map { updated.mesh.faces(_).get }
-      val otherFaces = updated.mesh.faces.references diff refs
+      val refs = borderFaces map { f => updated.faceRef(f) }
+      val otherFaces = updated.faceRefs diff refs
       otherFaces foreach { ref => updated.faceProps.get(ref) must_== entry.faceProps.get(ref) }
       true must beTrue // to return a spec fragment and thus allow compilation.
     }
     "leave vertices that are not borders unchanged" in {
-      val refs = borderPoints map { updated.mesh.vertices(_).get }
-      val otherPoints = updated.mesh.vertices.references diff refs
+      val refs = borderPoints map { p => updated.vertexRef(p) }
+      val otherPoints = updated.vertexRefs diff refs
       otherPoints foreach { ref => updated.vertexProps.get(ref) must_== entry.vertexProps.get(ref) }
       true must beTrue // to return a spec fragment and thus allow compilation.
     }
     "automatically consider border elements (faces and vertices) as water ones" in {
-      val faceRefs = borderFaces map { updated.mesh.faces(_).get }
-      val verticesRefs = borderPoints map { updated.mesh.vertices(_).get }
+      val faceRefs = borderFaces map { f => updated.faceRef(f) }
+      val verticesRefs = borderPoints map { p => updated.vertexRef(p) }
       faceRefs foreach { updated.faceProps.check(_, IsWater()) must beTrue }
       verticesRefs foreach { updated.vertexProps.check(_, IsWater()) must beTrue }
       true must beTrue
@@ -60,9 +60,8 @@ class ProcessTest extends SpecificationWithJUnit {
     val updated = process(entry)   // no pre-conditions
 
     "annotate all the faces with IsWater properties" in {
-      val props = updated.faceProps.project(updated.mesh.faces) _
-      val waters = props(Set(IsWater()))
-      val lands = props(Set(!IsWater()))
+      val waters = updated.findFacesWith(Set(IsWater()))
+      val lands = updated.findFacesWith(Set(!IsWater()))
       waters ++ lands must_== mesh.faces.values
     }
   }
@@ -70,25 +69,25 @@ class ProcessTest extends SpecificationWithJUnit {
   "The AlignVertexWaterBasedOnFaces process" should {
     val precondition = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
     val updated = AlignVertexWaterBasedOnFaces(precondition(entry))
-    val fProps = updated.faceProps.project(updated.mesh.faces) _
-    val vProps = updated.vertexProps.project(updated.mesh.vertices) _
+    //val fProps = updated.faceProps.project(updated.mesh.faces) _
+    //val vProps = updated.vertexProps.project(updated.mesh.vertices) _
     "consider vertices involved in land faces as land" in {
-      val vertices = fProps(Set(!IsWater())) flatMap { _.vertices(updated.mesh.edges) }
+      val vertices = updated.findFacesWith(Set(!IsWater())) flatMap { f => updated.cornerRefs(f) }
       vertices map { updated.vertexProps.check(_,!IsWater()) } must contain(beTrue)
     }
     "align faces' center to their associated face" in {
-      val faces = fProps(Set(!IsWater()))
+      val faces = updated.findFacesWith(Set(!IsWater()))
       faces foreach { f =>
-        val ref = updated.mesh.faces(f).get
+        val ref = updated.faceRef(f)
         val faceVal = updated.faceProps.getValue(ref,IsWater())
         updated.vertexProps.check(f.center, IsWater(faceVal)) must beTrue
       }
       true must beTrue
     }
     "tag all vertices defined in the map" in {
-      val vertices = updated.mesh.vertices.values
-      val landVertices  = vProps(Set(!IsWater()))
-      val waterVertices = vProps(Set(IsWater()))
+      val vertices = updated.vertices
+      val landVertices  = updated.findVerticesWith(Set(!IsWater()))
+      val waterVertices = updated.findVerticesWith(Set(IsWater()))
       (landVertices ++ waterVertices) must_== vertices
     }
 
@@ -102,10 +101,9 @@ class ProcessTest extends SpecificationWithJUnit {
       IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
     }
     val updated = IdentifyLakesAndOcean(preconditions(entry))
-    val props = updated.faceProps.project(updated.mesh.faces) _
-    val waters = props(Set(IsWater()))
-    val oceans = props(Set(WaterKind(OCEAN)))
-    val lakes = props(Set(WaterKind(LAKE)))
+    val waters = updated.findFacesWith(Set(IsWater()))
+    val oceans = updated.findFacesWith(Set(WaterKind(OCEAN)))
+    val lakes = updated.findFacesWith(Set(WaterKind(LAKE)))
 
     "annotate all the water faces with WaterKind properties" in { lakes ++ oceans must_== waters }
     "identify the external ocean" in { oceans.size must be greaterThan 0 }
@@ -120,16 +118,14 @@ class ProcessTest extends SpecificationWithJUnit {
     val updated = IdentifyCoastLine(preconditions(entry))
 
     "annotate land faces with an IsCoast tag" in {
-      val finder = updated.faceProps.project(updated.mesh.faces) _
-      val land = finder(Set(!IsWater()))
-      val coast = finder(Set(IsCoast()))
+      val land = updated.findFacesWith(Set(!IsWater()))
+      val coast = updated.findFacesWith(Set(IsCoast()))
       coast must not(beEmpty)
       (coast & land) must_== coast
     }
     "Annotate land vertices with the IsCoast tag" in {
-      val finder = updated.vertexProps.project(updated.mesh.vertices) _
-      val coast = finder(Set(IsCoast()))
-      val land = finder(Set(!IsWater()))
+      val coast = updated.findVerticesWith(Set(IsCoast()))
+      val land = updated.findVerticesWith(Set(!IsWater()))
       coast must not(beEmpty)
       (coast & land) must_== coast
     }
@@ -141,14 +137,13 @@ class ProcessTest extends SpecificationWithJUnit {
       IdentifyCoastLine(IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))
     }
     val updated = MinimalDistanceToCoast(preconditions(entry))
-    val props = updated.vertexProps.project(updated.mesh.vertices) _
     "consider coastal vertices as lowest distance (0)" in {
-      val coast = props(Set(IsCoast())) map { updated.mesh.vertices(_).get }
+      val coast = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
       coast foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must_== 0 }
       true must beTrue
     }
     "assign a distance to each land vertices" in {
-      val land = props(Set(!IsWater())) map { updated.mesh.vertices(_).get  }
+      val land = updated.findVerticesWith(Set(!IsWater())) map { p => updated.vertexRef(p)  }
       land foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must be greaterThanOrEqualTo(0.0) }
       true must beTrue
     }
@@ -164,12 +159,12 @@ class ProcessTest extends SpecificationWithJUnit {
               IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
     }
     val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
-    val vProps = updated.vertexProps.project(updated.mesh.vertices) _
-    val fProps = updated.faceProps.project(updated.mesh.faces) _
+    //val vProps = updated.vertexProps.project(updated.mesh.vertices) _
+    //val fProps = updated.faceProps.project(updated.mesh.faces) _
 
-    val coastline = vProps(Set(IsCoast())) map { updated.mesh.vertices(_).get }
+    val coastline = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
     import ExistingWaterKind._
-    val raw = fProps(Set(WaterKind(OCEAN))) flatMap { f => f.vertices(updated.mesh.edges) + f.center }
+    val raw = updated.findFacesWith(Set(WaterKind(OCEAN))) flatMap { f => updated.cornerRefs(f) + f.center }
     val oceans = raw diff coastline // taking all the vertices involved in oceans, removing coastline
 
     "not annotate ocean vertices with elevation annotation" in {
@@ -177,7 +172,7 @@ class ProcessTest extends SpecificationWithJUnit {
       true must beTrue // glitch to allow implicit conversion (thus compilation). real test is above.
     }
     "give an elevation >= 0 to any vertex that is not in the ocean " in {
-      val land = updated.mesh.vertices.references diff oceans
+      val land = updated.vertexRefs diff oceans
       land must not be empty
       land foreach { l =>
         updated.vertexProps.isAnnotatedAs(l, HasForHeight()) must beTrue

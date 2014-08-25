@@ -86,20 +86,20 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
 
   override def apply(m: IslandMap): IslandMap = {
     info("Assigning initial elevation for corner vertices")
-    val corners =  m.mesh.vertices.references diff (m.mesh.faces.values map { _.center })
+    val corners =  m.vertexRefs diff (m.faces map { _.center })
     val distances = (m.vertexProps restrictedTo DistanceToCoast()) filter { case (k,_) => corners contains k }
     val cornersElevation = phi(distances)
 
     info("Computing faces' center elevations as the average of the involved vertices' elevation")
-    val land = m.faceProps.project(m.mesh.faces)(Set(!IsWater()))
+    val land = m.findFacesWith(Set(!IsWater()))
     val centersElevation: Map[Int, Double] = (land map { face =>
-      val corners = face.vertices(m.mesh.edges)
+      val corners = m.cornerRefs(face)
       val sum = (0.0 /: corners) { (acc, ref) => acc + cornersElevation(ref) }
       face.center -> sum / corners.size
     }).toMap
 
     info("Adjusting inner lakes to make them flat")
-    val lakeFaces = m.faceProps.project(m.mesh.faces)(Set(WaterKind(ExistingWaterKind.LAKE)))
+    val lakeFaces = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE)))
     val adjustment = adjust(lakeFaces, m, cornersElevation)
 
     info("Updating the property sets")
@@ -135,9 +135,9 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
       case Some(face) => acc.flatten contains face match { // is this particular face already handled?
         case true  => loop(ins.tail, acc)  // yes, so move on to the next one
         case false => { // No, this face is not already handled => handle it and move to the next one!
-          val faceRef = m.mesh.faces(face).get
+          val faceRef = m.faceRef(face)
           val surroundingLake = getLake(faceRef, m)
-          val involvedFaces = surroundingLake map { ref => m.mesh.faces(ref) }
+          val involvedFaces = surroundingLake map { ref => m.face(ref) }
             loop(ins.tail, acc + involvedFaces)
         }
       }
@@ -155,7 +155,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
     def loop(faces: Set[Int], acc: Set[Int]): Set[Int] = faces.headOption match {
       case None => acc
       case Some(ref) => {
-        val face = m.mesh.faces(ref)
+        val face = m.face(ref)
         val relevant = face.neighbors.get filter { fRef =>
           m.faceProps.check(fRef, WaterKind(ExistingWaterKind.LAKE)) && !(acc contains fRef)
         }
@@ -173,7 +173,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
    * @return a map binding each vertices involved in the lake (as corner) to the minimal elevation of this lake
    */
   private def setToMinHeight(lake: Set[Face], m: IslandMap, existing: Map[Int, Double]): Map[Int, Double] = {
-    val verts = lake flatMap { l => l.vertices(m.mesh.edges) }
+    val verts = lake flatMap { face => m.cornerRefs(face) }
     val minHeight = (verts map { existing.getOrElse(_, Double.PositiveInfinity) }).min // the else should never happen
     (verts map { _ -> minHeight }).toMap
   }
