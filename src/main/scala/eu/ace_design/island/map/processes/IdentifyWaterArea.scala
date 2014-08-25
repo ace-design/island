@@ -27,16 +27,16 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
   override def apply(m: IslandMap): IslandMap = {
     info("Creating the shape")
     val isWaterVertex = shape.isWater _
-    val pRefs = m.mesh.vertices.queryReferences(isWaterVertex) // Find all the vertices matching the given shape
+    val pRefs = m.findVertexRefsWith(isWaterVertex) // Find all the vertices matching the given shape
 
     info("Annotating faces")
     val isWaterFace: Face => Boolean = { f =>
-      val vertices = f.vertices(m.mesh.edges)
+      val vertices = m.cornerRefs(f)
       val waterVertices = vertices filter { r => pRefs.contains(r)}
       (waterVertices.size.toFloat / vertices.size) * 100 > threshold
     }
-    val waterFaceRefs = m.mesh.faces.queryReferences(isWaterFace)
-    val landFaceRefs = m.mesh.faces.references diff waterFaceRefs
+    val waterFaceRefs = m.findFaceRefsWith(isWaterFace)
+    val landFaceRefs = m.faceRefs diff waterFaceRefs
     debug("Faces tagged as water: " + waterFaceRefs.toSeq.sorted.mkString("(", ",", ")"))
     debug("Faces tagged as land: " + landFaceRefs.toSeq.sorted.mkString("(", ",", ")"))
     val fProps = m.faceProps bulkAdd (waterFaceRefs -> IsWater()) bulkAdd (landFaceRefs -> !IsWater())
@@ -65,18 +65,18 @@ object AlignVertexWaterBasedOnFaces extends Process with Logger {
   override def apply(m: IslandMap): IslandMap = {
     info("Annotating land and water vertices based on faces tags")
     // Interesting vertices are all the vertices not used as the center of a given face.
-    val exceptCenters = m.mesh.vertices.references diff (m.mesh.faces.values map { _.center })
-    val landFaceRefs = m.faceProps.project(m.mesh.faces)(Set(!IsWater())) map { f => m.mesh.faces(f).get }
+    val exceptCenters = m.vertexRefs diff (m.faces map { _.center })
+    val landFaceRefs = m.findFacesWith(Set(!IsWater())) map { f => m.faceRef(f) }
     // Land vertices are the one involved in a land faces. All the other are water
-    val landVertices = landFaceRefs flatMap { idx: Int => m.mesh.faces(idx).vertices(m.mesh.edges) }
+    val landVertices = landFaceRefs flatMap { idx: Int => m.cornerRefs(m.face(idx)) }
     // Others are water (excepting the centers of the faces)
     val waterVertices = exceptCenters diff landVertices
     debug("Vertices tagged as water: " + waterVertices.toSeq.sorted.mkString("(", ",", ")"))
     debug("Vertices tagged as land: " + landVertices.toSeq.sorted.mkString("(", ",", ")"))
     val vProps = m.vertexProps bulkAdd (waterVertices -> IsWater()) bulkAdd (landVertices -> !IsWater())
     // aligning face centers with the surrounding face
-    val finalPSet = (vProps /: m.mesh.faces.values) { (acc, f) =>
-      val fVal =  m.faceProps.getValue(m.mesh.faces(f).get, IsWater()) // the value for this face
+    val finalPSet = (vProps /: m.faces) { (acc, f) =>
+      val fVal =  m.faceProps.getValue(m.faceRef(f), IsWater()) // the value for this face
       acc + (f.center -> IsWater(fVal))
     }
     m.copy(vertexProps = finalPSet)

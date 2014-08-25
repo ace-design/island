@@ -70,16 +70,16 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
       def isValid(data: Seq[String]) = {  // v $x $y $z
         data must haveSize(4)
         data(0) must_== "v"
-        map.mesh.vertices(Point(data(1).toDouble, data(2).toDouble)) must beSome
+        map.vertices must contain(Point(data(1).toDouble, data(2).toDouble))
       }
       val vertices = contents filter { s => s.startsWith("v") }
       vertices foreach { s => isValid(s.split(" ")) }
-      vertices must haveSize(map.mesh.vertices.size)
+      vertices must haveSize(map.vertices.size)
     }
     "contain the same number of faces" in {
       // WARNING this test is an over simplification of what should be done (check the contents of each face)
       val faces = contents filter { s => s.startsWith("f") }
-      faces must haveSize(map.mesh.faces.size)
+      faces must haveSize(map.faces.size)
     }
   }
 

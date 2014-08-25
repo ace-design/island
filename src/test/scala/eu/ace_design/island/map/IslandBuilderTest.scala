@@ -10,7 +10,8 @@ class IslandBuilderTest extends SpecificationWithJUnit with Mockito {
 
   "The IslandBuilder" should {
 
-    val m = IslandMap(Mesh(size = Some(300)))
+    val mesh = Mesh(size = Some(300))
+    val m = IslandMap(mesh)
     val p1 = mock[processes.Process]; p1.apply(m) answers { im => m.asInstanceOf[IslandMap]}
     val p2 = mock[processes.Process]; p2.apply(m) answers { im => m.asInstanceOf[IslandMap]}
 
@@ -27,8 +28,8 @@ class IslandBuilderTest extends SpecificationWithJUnit with Mockito {
     }
 
     "call each process stored in steps once" in {
-      val builder = MockedBuilder(m.mesh.size.get)
-      builder(m.mesh)
+      val builder = MockedBuilder(m.size)
+      builder(mesh)
       there was one(p1).apply(m)
       there was one(p2).apply(m)
     }

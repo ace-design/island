@@ -20,14 +20,13 @@ object MinimalDistanceToCoast extends Process {
 
   override def apply(m: IslandMap): IslandMap = {
     info("Computing minimal distance to coast for land vertices")
-    val props =  m.vertexProps.project(m.mesh.vertices) _
-    val coast = props(Set(IsCoast()))
-    val land =  props(Set(!IsWater()))
+    val coast = m.findVerticesWith(Set(IsCoast()))
+    val land =  m.findVerticesWith(Set(!IsWater()))
     // TODO coastal vertices can be precomputed as 0.0
     // computing distances
     val distances = (m.vertexProps /: land) { (acc, point) =>
       val distance = (coast map { point --> _ }).min  // finding the minimal one
-      acc + (m.mesh.vertices(point).get -> DistanceToCoast(distance))
+      acc + (m.vertexRef(point) -> DistanceToCoast(distance))
     }
     m.copy(vertexProps = distances)
   }

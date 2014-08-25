@@ -36,7 +36,7 @@ class SVGViewer extends Viewer  {
     info("Building an SVG document")
     val paintbrush = initGraphics(m)
     draw(m, paintbrush)
-    val f = flush(paintbrush, m.mesh.size)
+    val f = flush(paintbrush)
     debug(s"Storing the document in [${f.toString}]")
     f
   }
@@ -56,13 +56,13 @@ class SVGViewer extends Viewer  {
       drawCorners(_,_,_)
     )
     // We go through each function one by one. We apply each f to all the faces stored in the map
-    functions foreach { f => m.mesh.faces.references foreach { f(_, m, g) } }
+    functions foreach { f => m.faceRefs foreach { f(_, m, g) } }
     // We display the map UUID
     m.uuid match {
       case None =>
       case Some(uuid) => {
         g.setColor(Colors.BLACK)
-        g.drawString(s"seed: $uuid", 5, m.mesh.size.get - 5)
+        g.drawString(s"seed: $uuid", 5, m.size - 5)
       }
     }
   }
@@ -74,10 +74,10 @@ class SVGViewer extends Viewer  {
    * @param g the graphics2D object used to paint
    */
   private def drawAFace(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.mesh.faces(idx)
+    val f = map.face(idx)
 
     // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
-    val coords = (f.vertices(map.mesh.edges) map { map.mesh.vertices(_) } map { p => new Coordinate(p.x, p.y) }).toSeq
+    val coords = (map.cornerRefs(f) map { i => map.vertex(i) } map { p => new Coordinate(p.x, p.y) }).toSeq
     val linear = coords :+ new Coordinate(coords(0).x, coords(0).y)
     val factory = new GeometryFactory()
     val convexCoords = factory.createPolygon(linear.toArray).convexHull.getCoordinates
@@ -127,10 +127,10 @@ class SVGViewer extends Viewer  {
    * @param g the graphics2D object used to paint
    */
   private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.mesh.faces(idx)
+    val f = map.face(idx)
     g.setColor(Colors.LIGHT_GRAY)
     g.setStroke(new BasicStroke(1))
-    val center = map.mesh.vertices(f.center)
+    val center = map.vertex(f.center)
     g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
   }
 
@@ -141,14 +141,14 @@ class SVGViewer extends Viewer  {
    * @param g the graphics2D object used to paint
    */
   private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.mesh.faces(idx)
-    val center = map.mesh.vertices(f.center)
+    val f = map.face(idx)
+    val center = map.vertex(f.center)
     g.setColor(Color.LIGHT_GRAY)
     g.setStroke(new BasicStroke(0.05f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, Array{4.0f}, 0.0f))
     f.neighbors match {
       case None =>
       case Some(refs) => refs foreach { idx =>
-        val p = map.mesh.vertices(map.mesh.faces(idx).center)
+        val p = map.vertex(map.face(idx).center)
         g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
       }
     }
@@ -161,16 +161,16 @@ class SVGViewer extends Viewer  {
    * @param g the graphics2D object used to paint
    */
   private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.mesh.faces(idx)
+    val f = map.face(idx)
     g.setStroke(new BasicStroke(1))
-    f.vertices(map.mesh.edges) foreach { ref =>
+    map.cornerRefs(f) foreach { ref =>
       if(map.vertexProps.check(ref, IsWater()))
         g.setColor(Colors.DARK_BLUE)
       else if (map.vertexProps.check(ref, IsCoast()))
         g.setColor(Colors.LIGHT_SAND)
       else
         g.setColor(Colors.BLACK)
-      val p = map.mesh.vertices(ref)
+      val p = map.vertex(ref)
       g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
     }
   }
@@ -180,24 +180,19 @@ class SVGViewer extends Viewer  {
    * @return
    */
   private def initGraphics(m: IslandMap): SVGGraphics2D = {
-    val mesh = m.mesh
     val domImpl = SVGDOMImplementation.getDOMImplementation
     val document = domImpl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null)
     val r = new SVGGraphics2D(document)
-    mesh.size match {
-      case Some(s) => r.setSVGCanvasSize(new Dimension(s, s))
-      case None =>
-    }
+    r.setSVGCanvasSize(new Dimension(m.size, m.size))
     r
   }
 
   /**
    * Flush the mesh being drawn in an Graphics2D object into a plain file
    * @param svg2D the graphic object used to draw the mesh
-   * @param clip the size of the SVG file (attributes of the svg tag if present)
    * @return the file used to flush the graphic object
    */
-  private def flush(svg2D: SVGGraphics2D, clip: Option[Int]): File = {
+  private def flush(svg2D: SVGGraphics2D): File = {
     val result = initOutput
     svg2D.stream(result.getAbsolutePath, true) // true means "use CSS".
     result
