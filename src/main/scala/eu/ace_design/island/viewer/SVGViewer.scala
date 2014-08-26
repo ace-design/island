@@ -85,7 +85,7 @@ class SVGViewer extends Viewer  {
   private def drawAnEdge(idx: Int, map: IslandMap, g: Graphics2D) {
     try {
       val flow = map.edgeProps.getValue(idx, RiverFlow()) // throw an exception if no river flows through this edge
-      info(s"edge #$idx with flow $flow")
+      debug(s"edge #$idx with flow $flow")
       val edge = map.edge(idx)
       val p1 = map.vertex(edge.p1)
       val p2 = map.vertex(edge.p2)

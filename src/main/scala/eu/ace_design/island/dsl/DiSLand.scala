@@ -66,7 +66,7 @@ trait DiSLand {
   def withElevationRedistribution(factor: Double): Process = AssignElevation(ElevationFunctions.redistribute(factor))
 
   // Rivers
-  protected def flowing(rivers: Int): Process    = GenerateRivers(rivers)
+  protected def flowing(rivers: Int, distance: Double): Process = GenerateRivers(rivers, distance)
 
   // the initialisation process used to build island, **always** executed
   private val initProcess: Seq[Process] = Seq(
@@ -76,7 +76,7 @@ trait DiSLand {
   // the process used by default
   private val defaultProcess: Seq[Process] = Seq(
     withElevationRedistribution(factor = 0.5),
-    flowing(rivers = 10)
+    flowing(rivers = 10, distance = 0.4)
   )
 
   /**

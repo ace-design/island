@@ -18,12 +18,15 @@ import scala.util.Random
  * Post-conditions:
  *   - Edges involved in rivers are identified as RiverFlow(n), n >= 1 representing its flow
  *
- * @param sources the number of rivers' sources to generate on the island
+ * @param sources the number of rivers' sources to generate on the island (default to 10)
+ * @param distance the minimal distance to coast (as a percentage in [0,1]) to be a source (default to 0)
  */
-case class GenerateRivers(sources: Int = 10) extends RandomizedProcess {
+case class GenerateRivers(sources: Int = 10, distance: Double = 0.5) extends RandomizedProcess {
+  require(sources >= 0, "Sources cannot be negative")
+  require(distance >= 0 && distance <= 1, "distance must be in [0,1]")
 
   def apply(rand: Random)(m: IslandMap): IslandMap = {
-    // finding the river sources
+    info("Identifying sources for rivers, flowing water from source to coast")
     val rivers = identifySources(rand, m) map { source => createRiver(source, m, rand) }
     // concatenating the rivers, grouping by shared edges and counting the numbers of rivers per shared edge.
     val raw = (Seq[Int]() /: rivers) { (acc, r) => acc ++ r} groupBy { n => n } map { case (k,v) => k -> v.size }
@@ -41,12 +44,12 @@ case class GenerateRivers(sources: Int = 10) extends RandomizedProcess {
    * @return a sequence of vertex to be used as river sources
    */
   private def identifySources(rand: Random, m: IslandMap): Seq[Int] = {
-    info("Identifying sources for rivers")
-    def corners = m.faces flatMap { f => m.cornerRefs(f) } map { m.vertex }
-    val lands   = m.findVerticesWith(Set(!IsWater()))
-    val coasts  = m.findVerticesWith(Set(IsCoast()))
-    val candidates = (lands diff coasts) & corners
-    val result = rand.shuffle(candidates.toSeq).slice(0, sources) map { m.vertexRef }
+    // We are looking for vertices used as corners in faces, and annotated as land ones
+    val avails =  (m.faces flatMap { m.cornerRefs }) & (m.findVerticesWith(Set(!IsWater())) map { m.vertexRef })
+    // Among the available corners, we are looking for vertices located to a given distance from the coast
+    val maxDist = m.vertexProps.restrictedTo(DistanceToCoast()).values.max
+    val withDistance = avails filter { r => m.vertexProps.getValue(r, DistanceToCoast())/maxDist >= distance }
+    val result = rand.shuffle(withDistance.toSeq).slice(0, sources)
     debug(s"Vertices used as sources: ${result.mkString("(", ", ", ")")}")
     result
   }
@@ -59,7 +62,7 @@ case class GenerateRivers(sources: Int = 10) extends RandomizedProcess {
    * @return a set of edge references representing the edges involved in this river.
    */
   private def createRiver(source: Int, m: IslandMap, rand: Random): Set[Int] = {
-    info(s"Creating a river, starting at #$source")
+    debug(s"Creating a river, starting at #$source")
     def elevation(vRef: Int): Double = m.vertexProps.getValue(vRef, HasForHeight())
     def loop(from: Int, acc: Set[Int]): Set[Int] = m.vertexProps.check(from, IsCoast()) match {
       case true  => acc // coastline reached, and of the river
@@ -69,8 +72,10 @@ case class GenerateRivers(sources: Int = 10) extends RandomizedProcess {
         val crossed = acc map { edgeRef => m.edge(edgeRef) } flatMap { e => Seq(e.p1, e.p2) }
         // Vertex candidates are less elevated that this one, and not already crossed (to get out of lakes)
         val candidates = m.neighbors(from) filter { elevation(_) <= local } diff crossed
-        val to = rand.shuffle(candidates.toSeq).head // finding one candidate
-        loop(to, acc + m.edgeRef(Edge(from, to)))
+        candidates.toSeq.sorted.headOption match {
+          case None => acc // No more candidate available
+          case Some(to) => loop(to, acc + m.edgeRef(Edge(from, to))) // finding one candidate
+        }
     }
     val result = loop(source, Set())
     debug(s"River flows through edges ${ result.mkString("(", ", ", ")") }")
