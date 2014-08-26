@@ -76,7 +76,7 @@ trait DiSLand {
   // the process used by default
   private val defaultProcess: Seq[Process] = Seq(
     withElevationRedistribution(factor = 0.5),
-    flowing(rivers = 5)
+    flowing(rivers = 10)
   )
 
   /**

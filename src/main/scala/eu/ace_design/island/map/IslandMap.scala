@@ -76,7 +76,7 @@ class IslandMap private (
    */
   def copy(faceProps: PropertySet = this.faceProps, vertexProps: PropertySet = this.vertexProps,
            edgeProps: PropertySet = this.edgeProps, uuid: Option[String] = this.uuid): IslandMap =
-    new IslandMap(this._mesh, uuid, faceProps, vertexProps)
+    new IslandMap(this._mesh, uuid, faceProps, vertexProps, edgeProps)
 
   /**
    * Structural equality for maps
