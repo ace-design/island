@@ -47,24 +47,9 @@ class SVGViewer extends Viewer  {
    * @param g the Graphics2D object used to draw the mesh
    */
   private def draw(m: IslandMap, g: Graphics2D) {
-    // we rely on a set of function, executed sequentially to draw the map
-    // Function must be member of Int x IslandMap x Graphics2D -> Unit
-    val functions = Seq(
-      drawAFace(_,_,_),
-      //drawNeighbors(_,_,_),
-      drawCenters(_,_,_),
-      drawCorners(_,_,_)
-    )
-    // We go through each function one by one. We apply each f to all the faces stored in the map
-    functions foreach { f => m.faceRefs foreach { f(_, m, g) } }
-    // We display the map UUID
-    m.uuid match {
-      case None =>
-      case Some(uuid) => {
-        g.setColor(Colors.BLACK)
-        g.drawString(s"seed: $uuid", 5, m.size - 5)
-      }
-    }
+    m.faceRefs foreach { drawAFace(_, m, g) }
+    m.edgeRefs foreach { drawAnEdge(_, m, g) }
+    if (m.uuid.isDefined) { g.setColor(Colors.BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
   }
 
   /**
@@ -92,11 +77,22 @@ class SVGViewer extends Viewer  {
     val (bgColor, border) = colors(map.faceProps.get(idx))
     debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
 
-    g.setStroke(new BasicStroke(0.1f))
-    g.setColor(border)
-    g.draw(path)
     g.setColor(bgColor)
     g.fill(path)
+  }
+
+
+  private def drawAnEdge(idx: Int, map: IslandMap, g: Graphics2D) {
+    try {
+      val flow = map.edgeProps.getValue(idx, RiverFlow()) // throw an exception if no river flows through this edge
+      debug(s"edge #$idx with flow $flow")
+      val edge = map.edge(idx)
+      val p1 = map.vertex(edge.p1)
+      val p2 = map.vertex(edge.p2)
+      g.setStroke(new BasicStroke(1f * flow))
+      g.setColor(Colors.LIGHT_BLUE)
+      g.draw(new Line2D.Double(p1.x, p1.y, p2.x, p2.y))
+    } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
   /**
@@ -121,61 +117,6 @@ class SVGViewer extends Viewer  {
   }
 
   /**
-   * Draw the center of each face as a single black point (width: 3). Mainly used for explanation purpose
-   * @param idx the index of the face to draw
-   * @param map the map used as a reference
-   * @param g the graphics2D object used to paint
-   */
-  private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.face(idx)
-    g.setColor(Colors.LIGHT_GRAY)
-    g.setStroke(new BasicStroke(1))
-    val center = map.vertex(f.center)
-    g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
-  }
-
-  /**
-   * Draw the neighborhood relationship as gray lines between faces' centers. Mainly used for explanation purposes
-   * @param idx the index of the face to draw
-   * @param map the map used as a reference
-   * @param g the graphics2D object used to paint
-   */
-  private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.face(idx)
-    val center = map.vertex(f.center)
-    g.setColor(Color.LIGHT_GRAY)
-    g.setStroke(new BasicStroke(0.05f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, Array{4.0f}, 0.0f))
-    f.neighbors match {
-      case None =>
-      case Some(refs) => refs foreach { idx =>
-        val p = map.vertex(map.face(idx).center)
-        g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
-      }
-    }
-  }
-
-  /**
-   * Draw the corners of each face, coloring water corners in blue and land one in black.
-   * @param idx the index of the face to draw
-   * @param map the map used as a reference
-   * @param g the graphics2D object used to paint
-   */
-  private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
-    val f = map.face(idx)
-    g.setStroke(new BasicStroke(1))
-    map.cornerRefs(f) foreach { ref =>
-      if(map.vertexProps.check(ref, IsWater()))
-        g.setColor(Colors.DARK_BLUE)
-      else if (map.vertexProps.check(ref, IsCoast()))
-        g.setColor(Colors.LIGHT_SAND)
-      else
-        g.setColor(Colors.BLACK)
-      val p = map.vertex(ref)
-      g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
-    }
-  }
-
-  /**
    * Initialise the graphics2D object used to draw the mesh.
    * @return
    */
@@ -196,5 +137,64 @@ class SVGViewer extends Viewer  {
     val result = initOutput
     svg2D.stream(result.getAbsolutePath, true) // true means "use CSS".
     result
+  }
+
+
+  /**
+   * Draw the center of each face as a single black point (width: 3). Mainly used for explanation purpose
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   * @deprecated (useful at the beginning of the project to display the underlying mesh)
+   */
+  private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.face(idx)
+    g.setColor(Colors.LIGHT_GRAY)
+    g.setStroke(new BasicStroke(2))
+    val center = map.vertex(f.center)
+    g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
+  }
+
+  /**
+   * Draw the neighborhood relationship as gray lines between faces' centers. Mainly used for explanation purposes
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   * @deprecated (useful at the beginning of the project to display the underlying mesh)
+   */
+  private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.face(idx)
+    val center = map.vertex(f.center)
+    g.setColor(Color.LIGHT_GRAY)
+    g.setStroke(new BasicStroke(0.05f,BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1.0f, Array{4.0f}, 0.0f))
+    f.neighbors match {
+      case None =>
+      case Some(refs) => refs foreach { idx =>
+        val p = map.vertex(map.face(idx).center)
+        g.draw(new Line2D.Double(center.x, center.y, p.x, p.y))
+      }
+    }
+  }
+
+  /**
+   * Draw the corners of each face, coloring water corners in blue and land one in black.
+   * @param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   * @deprecated (useful at the beginning of the project to display the underlying mesh)
+   */
+  private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
+    val f = map.face(idx)
+    g.setStroke(new BasicStroke(1))
+    map.cornerRefs(f) foreach { ref =>
+      if(map.vertexProps.check(ref, IsWater()))
+        g.setColor(Colors.DARK_BLUE)
+      else if (map.vertexProps.check(ref, IsCoast()))
+        g.setColor(Colors.LIGHT_SAND)
+      else
+        g.setColor(Colors.BLACK)
+      val p = map.vertex(ref)
+      g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
+    }
   }
 }

@@ -46,3 +46,7 @@ case class DistanceToCoast(override val value: Double  = 0.0) extends Property[D
 case class HasForHeight(override val value: Double = 0.0) extends Property[Double] {
   override val key = "height"
 }
+
+case class RiverFlow(override val value: Int = 1) extends Property[Int] {
+  override val key = "riverFlow"
+}

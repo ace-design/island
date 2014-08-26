@@ -13,13 +13,13 @@ object Main extends App with Logger with DiSLand {
   val small = createIsland shapedAs donut(80.percent, 20.percent) withSize 400 having 1200.faces
   //export(small)
 
-  val medium = createIsland shapedAs radial(factor = 1.37) withSize 800 having 1024.faces
+  val medium = createIsland shapedAs radial(factor = 1.47)
   //export(medium)
 
   val large = createIsland shapedAs radial(factor = 1.07) withSize 2048 having 4096.faces
   //export(large)
 
-  val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834" withSize 800 having 1024.faces
+  val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834"
   export(always)
 
 

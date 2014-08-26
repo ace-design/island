@@ -58,31 +58,25 @@ trait DiSLand {
   }
 
   /**
-   * functions as syntactical element to build elevation functions for the build process
+   * functions as syntactical element to instantiate map building processes
    */
+  // Elevations
   def whereDistanceIsHeight: Process                       = AssignElevation(ElevationFunctions.identity)
   def withCulminatingPeak(i: Int): Process                 = AssignElevation(ElevationFunctions.peak(i))
   def withElevationRedistribution(factor: Double): Process = AssignElevation(ElevationFunctions.redistribute(factor))
 
-  /**
-   * Syntactic sugar to access builder processes as keywords
-   */
+  // Rivers
+  protected def flowing(rivers: Int, distance: Double): Process = GenerateRivers(rivers, distance)
 
-  protected val borders: Process            = IdentifyBorders
-  protected val lakesAndOceans: Process     = IdentifyLakesAndOcean
-  protected val coastLine: Process          = IdentifyCoastLine
-  protected val alignWaterVertices: Process = AlignVertexWaterBasedOnFaces
-  protected val distanceToCoast: Process    = MinimalDistanceToCoast
+  // the initialisation process used to build island, **always** executed
+  private val initProcess: Seq[Process] = Seq(
+    IdentifyBorders, AlignVertexWaterBasedOnFaces, IdentifyLakesAndOcean,
+    IdentifyCoastLine, MinimalDistanceToCoast)
 
-
-  // the default process used to build island
-  protected val defaultProcess = Seq(
-    borders,
-    alignWaterVertices,
-    lakesAndOceans,
-    coastLine,
-    distanceToCoast,
-    withElevationRedistribution(factor = 0.5)
+  // the process used by default
+  private val defaultProcess: Seq[Process] = Seq(
+    withElevationRedistribution(factor = 0.5),
+    flowing(rivers = 10, distance = 0.4)
   )
 
   /**
@@ -94,8 +88,8 @@ trait DiSLand {
    * @param process the sequence of process to be used to properly build the island
    * @param uuid an unique identifier (a Java UUID) used to initialize the random generator (if used)
    */
-  protected case class Configuration(mapSize: Int        = 1024,
-                                     faces: Int          = 1000,
+  protected case class Configuration(mapSize: Int        = 800,
+                                     faces: Int          = 1024,
                                      waterThreshold: Int = 30,
                                      generator: PointGeneratorDirective = smoothly,
                                      shape: ShapeDirective = radial(1.27),
@@ -112,6 +106,7 @@ trait DiSLand {
     def builtWith(seq: Seq[Process]) = this.copy(process = seq)
     def usingSeed(s: String) = this.copy(uuid = s)
 
+
     /**
      * Transform this very specific configuration into an Island map
      * @return the map built using this configuration
@@ -123,9 +118,9 @@ trait DiSLand {
       val mesh = meshBuilder(sites)
       val mapBuilder = new IslandBuilder {
         override def size: Int = mapSize
-        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: process
+        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: (initProcess ++ process)
       }
-      mapBuilder(mesh).copy(uuid = Some(uuid))
+      mapBuilder(mesh, random).copy(uuid = Some(uuid))
     }
   }
 

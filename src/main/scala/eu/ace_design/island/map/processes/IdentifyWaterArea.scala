@@ -58,9 +58,7 @@ case class IdentifyWaterArea(shape: IslandShape, threshold: Int) extends Process
  *   - Vertices involved in face centers are aligned with their related face
  *   - All vertices in the map are annotated as water OR land
  */
-object AlignVertexWaterBasedOnFaces extends Process with Logger {
-
-  override val silo = LogSilos.MAP_GEN
+object AlignVertexWaterBasedOnFaces extends Process  {
 
   override def apply(m: IslandMap): IslandMap = {
     info("Annotating land and water vertices based on faces tags")
