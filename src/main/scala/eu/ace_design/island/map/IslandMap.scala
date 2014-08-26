@@ -65,6 +65,8 @@ class IslandMap private (
   def edge(i: Int): Edge     = _mesh.edges(i)
   def edgeRef(e: Edge): Int  = _mesh.edges(e).get
 
+  val findEdgesWith: Set[Property[_]] => Set[Edge] = edgeProps.project(_mesh.edges)
+
 
   /**
    * copy Method defined to mimic classical case classes (mesh cannot be updated)

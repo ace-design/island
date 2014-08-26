@@ -18,8 +18,6 @@ class AssignElevationTest extends SpecificationWithJUnit {
               IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
     }
     val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
-    //val vProps = updated.vertexProps.project(updated.mesh.vertices) _
-    //val fProps = updated.faceProps.project(updated.mesh.faces) _
 
     val coastline = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
     import ExistingWaterKind._
