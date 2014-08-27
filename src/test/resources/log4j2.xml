@@ -9,5 +9,8 @@
         <Root level="error">
             <AppenderRef ref="Console"/>
         </Root>
+        <Logger name="eu.ace_design.Island/Map" level="off" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

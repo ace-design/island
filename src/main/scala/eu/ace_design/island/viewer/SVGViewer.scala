@@ -49,7 +49,7 @@ class SVGViewer extends Viewer  {
   private def draw(m: IslandMap, g: Graphics2D) {
     m.faceRefs foreach { drawAFace(_, m, g) }
     m.edgeRefs foreach { drawAnEdge(_, m, g) }
-    //highlightVertex(1337, m, g)
+    //highlightVertex(1, m, g)
     if (m.uuid.isDefined) { g.setColor(Colors.BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
   }
 
