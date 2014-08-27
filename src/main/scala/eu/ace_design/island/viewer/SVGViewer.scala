@@ -49,8 +49,17 @@ class SVGViewer extends Viewer  {
   private def draw(m: IslandMap, g: Graphics2D) {
     m.faceRefs foreach { drawAFace(_, m, g) }
     m.edgeRefs foreach { drawAnEdge(_, m, g) }
+    //highlightVertex(1337, m, g)
     if (m.uuid.isDefined) { g.setColor(Colors.BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
   }
+
+  private def highlightVertex(vRef: Int, m: IslandMap, g: Graphics2D ): Unit = {
+    g.setStroke(new BasicStroke(3f))
+    val p = m.vertex(vRef)
+    g.setColor(Color.RED)
+    g.draw(new Line2D.Double(p.x, p.y, p.x, p.y))
+  }
+
 
   /**
    * Draw a given face as a polygon on the map. The used colors are computed by the 'colors' function.
