@@ -15,7 +15,9 @@ class GenerateRiversTest extends ProcessTestTrait {
             AlignVertexWaterBasedOnFaces(
               IdentifyWaterArea(disk, 30)(IdentifyBorders(m)))))))
   }
-  override val updated =  GenerateRivers()(preconditions(entry))
+  override val updated =  GenerateRivers(sources = 1)(preconditions(entry))
+
+  draw()
 
   "The GenerateRivers process " should {
 
@@ -23,9 +25,10 @@ class GenerateRiversTest extends ProcessTestTrait {
       GenerateRivers(sources = -1) must throwAn[IllegalArgumentException]
     }
 
-    "reject a non-normalized distance" in { // normalized means in [0,1]
+    "reject a non-normalized distance" in { // normalized means in ]0,1]
+      GenerateRivers(distance = 0)  must throwAn[IllegalArgumentException]
       GenerateRivers(distance = -1) must throwAn[IllegalArgumentException]
-      GenerateRivers(distance = 2) must throwAn[IllegalArgumentException]
+      GenerateRivers(distance = 2)  must throwAn[IllegalArgumentException]
     }
 
     "Annotate edges with river flow" in {
