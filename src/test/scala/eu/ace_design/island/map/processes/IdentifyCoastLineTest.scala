@@ -1,18 +1,19 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map.{IsCoast, IsWater, DonutShape, IslandMap}
-import org.specs2.mutable._
 
-class IdentifyCoastLineTest extends SpecificationWithJUnit {
+
+class IdentifyCoastLineTest extends ProcessTestTrait {
 
   "IdentifyCoastLineTest Specifications".title
 
+  override val preconditions : IslandMap => IslandMap = { m =>
+    val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+    IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts,30)(IdentifyBorders(m))))
+  }
+  override val updated = IdentifyCoastLine(preconditions(entry))
+
   "The IdentifyCoastLine process" should {
-    val preconditions : IslandMap => IslandMap = { m =>
-      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
-      IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts,30)(IdentifyBorders(m))))
-    }
-    val updated = IdentifyCoastLine(preconditions(entry))
 
     "annotate land faces with an IsCoast tag" in {
       val land = updated.findFacesWith(Set(!IsWater()))

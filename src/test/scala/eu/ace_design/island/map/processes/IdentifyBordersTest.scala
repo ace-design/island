@@ -1,15 +1,17 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.geom.Point
-import eu.ace_design.island.map.{IsWater, IsBorder}
-import org.specs2.mutable._
+import eu.ace_design.island.map.{IslandMap, IsWater, IsBorder}
 
-class IdentifyBordersTest extends SpecificationWithJUnit {
+class IdentifyBordersTest extends ProcessTestTrait {
 
   "IdentifyBordersTest Specifications".title
 
+  override val preconditions: IslandMap => IslandMap = m => m
+  override val updated = IdentifyBorders(preconditions(entry))  // no pre-conditions
+
   "The IdentifyBorders process" should {
-    val updated = IdentifyBorders(entry)  // no pre-conditions
+
     val borderPoints = updated.findVerticesWith(Set(IsBorder()))
     val borderFaces  = updated.findFacesWith(Set(IsBorder()))
 

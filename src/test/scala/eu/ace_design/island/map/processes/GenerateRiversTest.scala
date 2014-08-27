@@ -1,24 +1,23 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map.{RiverFlow, DiskShape, IslandMap}
-import org.specs2.mutable._
 
-class GenerateRiversTest extends SpecificationWithJUnit {
+class GenerateRiversTest extends ProcessTestTrait {
 
   "GenerateRiversTest Specifications".title
 
-  "The GenerateRivers process " should {
+  override val preconditions: IslandMap => IslandMap = { m =>
+    val disk = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)
+    AssignElevation(ElevationFunctions.identity)(
+      MinimalDistanceToCoast(
+        IdentifyCoastLine(
+          IdentifyLakesAndOcean(
+            AlignVertexWaterBasedOnFaces(
+              IdentifyWaterArea(disk, 30)(IdentifyBorders(m)))))))
+  }
+  override val updated =  GenerateRivers()(preconditions(entry))
 
-    val preconditions: IslandMap => IslandMap = { m =>
-      val disk = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)
-      AssignElevation(ElevationFunctions.identity)(
-        MinimalDistanceToCoast(
-          IdentifyCoastLine(
-            IdentifyLakesAndOcean(
-              AlignVertexWaterBasedOnFaces(
-                IdentifyWaterArea(disk, 30)(IdentifyBorders(m)))))))
-    }
-    val updated =  GenerateRivers()(preconditions(entry))
+  "The GenerateRivers process " should {
 
     "reject a negative number of sources" in {
       GenerateRivers(sources = -1) must throwAn[IllegalArgumentException]

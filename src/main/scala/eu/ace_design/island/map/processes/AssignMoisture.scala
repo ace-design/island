@@ -98,7 +98,7 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
   private def moisturize(vertexRef: Int, m: IslandMap, sources: Map[Int, Int], elevations: Map[Int, Double]): Double = {
     val p = m.vertex(vertexRef)
     val upstream = sources filter { case (k, _) => elevations(k) >= elevations(vertexRef) }
-    val moisture = upstream map { case (ref, flow) =>  flow * propagation(p --> m.vertex(ref)) }
+    val moisture = upstream map { case (ref, flow) =>  flow * MoisturePropagation(propagation)(p --> m.vertex(ref)) }
     (0.0 /: moisture) { (acc, m) => acc + m }
   }
 

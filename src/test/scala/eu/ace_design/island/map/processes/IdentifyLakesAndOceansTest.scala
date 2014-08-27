@@ -1,21 +1,23 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map.{WaterKind, IsWater, DonutShape, IslandMap}
-import org.specs2.mutable._
+import eu.ace_design.island.map.ExistingWaterKind._
 
 
-class IdentifyLakesAndOceansTest extends SpecificationWithJUnit {
+class IdentifyLakesAndOceansTest extends ProcessTestTrait {
 
   "IdentifyLakesAndOceansTest Specifications".title
 
+  override val preconditions : IslandMap => IslandMap = { m =>
+    val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+    IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
+  }
+  override val updated = IdentifyLakesAndOcean(preconditions(entry))
+
   "The IdentifyLakesAndOcean process" should {
-    import eu.ace_design.island.map.ExistingWaterKind._
+
     // preconditions:  only works on faces => neglect AlignVertex...  Requires borders and IdentifyWaterArea
-    val preconditions : IslandMap => IslandMap = { m =>
-      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
-      IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
-    }
-    val updated = IdentifyLakesAndOcean(preconditions(entry))
+
     val waters = updated.findFacesWith(Set(IsWater()))
     val oceans = updated.findFacesWith(Set(WaterKind(OCEAN)))
     val lakes = updated.findFacesWith(Set(WaterKind(LAKE)))

@@ -1,23 +1,22 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
-import org.specs2.mutable._
 
-class AssignElevationTest extends SpecificationWithJUnit {
+class AssignElevationTest extends ProcessTestTrait {
 
   "AssignElevationTest Specifications".title
 
+  override val preconditions: IslandMap => IslandMap = { m =>
+    val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+    MinimalDistanceToCoast(
+      IdentifyCoastLine(
+        IdentifyLakesAndOcean(
+          AlignVertexWaterBasedOnFaces(
+            IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
+  }
+  override val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
 
   "The AssignElevation process" should {
-    val preconditions: IslandMap => IslandMap = { m =>
-      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
-      MinimalDistanceToCoast(
-        IdentifyCoastLine(
-          IdentifyLakesAndOcean(
-            AlignVertexWaterBasedOnFaces(
-              IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
-    }
-    val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
 
     val coastline = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
     import ExistingWaterKind._
