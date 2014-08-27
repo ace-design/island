@@ -10,7 +10,7 @@ class AssignElevationTest extends SpecificationWithJUnit {
 
   "The AssignElevation process" should {
     val preconditions: IslandMap => IslandMap = { m =>
-      val donuts = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)// DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
       MinimalDistanceToCoast(
         IdentifyCoastLine(
           IdentifyLakesAndOcean(
@@ -23,19 +23,24 @@ class AssignElevationTest extends SpecificationWithJUnit {
     import ExistingWaterKind._
     val raw = updated.findFacesWith(Set(WaterKind(OCEAN))) flatMap { f => updated.cornerRefs(f) + f.center }
     val oceans = raw diff coastline // taking all the vertices involved in oceans, removing coastline
+    val lakes = updated.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => updated.cornerRefs(f) + f.center }
 
     "not annotate ocean vertices with elevation annotation" in {
       oceans foreach { updated.vertexProps.isAnnotatedAs(_, HasForHeight()) must beFalse }
       true must beTrue // glitch to allow implicit conversion (thus compilation). real test is above.
     }
-    "give an elevation >= 0 to any vertex that is not in the ocean " in {
-      val land = updated.vertexRefs diff oceans
+    "give an elevation >= 0 to any land vertex (!ocean, !lake) " in {
+      val land = updated.vertexRefs diff oceans diff lakes
       land must not be empty
       land foreach { l =>
         updated.vertexProps.isAnnotatedAs(l, HasForHeight()) must beTrue
         updated.vertexProps.getValue(l, HasForHeight()) must beGreaterThanOrEqualTo(0.0)
       }
       true must beTrue
+    }
+    "assign elevations to lakes (including centers)" in {
+      lakes foreach { updated.vertexProps.isAnnotatedAs(_, HasForHeight()) must beTrue }
+      lakes must not(beEmpty)
     }
   }
 
