@@ -2,6 +2,8 @@ package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
 
+import scala.util.Random
+
 /**
  * This process is used to assign moisture to each vertex and face a moisture level. The moisture of a vertex is defined
  * by the sum of the moisture propagation function applied to each source of fresh water (i.e., lakes, rivers) located
@@ -24,13 +26,15 @@ import eu.ace_design.island.map._
  *
  * @param propagation the propagation function to be used (ideally, but not restricted to) in MoisturePropagation
  */
-case class AssignMoisture(propagation: Int => Double => Double) extends Process {
+case class AssignMoisture(propagation: Int => Double => Double,
+                          aquifers: Int = 10) extends RandomizedProcess {
 
-  final val LAKE_FACTOR: Int = 2
+  final val LAKE_FACTOR: Int    = 2
+  final val AQUIFER_FACTOR: Int = 1
 
-  override def apply(m: IslandMap): IslandMap = {
+  override def apply(rand: Random)(m: IslandMap): IslandMap = {
     info("Identifying vertices to be used as sources of fresh water")
-    val sources = identifyFreshWater(m)
+    val sources = merge(identifyFreshWater(m), createAquifers(rand, m))
 
     info("Computing moisture for vertices")
     val landRefs = m.findVerticesWith(Set(!IsWater())) map { m.vertexRef }
@@ -56,7 +60,8 @@ case class AssignMoisture(propagation: Int => Double => Double) extends Process 
   }
 
   /**
-   * Identify sources of fresh water (i.e., vertex involved in lakes and rivers) in a given map
+   * Identify sources of fresh water (i.e., vertex involved in lakes and rivers) in a given map. The process introduces
+   * random sources of underground water on the island
    * @param m the map to analyse
    * @return a map where vertex references (sources) are bound to a "flow" value ( flow >= 1 )
    */
@@ -71,6 +76,15 @@ case class AssignMoisture(propagation: Int => Double => Double) extends Process 
     val result = merge(lakesMap, riversMap)
     debug(s" Identified sources: $result")
     result
+  }
+
+  private def createAquifers(rand: Random,m: IslandMap): Map[Int, Int] = {
+    val selected = rand.shuffle(m.findFacesWith(Set(!IsWater())).toSeq).slice(0, aquifers)
+    val vertices = selected flatMap { f =>
+      val corners = m.cornerRefs(f).toSeq
+      f.center +: rand.shuffle(corners).slice(0,corners.size/2)
+    }
+    (vertices map { _ -> AQUIFER_FACTOR}).toMap
   }
 
   /**

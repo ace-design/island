@@ -16,7 +16,8 @@ class AssignMoistureTest extends ProcessTestTrait {
               AlignVertexWaterBasedOnFaces(
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
-  override val updated = AssignMoisture(MoisturePropagation.linear(100, 100))(preconditions(entry))
+  val moisturizer = AssignMoisture(MoisturePropagation.linear(100, 100), aquifers = 0)
+  override val updated = moisturizer(preconditions(entry))
 
   "The AssignMoisture process" should {
 
@@ -37,9 +38,7 @@ class AssignMoistureTest extends ProcessTestTrait {
     }
 
     "Assign an high moisture level (100) for vertices involved in rivers" in {
-      rivers foreach {
-        updated.vertexProps.getValue(_, HasForMoisture()) must_== 100.0
-      }
+      rivers foreach { updated.vertexProps.getValue(_, HasForMoisture()) must_== 100.0 }
       rivers must not(beEmpty)
     }
 
