@@ -3,16 +3,17 @@ package eu.ace_design.island.map.processes
 import eu.ace_design.island.map._
 import org.specs2.mutable._
 
-class MinimalDistanceToCoastTest extends SpecificationWithJUnit {
+class MinimalDistanceToCoastTest extends ProcessTestTrait {
 
   "MinimalDistanceToCoastTest Specifications".title
 
+  override val preconditions: IslandMap => IslandMap = { m =>
+    val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
+    IdentifyCoastLine(IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))
+  }
+  override val updated = MinimalDistanceToCoast(preconditions(entry))
+
   "The DistanceToCoast process" should {
-    val preconditions: IslandMap => IslandMap = { m =>
-      val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
-      IdentifyCoastLine(IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))
-    }
-    val updated = MinimalDistanceToCoast(preconditions(entry))
 
     "consider coastal vertices as lowest distance (0)" in {
       val coast = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }

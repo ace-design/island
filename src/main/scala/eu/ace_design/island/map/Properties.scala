@@ -50,3 +50,7 @@ case class HasForHeight(override val value: Double = 0.0) extends Property[Doubl
 case class RiverFlow(override val value: Int = 1) extends Property[Int] {
   override val key = "riverFlow"
 }
+
+case class HasForMoisture(override val value: Double = 0) extends Property[Double] {
+  override val key = "moisture"
+}

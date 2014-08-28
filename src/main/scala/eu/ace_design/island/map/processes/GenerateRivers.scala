@@ -19,11 +19,11 @@ import scala.util.Random
  *   - Edges involved in rivers are identified as RiverFlow(n), n >= 1 representing its flow
  *
  * @param sources the number of rivers' sources to generate on the island (default to 10)
- * @param distance the minimal distance to coast (as a percentage in [0,1]) to be a source (default to 0)
+ * @param distance the minimal distance to coast (as a percentage in ]0,1]) to be a source (default to 0)
  */
 case class GenerateRivers(sources: Int = 10, distance: Double = 0.5) extends RandomizedProcess {
   require(sources >= 0, "Sources cannot be negative")
-  require(distance >= 0 && distance <= 1, "distance must be in [0,1]")
+  require(distance > 0 && distance <= 1, "distance must be in [0,1]")
 
   def apply(rand: Random)(m: IslandMap): IslandMap = {
     info("Identifying sources for rivers, flowing water from source to coast")

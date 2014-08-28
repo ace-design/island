@@ -1,15 +1,18 @@
 package eu.ace_design.island.map.processes
 
-import eu.ace_design.island.map.{IsWater, DiskShape}
+import eu.ace_design.island.map.{IslandMap, IsWater, DiskShape}
 import org.specs2.mutable._
 
-class IdentifyWaterAreaTest extends SpecificationWithJUnit {
+class IdentifyWaterAreaTest extends ProcessTestTrait {
 
   "IdentifyWaterAreaTest Specifications".title
 
+  val process = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+
+  override val preconditions: IslandMap => IslandMap = m => m
+  override val updated: IslandMap = process(entry)
+
   "The IdentifyWaterArea process" should {
-    val process = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
-    val updated = process(entry)   // no pre-conditions
 
     "annotate all the faces with IsWater properties" in {
       val waters = updated.findFacesWith(Set(IsWater()))
@@ -17,10 +20,18 @@ class IdentifyWaterAreaTest extends SpecificationWithJUnit {
       waters ++ lands must_== mesh.faces.values
     }
   }
+}
+
+class AlignVertexWaterBasedOnFacesTest extends ProcessTestTrait {
+
+  "AlignVertexWaterBasedOnFacesTest Specifications".title
+
+  val disk = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)
+  override val preconditions: IslandMap => IslandMap = m => IdentifyWaterArea(shape = disk, threshold = 30)(m)
+  override val updated = AlignVertexWaterBasedOnFaces(preconditions(entry))
 
   "The AlignVertexWaterBasedOnFaces process" should {
-    val precondition = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
-    val updated = AlignVertexWaterBasedOnFaces(precondition(entry))
+
 
     "consider vertices involved in land faces as land" in {
       val vertices = updated.findFacesWith(Set(!IsWater())) flatMap { f => updated.cornerRefs(f) }

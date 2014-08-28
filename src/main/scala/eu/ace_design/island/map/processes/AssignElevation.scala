@@ -28,27 +28,30 @@ object ElevationFunctions {
   }
 
   /**
-   * This algorithm is used to redistribute the elevations according to the y = 1 - (1-x)^2 function.
+   * This algorithm is used to redistribute the elevations according to the y = 1 - (1-x)**2 function.
    * (see http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/)
    *
    * The idea is to sort the points based on their distance to the coast. The redistribution function reshape the island
    * by defining the number of points having an elevation lesser than s given one. In this function, y is the number of
-   * points handled, and x is the associated elevation. We rely on a normalized function, i.e., (x,y) \in [0,1]^2
+   * points handled, and x is the associated elevation. We rely on a normalized function, i.e., (x,y) \in [0,1]**2
    *
    * By sorting the distance map, we know the y value, assimilated to the position of the point in the sorted list. It
    * is then our responsibility to find the x, which maps to the elevation to be assigned to the associated points. I
    * must admit it looks like magic at first sight, but it is quite logic after all (Read Patel's blog post to see an
    * illustration).
    *
-   * y = 1  - (1-x)^2
-   *   = 2x - x^2
-   * => - x^2 +2x - y = 0
+   * y = 1  - (1-x)**2
+   *   = 2x - x**2
+   *
+   * - x**2 +2x - y = 0
    *
    * A y is known, this is a simple quadratic equation.  delta = 4 - 4y, and as y \in [0,1], delta > 0 \forall y
    * It admits 2 solutions :
-   * s = (2 ± sqrt(4 - 4y) ) / 2  = (2 ± sqrt(4(1 - y)) ) / 2
-   *   = (2 ± 2.sqrt(1 - y)) / 2  = 2 (1 ± sqrt(1 - y)) / 2
-   *   = (1 ± sqrt(1 - y))        As (x,y) \in [0,1]^2, the only solution is (1 - sqrt(1 - y))
+   * s = (2 ± sqrt(4 - 4y) )  / 2
+   *   = (2 ± sqrt(4(1 - y))) / 2
+   *   = (2 ± 2.sqrt(1 - y))  / 2
+   *   = 2 (1 ± sqrt(1 - y))  / 2
+   *   = (1 ± sqrt(1 - y))        As (x,y) \in [0,1]**2, the only solution is (1 - sqrt(1 - y))
    *
    * Like Patel, we use a glitch (replacing 1 by 1.1) in s to strengthen the slopes a little bit.
    *
@@ -173,7 +176,7 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
    * @return a map binding each vertices involved in the lake (as corner) to the minimal elevation of this lake
    */
   private def setToMinHeight(lake: Set[Face], m: IslandMap, existing: Map[Int, Double]): Map[Int, Double] = {
-    val verts = lake flatMap { face => m.cornerRefs(face) }
+    val verts = lake flatMap { face => m.cornerRefs(face) + face.center }
     val minHeight = (verts map { existing.getOrElse(_, Double.PositiveInfinity) }).min // the else should never happen
     (verts map { _ -> minHeight }).toMap
   }
