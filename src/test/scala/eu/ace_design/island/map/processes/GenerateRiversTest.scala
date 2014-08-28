@@ -17,8 +17,6 @@ class GenerateRiversTest extends ProcessTestTrait {
   }
   override val updated =  GenerateRivers(sources = 1)(preconditions(entry))
 
-  draw()
-
   "The GenerateRivers process " should {
 
     "reject a negative number of sources" in {

@@ -123,11 +123,11 @@ class SVGViewer extends Viewer  {
       Colors.DARK_BLUE
     else if(m.faceProps.check(faceRef,WaterKind(LAKE)))
       Colors.LIGHT_BLUE
-    //else if (m.faceProps.check(faceRef,IsCoast()))
-    //  Colors.LIGHT_SAND
+    else if (m.faceProps.check(faceRef,IsCoast()))
+      Colors.LIGHT_SAND
     else {
       val moisture = m.faceProps.restrictedTo(HasForMoisture())
-      gradient(Color.BLUE, Colors.WHITE, moisture(faceRef))
+      gradient(Color.BLUE, Colors.WHITE, moisture.getOrElse(faceRef,0.0))
     }
     val border = Colors.BLACK
     (background, border)

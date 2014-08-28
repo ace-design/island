@@ -16,52 +16,89 @@ class AssignMoistureTest extends ProcessTestTrait {
               AlignVertexWaterBasedOnFaces(
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
-  override val updated = AssignMoisture(MoisturePropagation.order1)(preconditions(entry))
+  override val updated = AssignMoisture(MoisturePropagation.linear(100, 100))(preconditions(entry))
 
   "The AssignMoisture process" should {
 
     // vertices tagged as land
-    val lands = updated.findVerticesWith(Set(!IsWater())) map { updated.vertexRef }
+    val lands = updated.findVerticesWith(Set(!IsWater())) map {
+      updated.vertexRef
+    }
 
     // vertices involved in rivers (riverflow is defined on the edges => finding the involved vertices)
     val riverFlow = updated.edgeProps.restrictedTo(RiverFlow())
-    val rivers = (riverFlow.keys flatMap { r => val e = updated.edge(r); Seq(e.p1, e.p2) }).toSet
+    val rivers = (riverFlow.keys flatMap { r => val e = updated.edge(r); Seq(e.p1, e.p2)}).toSet
 
     "Assign a moisture to each vertex identified as land" in {
-      lands foreach { updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0) }
+      lands foreach {
+        updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
+      }
       lands must not(beEmpty)
     }
 
-    "Assign an high moisture level (>=100) for vertices involved in rivers" in {
-      rivers foreach { updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(100.0) }
+    "Assign an high moisture level (100) for vertices involved in rivers" in {
+      rivers foreach {
+        updated.vertexProps.getValue(_, HasForMoisture()) must_== 100.0
+      }
       rivers must not(beEmpty)
+    }
+
+    "Assign a moisture to each land face" in {
+      val withMoisture = updated.faceProps.restrictedTo(HasForMoisture()).keys.toSet
+      val lands = updated.findFacesWith(Set(!IsWater())) map { updated.faceRef }
+      withMoisture must_== lands
     }
 
   }
 
   "The MoisturePropagation function library" should {
+    val moist = 100
+    val dist = 300
+    val dry = MoisturePropagation.dry(moist, dist) _
+    val wet = MoisturePropagation.wet(moist, dist) _
 
-    val fSqrt = MoisturePropagation(MoisturePropagation.orderSqrt) _
-    val f1 = MoisturePropagation(MoisturePropagation.order1) _
-    val f2 = MoisturePropagation(MoisturePropagation.order2) _
-    val f3 = MoisturePropagation(MoisturePropagation.order3) _
-    val f4 = MoisturePropagation(MoisturePropagation.order4) _
+    "support a 'dry' moisture propagation" in {
+      val f1 = dry(1)
+      f1(0) must_== moist
+      f1(dist.toDouble) must_== 0
 
-    "assign 100 for a point identified as fresh water (distance = 0)" in {
-      fSqrt(0) must_== 100; f1(0) must_== 100; f2(0) must_== 100; f3(0) must_== 100; f4(0) must_== 100
+      val f2 = dry(2)
+      f2(0) must_== moist
+      f2(dist.toDouble) must_== 0
+
+      val f3 = dry(3)
+      f3(0) must_== moist
+      f3(dist.toDouble) must_== 0
+
+      f1(150) must beLessThan(50.0)
+      f2(150) must beLessThan(f1(150))
+      f3(150) must beLessThan(f2(150))
+
+      f1(400) must_== 0.0
+      f2(400) must_== 0.0
+      f3(400) must_== 0.0
     }
 
-    "assign 0 to points located at 50+ the source" in {
-      fSqrt(50) must_== 0; f1(50) must_== 0; f2(50) must_== 0; f3(50) must_== 0; f4(50) must_== 0
-    }
+    "support a 'wet' moisture propagation" in {
+      val f1 = wet(1)
+      f1(0) must_== moist
+      f1(dist.toDouble) must_== 0
 
-    "reject negative distance" in {
-      fSqrt(-1) must throwAn[IllegalArgumentException]
-      f1(-1)    must throwAn[IllegalArgumentException]
-      f2(-1)    must throwAn[IllegalArgumentException]
-      f3(-1)    must throwAn[IllegalArgumentException]
-      f4(-1)    must throwAn[IllegalArgumentException]
+      val f2 = wet(2)
+      f2(0) must_== moist
+      f2(dist.toDouble) must_== 0
+
+      val f3 = wet(3)
+      f3(0) must_== moist
+      f3(dist.toDouble) must_== 0
+
+      f1(150) must beGreaterThan(50.0)
+      f2(150) must beGreaterThan(f1(150))
+      f3(150) must beGreaterThan(f2(150))
+
+      f1(400) must_== 0.0
+      f2(400) must_== 0.0
+      f3(400) must_== 0.0
     }
   }
-
 }

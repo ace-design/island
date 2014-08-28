@@ -1,5 +1,4 @@
 import eu.ace_design.island.map._
-import eu.ace_design.island.map.processes.MoisturePropagation
 import eu.ace_design.island.util.{LogSilos, Logger}
 import eu.ace_design.island.dsl.DiSLand
 
@@ -20,14 +19,14 @@ object Main extends App with Logger with DiSLand {
   val large = createIsland shapedAs radial(1.07) usingSeed "9ac771d2-47f7-4037-ad83-919cd4edc1be" withSize 2048 having 4096.faces builtWith Seq(
     withElevationRedistribution(factor = 0.5),
     flowing(rivers = 30, distance = 0.4),
-    withMoisture()
+    withMoisture(soils.normal, distance = 400)
   )
   export(large)
 
   val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834" builtWith Seq(
     withElevationRedistribution(factor = 0.5),
     flowing(rivers = 10, distance = 0.4),
-    withMoisture(MoisturePropagation.order2)
+    withMoisture(soils.wet)
   )
   //export(always)
 

@@ -24,8 +24,7 @@ import eu.ace_design.island.map._
  *
  * @param propagation the propagation function to be used (ideally, but not restricted to) in MoisturePropagation
  */
-case class AssignMoisture(propagation: Double => Double = MoisturePropagation.order2)
-  extends Process {
+case class AssignMoisture(propagation: Int => Double => Double) extends Process {
 
   final val LAKE_FACTOR: Int = 2
 
@@ -36,8 +35,11 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
     info("Computing moisture for vertices")
     val landRefs = m.findVerticesWith(Set(!IsWater())) map { m.vertexRef }
     val elevations = m.vertexProps.restrictedTo(HasForHeight())
-    val rawMoist = (landRefs map { vRef => vRef -> moisturize(vRef, m, sources, elevations) }).toMap
-    val moistureMap = rawMoist
+    val moistureMap = (landRefs map { vRef => vRef -> moisturize(vRef, m, sources, elevations) }).toMap
+
+    debug(s"Vertex: min_moist = ${moistureMap.values.min}, max_moist = ${moistureMap.values.max} ")
+
+
     val vProps = (m.vertexProps /: landRefs) { (acc, r) => acc + (r -> HasForMoisture(moistureMap(r)) )}
 
     info("Computing moisture for faces")
@@ -47,6 +49,7 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
       val vertices = m.cornerRefs(f) + f.center
       ref -> (0.0 /: vertices) { (acc, r) => acc + moistureMap(r) } / vertices.size
     }).toMap
+    debug(s"Faces: min_moist = ${faceMap.values.min}, max_moist = ${faceMap.values.max} ")
     val fProps = (m.faceProps /: landFaceRefs) { (acc, r) => acc + (r -> HasForMoisture(faceMap(r))) }
 
     m.copy(vertexProps = vProps, faceProps = fProps)
@@ -93,33 +96,42 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
    * @return the moisture value for the given vertex
    */
   private def moisturize(vertexRef: Int, m: IslandMap, sources: Map[Int, Int], elevations: Map[Int, Double]): Double = {
-    val p = m.vertex(vertexRef)
+    val point = m.vertex(vertexRef)
     val upstream = sources filter { case (k, _) => elevations(k) >= elevations(vertexRef) }
-    val moisture = upstream map { case (ref, flow) =>  flow * MoisturePropagation(propagation)(p --> m.vertex(ref)) }
-    (0.0 /: moisture) { (acc, m) => acc + m }
+    val moisture = upstream map { case (ref, flow) =>  propagation(flow)(point --> m.vertex(ref)) } filter { _ > 0.0 }
+    val r = sources.isDefinedAt(vertexRef) match {
+      case true => 100
+      case false => if (moisture.size == 0) 0 else (0.0 /: moisture) { (acc, m) => acc + m } / moisture.size
+    }
+    trace(s"$vertexRef => $r / $moisture")
+    r
   }
 
 }
 
 /**
- * A moisture propagation function returns the moisture (in [0,100]) based on the distance between a point and the
- * fresh water source under consideration. We consider as an assumption that the propagation stops when the distance is
- * greater than 50 units (implemented in each function).
+ * A moisture propagation function is a function defined on the distance from a point to a source of fresh water. It
+ * returns a moisture value for the given distance, in [0, moistMax]. The more close the point is to the source of
+ * water, the higher the value is. Distances greater than distMax are not impacted by this source of water.
  *
- * The order changes the decrease rate according to the distance. Lower orders drop more quickly than higher ones.
+ * The library comes with 3 functions:
+ *
+ *   - the linear propagation follows the -x+1 function. It correspond to "normal" soil.
+ *   - the wet propagation follows the -x**flow+1 function. It corresponds to a rich soil that keeps the moisture
+ *   - the dry propagation follows the (-x+1)**flow function. It corresponds to a washed soil where moisture vanish
  *
  */
 object MoisturePropagation {
 
-  val orderSqrt: Double => Double = x => -15 * math.sqrt(x) + 100   // sqrt(x) == x^(1/2)
-  val order1: Double => Double = x => - 2 * x               + 100
-  val order2: Double => Double = x => - (math.pow(x,2)/ 5)  + 100
-  val order3: Double => Double = x => - (math.pow(x,3)/10)  + 100
-  val order4: Double => Double = x => - (math.pow(x,4)/15)  + 100
+  type MoistureFunction = Double => Double
 
-  def apply(phi: Double => Double)(distance: Double): Double = {
-    require(distance >= 0, "The distance cannot be negative")
-    val y = phi(distance); if (y <= 0) 0 else y
+  def wet(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = {
+    if (dist > distMax) 0 else moistMax.toDouble * ( -1 / math.pow(distMax,flow+1) * math.pow(dist,flow + 1) + 1)
   }
 
+  def linear(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = dry(moistMax,distMax)(1)(dist)
+
+  def dry(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = {
+    if (dist > distMax) 0 else moistMax.toDouble * math.pow(-1.0 / distMax.toDouble * dist + 1, flow + 1)
+  }
 }
