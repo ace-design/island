@@ -73,10 +73,10 @@ trait DiSLand {
     type kind = Value
     val dry, normal, wet = Value
   }
-  protected def withMoisture(soil: soils.kind, moisture: Int = 100, distance: Int = 100): Process = soil match {
-    case soils.dry    => AssignMoisture(MoisturePropagation.dry(moisture,distance))
-    case soils.normal => AssignMoisture(MoisturePropagation.linear(moisture,distance))
-    case soils.wet    => AssignMoisture(MoisturePropagation.wet(moisture,distance))
+  protected def withMoisture(soil: soils.kind, distance: Int = 100): Process = soil match {
+    case soils.dry    => AssignMoisture(MoisturePropagation.dry(distance))
+    case soils.normal => AssignMoisture(MoisturePropagation.linear(distance))
+    case soils.wet    => AssignMoisture(MoisturePropagation.wet(distance))
   }
 
 

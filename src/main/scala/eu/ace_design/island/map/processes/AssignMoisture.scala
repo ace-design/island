@@ -14,6 +14,9 @@ import scala.util.Random
  * modelled thanks to a "flow" value associated to each vertices. For a vertex involved in a river, this is basically
  * the RiverFlow value. When involved in a lake, we use a LAKE_FACTOR constant.
  *
+ * Some faces contain underground aquifers, generated randomly. The vertices involves in an aquifer (half of the corners
+ * and the face center) are considered as a source of fresh water, using the AQUIFER_FACTOR constant
+ *
  * The moisture of a face is defined as the average of the moisture of its involved vertices (including center)
  *
  * Pre-conditions:
@@ -25,6 +28,7 @@ import scala.util.Random
  *   - Faces and Vertices are annotated with HasForMoisture(x)
  *
  * @param propagation the propagation function to be used (ideally, but not restricted to) in MoisturePropagation
+ * @param aquifers the nunmber of underground aquifers to generate on this map.
  */
 case class AssignMoisture(propagation: Int => Double => Double,
                           aquifers: Int = 10) extends RandomizedProcess {
@@ -78,7 +82,14 @@ case class AssignMoisture(propagation: Int => Double => Double,
     result
   }
 
-  private def createAquifers(rand: Random,m: IslandMap): Map[Int, Int] = {
+  /**
+   * Create underground aquifers. An aquifer is located under a land face, and impacts a subset of the corners (50%) of
+   * this face (+ its center).
+   * @param rand the random generator to be used to locate the aquifers
+   * @param m the map
+   * @return a map of freshwater sources (vertexRef -> Flow)
+   */
+  private def createAquifers(rand: Random, m: IslandMap): Map[Int, Int] = {
     val selected = rand.shuffle(m.findFacesWith(Set(!IsWater())).toSeq).slice(0, aquifers)
     val vertices = selected flatMap { f =>
       val corners = m.cornerRefs(f).toSeq
@@ -113,12 +124,12 @@ case class AssignMoisture(propagation: Int => Double => Double,
     val point = m.vertex(vertexRef)
     val upstream = sources filter { case (k, _) => elevations(k) >= elevations(vertexRef) }
     val moisture = upstream map { case (ref, flow) =>  propagation(flow)(point --> m.vertex(ref)) } filter { _ > 0.0 }
-    val r = sources.isDefinedAt(vertexRef) match {
-      case true => 100
+    val result = sources.isDefinedAt(vertexRef) match {
+      case true  => MoisturePropagation.MAX_MOISTURE
       case false => if (moisture.size == 0) 0 else (0.0 /: moisture) { (acc, m) => acc + m } / moisture.size
     }
-    trace(s"$vertexRef => $r / $moisture")
-    r
+    trace(s"$vertexRef => $result / $moisture")
+    result
   }
 
 }
@@ -139,13 +150,15 @@ object MoisturePropagation {
 
   type MoistureFunction = Double => Double
 
-  def wet(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = {
-    if (dist > distMax) 0 else moistMax.toDouble * ( -1 / math.pow(distMax,flow+1) * math.pow(dist,flow + 1) + 1)
+  final val MAX_MOISTURE: Double = 100.0
+
+  def wet(distMax: Int)(flow: Int)(dist: Double): Double = {
+    if (dist > distMax) 0 else MAX_MOISTURE * ( -1 / math.pow(distMax,flow+1) * math.pow(dist,flow + 1) + 1)
   }
 
-  def linear(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = dry(moistMax,distMax)(1)(dist)
+  def linear(distMax: Int)(flow: Int)(dist: Double): Double = dry(distMax)(1)(dist)
 
-  def dry(moistMax: Int, distMax: Int)(flow: Int)(dist: Double): Double = {
-    if (dist > distMax) 0 else moistMax.toDouble * math.pow(-1.0 / distMax.toDouble * dist + 1, flow + 1)
+  def dry(distMax: Int)(flow: Int)(dist: Double): Double = {
+    if (dist > distMax) 0 else MAX_MOISTURE * math.pow(-1.0 / distMax.toDouble * dist + 1, flow + 1)
   }
 }

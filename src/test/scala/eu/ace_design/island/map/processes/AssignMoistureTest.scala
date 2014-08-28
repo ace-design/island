@@ -16,7 +16,7 @@ class AssignMoistureTest extends ProcessTestTrait {
               AlignVertexWaterBasedOnFaces(
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
-  val moisturizer = AssignMoisture(MoisturePropagation.linear(100, 100), aquifers = 0)
+  val moisturizer = AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)
   override val updated = moisturizer(preconditions(entry))
 
   "The AssignMoisture process" should {
@@ -51,22 +51,21 @@ class AssignMoistureTest extends ProcessTestTrait {
   }
 
   "The MoisturePropagation function library" should {
-    val moist = 100
     val dist = 300
-    val dry = MoisturePropagation.dry(moist, dist) _
-    val wet = MoisturePropagation.wet(moist, dist) _
+    val dry = MoisturePropagation.dry(dist) _
+    val wet = MoisturePropagation.wet(dist) _
 
     "support a 'dry' moisture propagation" in {
       val f1 = dry(1)
-      f1(0) must_== moist
+      f1(0) must_== MoisturePropagation.MAX_MOISTURE
       f1(dist.toDouble) must_== 0
 
       val f2 = dry(2)
-      f2(0) must_== moist
+      f2(0) must_== MoisturePropagation.MAX_MOISTURE
       f2(dist.toDouble) must_== 0
 
       val f3 = dry(3)
-      f3(0) must_== moist
+      f3(0) must_== MoisturePropagation.MAX_MOISTURE
       f3(dist.toDouble) must_== 0
 
       f1(150) must beLessThan(50.0)
@@ -80,15 +79,15 @@ class AssignMoistureTest extends ProcessTestTrait {
 
     "support a 'wet' moisture propagation" in {
       val f1 = wet(1)
-      f1(0) must_== moist
+      f1(0) must_== MoisturePropagation.MAX_MOISTURE
       f1(dist.toDouble) must_== 0
 
       val f2 = wet(2)
-      f2(0) must_== moist
+      f2(0) must_== MoisturePropagation.MAX_MOISTURE
       f2(dist.toDouble) must_== 0
 
       val f3 = wet(3)
-      f3(0) must_== moist
+      f3(0) must_== MoisturePropagation.MAX_MOISTURE
       f3(dist.toDouble) must_== 0
 
       f1(150) must beGreaterThan(50.0)
