@@ -1,6 +1,5 @@
 package eu.ace_design.island.map.processes
 
-import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 
 /**
@@ -24,10 +23,8 @@ import eu.ace_design.island.map._
  *   - Faces and Vertices are annotated with HasForMoisture(x)
  *
  * @param propagation the propagation function to be used (ideally, but not restricted to) in MoisturePropagation
- * @param redistribution a redistribution function, if needed
  */
-case class AssignMoisture(propagation: Double => Double = MoisturePropagation.order2,
-                          redistribution: Map[Int, Double] => Map[Int, Double] = MoistureDistribution.identity)
+case class AssignMoisture(propagation: Double => Double = MoisturePropagation.order2)
   extends Process {
 
   final val LAKE_FACTOR: Int = 2
@@ -40,7 +37,7 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
     val landRefs = m.findVerticesWith(Set(!IsWater())) map { m.vertexRef }
     val elevations = m.vertexProps.restrictedTo(HasForHeight())
     val rawMoist = (landRefs map { vRef => vRef -> moisturize(vRef, m, sources, elevations) }).toMap
-    val moistureMap = redistribution(rawMoist)
+    val moistureMap = rawMoist
     val vProps = (m.vertexProps /: landRefs) { (acc, r) => acc + (r -> HasForMoisture(moistureMap(r)) )}
 
     info("Computing moisture for faces")
@@ -102,11 +99,6 @@ case class AssignMoisture(propagation: Double => Double = MoisturePropagation.or
     (0.0 /: moisture) { (acc, m) => acc + m }
   }
 
-}
-
-
-object MoistureDistribution {
-  val identity: Map[Int, Double] => Map[Int, Double] = m => m
 }
 
 /**

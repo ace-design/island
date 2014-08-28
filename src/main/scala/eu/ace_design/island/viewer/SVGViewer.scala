@@ -53,6 +53,12 @@ class SVGViewer extends Viewer  {
     if (m.uuid.isDefined) { g.setColor(Colors.BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
   }
 
+  /**
+   * Highlight a given vertex to show its position on the map (useful for debugging wide maps)
+   * @param vRef the vertex reference
+   * @param m the map
+   * @param g the graphics2D to be used to paint the vertex
+   */
   private def highlightVertex(vRef: Int, m: IslandMap, g: Graphics2D ): Unit = {
     g.setStroke(new BasicStroke(3f))
     val p = m.vertex(vRef)
@@ -83,7 +89,7 @@ class SVGViewer extends Viewer  {
     path.closePath()
 
     // Get the colors associated to this face, and draw it
-    val (bgColor, border) = colors(map.faceProps.get(idx))
+    val (bgColor, border) = colors(idx, map)
     debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
 
     g.setColor(bgColor)
@@ -99,30 +105,40 @@ class SVGViewer extends Viewer  {
       val p1 = map.vertex(edge.p1)
       val p2 = map.vertex(edge.p2)
       g.setStroke(new BasicStroke(1f * flow))
-      g.setColor(Colors.LIGHT_BLUE)
+      g.setColor(Color.RED)
       g.draw(new Line2D.Double(p1.x, p1.y, p2.x, p2.y))
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
   /**
    * Identify the colors to be used for a given polygon, based on its face properties
-   * @param props the set of properties associated to this face
+   * @param faceRef the face to paint
+   * @param m the IslandMap containing this face
    * @return a couple (bgColor, borderColor) to be used to draw this face
    */
-  private def colors(props: Set[Property[_]]): (Color, Color) = {
+  private def colors(faceRef: Int, m: IslandMap): (Color, Color) = {
     import ExistingWaterKind._
 
-    val background = if(props.contains(WaterKind(OCEAN)))
+    val background = if(m.faceProps.check(faceRef,WaterKind(OCEAN)))
       Colors.DARK_BLUE
-    else if(props.contains(WaterKind(LAKE)))
+    else if(m.faceProps.check(faceRef,WaterKind(LAKE)))
       Colors.LIGHT_BLUE
-    else if (props.contains(IsCoast()))
-      Colors.LIGHT_SAND
-    else
-      Colors.WHITE
-
+    //else if (m.faceProps.check(faceRef,IsCoast()))
+    //  Colors.LIGHT_SAND
+    else {
+      val moisture = m.faceProps.restrictedTo(HasForMoisture())
+      gradient(Color.BLUE, Colors.WHITE, moisture(faceRef))
+    }
     val border = Colors.BLACK
     (background, border)
+  }
+
+  private def gradient(c1: Color, c2: Color, value: Double): Color = {
+    val comp1 = c1.getRGBComponents(null)
+    val comp2 = c2.getRGBComponents(null)
+    val factor = math.min(value / 100, 1)
+    def get(i: Int): Float = (comp1(i)*factor + comp2(i)*(1-factor)).toFloat
+    new Color(get(0), get(1), get(2))
   }
 
   /**

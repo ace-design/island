@@ -69,8 +69,9 @@ trait DiSLand {
   protected def flowing(rivers: Int, distance: Double): Process = GenerateRivers(rivers, distance)
 
   // moisture
-  protected def withMoisture(p: Double => Double, r: Map[Int,Double] => Map[Int, Double]): Process =
-    AssignMoisture(propagation = p, redistribution = r)
+  import MoisturePropagation._
+  protected def withMoisture(propagation: Double => Double = order2): Process =
+    AssignMoisture(propagation)
 
   // the initialisation process used to build island, **always** executed
   private val initProcess: Seq[Process] = Seq(
@@ -81,7 +82,7 @@ trait DiSLand {
   private val defaultProcess: Seq[Process] = Seq(
     withElevationRedistribution(factor = 0.5),
     flowing(rivers = 10, distance = 0.4),
-    withMoisture(MoisturePropagation.order2, MoistureDistribution.identity)
+    withMoisture(MoisturePropagation.order2)
   )
 
   /**

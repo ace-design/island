@@ -16,7 +16,7 @@ class AssignMoistureTest extends ProcessTestTrait {
               AlignVertexWaterBasedOnFaces(
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
-  override val updated = AssignMoisture(MoisturePropagation.order1, MoistureDistribution.identity)(preconditions(entry))
+  override val updated = AssignMoisture(MoisturePropagation.order1)(preconditions(entry))
 
   "The AssignMoisture process" should {
 
@@ -36,14 +36,6 @@ class AssignMoistureTest extends ProcessTestTrait {
       rivers foreach { updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(100.0) }
       rivers must not(beEmpty)
     }
-
-  }
-
-  "The MoistureDistribution function library" should {
-
-    val data = (for(i <- 0 until 100) yield i -> 2.0*i).toMap
-
-    "expose the identity function" in { MoistureDistribution.identity(data) must_== data }
 
   }
 
