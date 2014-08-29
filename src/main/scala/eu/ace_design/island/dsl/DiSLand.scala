@@ -79,6 +79,7 @@ trait DiSLand {
     case soils.wet    => AssignMoisture(MoisturePropagation.wet(distance))
   }
 
+  protected def usingBiomes(diagram: WhittakerDiagram = WhittakerDiagrams.complete): Process = AssignBiomes(diagram)
 
   // the initialisation process used to build island, **always** executed
   private val initProcess: Seq[Process] = Seq(
@@ -89,7 +90,8 @@ trait DiSLand {
   private val defaultProcess: Seq[Process] = Seq(
     withElevationRedistribution(factor = 0.5),
     flowing(rivers = 10, distance = 0.4),
-    withMoisture(soils.normal)
+    withMoisture(soils.normal),
+    usingBiomes()
   )
 
   /**

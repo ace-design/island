@@ -55,9 +55,8 @@ case class HasForMoisture(override val value: Double = 0) extends Property[Doubl
   override val key = "moisture"
 }
 
-case class HasForBiome(override val value: ExistingBiomes.Biome) extends Property[ExistingBiomes.Biome] {
-  override val key = "biome"
-}
+case class HasForBiome(override val value: ExistingBiomes.Biome = ExistingBiomes.ALPINE)
+  extends Property[ExistingBiomes.Biome] { override val key = "biome" }
 
 object ExistingBiomes extends Enumeration {
   type Biome = Value
