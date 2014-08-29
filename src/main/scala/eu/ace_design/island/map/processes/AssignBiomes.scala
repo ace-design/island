@@ -1,5 +1,6 @@
 package eu.ace_design.island.map.processes
 
+import eu.ace_design.island.map._
 import eu.ace_design.island.map.ExistingBiomes._
 
 /**
@@ -10,9 +11,9 @@ import eu.ace_design.island.map.ExistingBiomes._
  * Water faces with kind "Ocean" faces are always assigned as Oceans.
  * Water faces identified as Lakes can be a "lake", or a glacier (with respect to the elevation of their center)
  *
- * * Pre-conditions:
- *   - Faces are identified as IsWater and HasForMoisture
- *   - Vertices are identified with HasForElevation
+ * Pre-conditions:
+ *   - Faces are identified with WaterKind({OCEAN, LAKE}), IsWater and HasForMoisture
+ *   - Vertices are identified with HasForHeight
  *
  * Post-conditions:
  *   - All faces in the map are annotated with HasForBiome
@@ -21,30 +22,80 @@ import eu.ace_design.island.map.ExistingBiomes._
  */
 case class AssignBiomes(distribution: WhittakerDiagram = WhittakerDiagrams.complete) extends Process {
 
+  def apply(m: IslandMap): IslandMap = {
+    // Computing relevant data to help the biome assignment process
+    val vertexElevations = m.vertexProps.restrictedTo(HasForHeight())
+    // A vertex in the ocean does not have an altitude => using getOrElse
+    val elevations = (m.faces map { f => m.faceRef(f) -> vertexElevations.getOrElse(f.center, 0.0) }).toMap
+    val moistures  = m.faceProps.restrictedTo(HasForMoisture())
+    val oceanRefs  = m.findFacesWith(Set(WaterKind(ExistingWaterKind.OCEAN))) map { m.faceRef }
+    val lakeRefs   = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE)))  map { m.faceRef }
+    val landRefs   = m.findFacesWith(Set(!IsWater())) map { m.faceRef }
 
+    info("Assigning biomes to faces defined in the map")
+    val oceans = (oceanRefs map { o => o -> OCEAN }).toMap                                  // oceans are oceans
+    val lakes  = (lakeRefs  map { l => l -> distribution.freshWater(elevations(l)) }).toMap // lakes: glacier or lake
+    val lands  = (landRefs  map { l => l -> distribution(moistures(l), elevations(l)) }).toMap
+    val biomes = oceans ++ lakes ++ lands
 
+    info("Updating the map")
+    val fProps = (m.faceProps /: biomes) { case (acc, (ref, biome)) => acc + (ref -> HasForBiome(biome)) }
+    m.copy(faceProps = fProps)
+  }
 }
 
-
-
+/**
+ * In the literature, a Whittaker diagram is used to distribute the different biomes with respect to temperature and
+ * precipitation level. We use here a gross approximation, considering that the elevation is an approximation of the
+ * temperature (higher elevations are colder than lowest one), and the soil moisture for the precipitation level (as
+ * there is no precipitation concept in the Island's model)
+ *
+ * The diagram defines 2 operations:
+ *   - for water faces, freshWater is used to decide if a fresh water reservoir is a lake or a glacier
+ *   - for land faces,  apply takes as input an elevation and a moisture, and returns the associated biome.
+ *
+ * A diagram is not designed to address ocean faces.
+ *
+ */
 trait WhittakerDiagram {
+  import ExistingBiomes.{GLACIER, LAKE}
 
+  /**
+   * Compute the biome for a land faces
+   * @param moisture moisture level of the face
+   * @param elevation elevation of the face
+   * @return on of the ExistingBiomes to be associated to this face (excepting GLACIER, OCEAN and LAKE)
+   */
   def apply(moisture: Double, elevation: Double): Biome = {
     require(moisture >= 0.0 && moisture <= 100.0, "Moisture level must be in [0,100]")
     require(elevation >= 0.0, "Elevation level cannot be negative")
     assign(moisture, elevation)
   }
 
-  def freshWater(elevation: Double): Biome = if (elevation > iceLevel) GLACIER else LAKE
+  /**
+   * Compute the biome for a freshwater face
+   * @param elevation elevation of the face
+   * @return GLACIER or LAKE w.r.t. the elevation
+   */
+  def freshWater(elevation: Double): Biome = if (elevation >= iceLevel) GLACIER else LAKE
 
+  // define the elevation where freshwater becomes a glacier
   protected val iceLevel: Double
 
+  // implementation of the whittaker diagram, as a function.
   protected def assign(moisture: Double, elevation: Double): Biome
 
 }
 
+/**
+ * a Library containing off-the-shelf Whittaker diagrams
+ */
 object WhittakerDiagrams {
+  import ExistingBiomes._
 
+  /**
+   * The complete diagrams exhibits all the available biomes. It does not produce realist island (demo purpose)
+   */
   object complete extends WhittakerDiagram {
 
     override val iceLevel = 130.0
