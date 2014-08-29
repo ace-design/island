@@ -1,5 +1,6 @@
 package eu.ace_design.island.viewer
 
+import java.awt.Color
 import java.io.File
 import eu.ace_design.island.map._
 
@@ -12,21 +13,11 @@ class SVGViewer extends Viewer  {
   import org.apache.batik.svggen.SVGGraphics2D
   import org.apache.batik.dom.svg.SVGDOMImplementation
   import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
+  import ColorBrewer._
 
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
-
-  object Colors {
-    // classical colors
-    final val BLACK      = new Color(0,   0,   0)
-    final val WHITE      = new Color(255, 255, 255)
-    final val LIGHT_GRAY = new Color(211, 211, 211)
-    // Extracted from Cynthia Brewer palettes (http://colorbrewer2.org/)
-    final val DARK_BLUE  = new Color(4  , 90 , 141) // 5-class PuBu theme  #5
-    final val LIGHT_BLUE = new Color(116, 169, 207) // 5-class PuBu theme  #3
-    final val LIGHT_SAND = new Color(255, 255, 204) // 9-class YlOrRd theme #1
-  }
-
+  
   /**
    * Syntactic sugar to call the viewer as a function
    * @param m the map one wants to visualize
@@ -47,10 +38,10 @@ class SVGViewer extends Viewer  {
    * @param g the Graphics2D object used to draw the mesh
    */
   private def draw(m: IslandMap, g: Graphics2D) {
-    m.faceRefs foreach { drawAFace(_, m, g) }
+    m.faceRefs foreach { drawABiome(_, m, g) }
     m.edgeRefs foreach { drawAnEdge(_, m, g) }
     //highlightVertex(1, m, g)
-    if (m.uuid.isDefined) { g.setColor(Colors.BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
+    if (m.uuid.isDefined) { g.setColor(BLACK); g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5) }
   }
 
   /**
@@ -68,12 +59,14 @@ class SVGViewer extends Viewer  {
 
 
   /**
-   * Draw a given face as a polygon on the map. The used colors are computed by the 'colors' function.
+   * Draw a given face as a polygon on the map according to its biome. The used colors are extracted from the
+   * biomePalette association function.
+   *
    * @param idx the index of the face to draw
    * @param map the map used as a reference
    * @param g the graphics2D object used to paint
    */
-  private def drawAFace(idx: Int, map: IslandMap, g: Graphics2D) {
+  private def drawABiome(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.face(idx)
 
     // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
@@ -88,11 +81,11 @@ class SVGViewer extends Viewer  {
     convexCoords.slice(1,convexCoords.length) foreach { c => path.lineTo(c.x, c.y) }
     path.closePath()
 
-    // Get the colors associated to this face, and draw it
-    val (bgColor, border) = colors(idx, map)
-    debug(s"drawAFace(#$idx) using (bg=$bgColor, border=$border)")
+    try {
+      val biome = map.faceProps.getValue(idx, HasForBiome())
+      g.setColor(biomePalette(biome))
+    } catch { case e: IllegalArgumentException => g.setColor(BLACK) }
 
-    g.setColor(bgColor)
     g.fill(path)
   }
 
@@ -104,34 +97,53 @@ class SVGViewer extends Viewer  {
       val edge = map.edge(idx)
       val p1 = map.vertex(edge.p1)
       val p2 = map.vertex(edge.p2)
-      g.setStroke(new BasicStroke(1f * flow))
-      g.setColor(Color.RED)
+      g.setStroke(new BasicStroke(2f * flow))
+      g.setColor(MEDIUM_BLUE)
       g.draw(new Line2D.Double(p1.x, p1.y, p2.x, p2.y))
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
   /**
-   * Identify the colors to be used for a given polygon, based on its face properties
-   * @param faceRef the face to paint
-   * @param m the IslandMap containing this face
-   * @return a couple (bgColor, borderColor) to be used to draw this face
+   *
+   * @param biome
+   * @return
    */
-  private def colors(faceRef: Int, m: IslandMap): (Color, Color) = {
-    import ExistingWaterKind._
+  private def biomePalette(biome: ExistingBiomes.Biome): Color = {
+    import ExistingBiomes._
+    biome match {
+      /** Water faces **/
+      case GLACIER => LIGHT_BLUE
+      case LAKE    => MEDIUM_BLUE
+      case OCEAN   => DARK_BLUE
 
-    val background = if(m.faceProps.check(faceRef,WaterKind(OCEAN)))
-      Colors.DARK_BLUE
-    else if(m.faceProps.check(faceRef,WaterKind(LAKE)))
-      Colors.LIGHT_BLUE
-    //else if (m.faceProps.check(faceRef,IsCoast()))
-    //  Colors.LIGHT_SAND
-    else {
-      val moisture = m.faceProps.restrictedTo(HasForMoisture())
-      gradient(Color.BLUE, Colors.WHITE, moisture.getOrElse(faceRef,0.0))
+      /** Dry biomes: beach, deserts and alpine rocks **/
+      case BEACH               => LIGHT_YELLOW
+      case SUB_TROPICAL_DESERT => MEDIUM_YELLOW
+      case TEMPERATE_DESERT    => DARK_YELLOW
+      case ALPINE              => DARK_GREY
+        
+      /** Dry biomes: grassland, shrubland and tundra **/
+      case GRASSLAND => LIGHT_ORANGE
+      case SHRUBLAND => MEDIUM_ORANGE
+      case TUNDRA    => DARK_ORANGE
+
+      /** Half-wet biomes: forests and taiga **/
+      case TROPICAL_SEASONAL_FOREST   => ULTRA_LIGHT_GREEN
+      case TEMPERATE_RAIN_FOREST      => LIGHT_GREEN
+      case TROPICAL_RAIN_FOREST       => DARK_GREEN
+
+      case TEMPERATE_DECIDUOUS_FOREST => MEDIUM_GREEN
+      case TAIGA                      => ULTRA_DARK_GREEN
+
+      /** Wet biomes: mangroves and snow  **/
+      case MANGROVE => BROWN
+      case SNOW     => WHITE
+
+      /** Terra incognita **/
+      case _ => BLACK
     }
-    val border = Colors.BLACK
-    (background, border)
   }
+
 
   private def gradient(c1: Color, c2: Color, value: Double): Color = {
     val comp1 = c1.getRGBComponents(null)
@@ -174,7 +186,7 @@ class SVGViewer extends Viewer  {
    */
   private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.face(idx)
-    g.setColor(Colors.LIGHT_GRAY)
+    g.setColor(ColorBrewer.LIGHT_GREY)
     g.setStroke(new BasicStroke(2))
     val center = map.vertex(f.center)
     g.draw(new Line2D.Double(center.x, center.y,center.x, center.y))
@@ -213,13 +225,53 @@ class SVGViewer extends Viewer  {
     g.setStroke(new BasicStroke(1))
     map.cornerRefs(f) foreach { ref =>
       if(map.vertexProps.check(ref, IsWater()))
-        g.setColor(Colors.DARK_BLUE)
+        g.setColor(ColorBrewer.DARK_BLUE)
       else if (map.vertexProps.check(ref, IsCoast()))
-        g.setColor(Colors.LIGHT_SAND)
+        g.setColor(ColorBrewer.LIGHT_YELLOW)
       else
-        g.setColor(Colors.BLACK)
+        g.setColor(ColorBrewer.BLACK)
       val p = map.vertex(ref)
       g.draw(new Line2D.Double(p.x, p.y,p.x, p.y))
     }
   }
 }
+
+
+/**
+ * Color Palettes extracted from Cynthia Brewer colorbrewer awesome tool (http://colorbrewer2.org/)
+ */
+object ColorBrewer {
+  // Classical colors (not from Brewer's palettes)
+  final val BLACK = new Color(0,   0,   0)
+  final val WHITE = new Color(255, 255, 255)
+  final val BROWN = new Color(133, 127, 48)
+
+  // Grays are defined with the 3-class Greys palette [http://colorbrewer2.org/?type=sequential&scheme=Greys&n=3]
+  final val LIGHT_GREY  = new Color(240, 240, 240)
+  final val MEDIUM_GREY = new Color(189, 189, 189)
+  final val DARK_GREY   = new Color(99,  99,  99 )
+
+  // Blues are defined with the 9-class PuBu palette [http://colorbrewer2.org/?type=sequential&scheme=PuBu&n=9]
+  final val DARK_BLUE   = new Color(2,   56, 88 ) // 3-class PuBu theme  #9
+  final val MEDIUM_BLUE = new Color(4,   90, 141) // 3-class PuBu theme  #8
+  final val LIGHT_BLUE  = new Color(5,  112, 176) // 3-class PuBu theme  #7
+
+  // Yellows are defined with the 6-class YlOrBr palette [http://colorbrewer2.org/?type=sequential&scheme=YlOrBr&n=6]
+  final val LIGHT_YELLOW  = new Color(255, 255, 212) // 6-class YlOrBr theme #1
+  final val MEDIUM_YELLOW = new Color(254, 227, 145) // 6-class YlOrBr theme #2
+  final val DARK_YELLOW   = new Color(254, 198, 79 ) // 6-class YlOrBr theme #3
+
+  // Oranges are defined with the 6-class YlOrBr palette [http://colorbrewer2.org/?type=sequential&scheme=YlOrBr&n=6]
+  final val LIGHT_ORANGE  = new Color(254, 153, 41 ) // 6-class YlOrBr theme #4
+  final val MEDIUM_ORANGE = new Color(217, 95 , 14 ) // 6-class YlOrBr theme #5
+  final val DARK_ORANGE   = new Color(153, 52,  4  ) // 6-class YlOrBr theme #6
+
+  // Greens are defined with the 9-class Greens palette [http://colorbrewer2.org/?type=sequential&scheme=Greens&n=9]
+  final val ULTRA_DARK_GREEN  = new Color(0,   68,  27 ) // 9-class Greens #9
+  final val DARK_GREEN        = new Color(0,   109, 44 ) // 9-class Greens #8
+  final val MEDIUM_GREEN      = new Color(35,  139, 69 ) // 9-class Greens #7
+  final val LIGHT_GREEN       = new Color(116, 198, 118) // 9-class Greens #5
+  final val ULTRA_LIGHT_GREEN = new Color(161, 217, 165) // 9-class Greens #4
+
+}
+

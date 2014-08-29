@@ -30,19 +30,19 @@ class AssignMoistureTest extends ProcessTestTrait {
     val riverFlow = updated.edgeProps.restrictedTo(RiverFlow())
     val rivers = (riverFlow.keys flatMap { r => val e = updated.edge(r); Seq(e.p1, e.p2)}).toSet
 
-    "Assign a moisture to each vertex identified as land" in {
+    "assign a moisture to each vertex identified as land" in {
       lands foreach {
         updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
       }
       lands must not(beEmpty)
     }
 
-    "Assign an high moisture level (100) for vertices involved in rivers" in {
+    "assign an high moisture level (100) for vertices involved in rivers" in {
       rivers foreach { updated.vertexProps.getValue(_, HasForMoisture()) must_== 100.0 }
       rivers must not(beEmpty)
     }
 
-    "Assign a moisture to each land face" in {
+    "assign a moisture to each land face" in {
       val withMoisture = updated.faceProps.restrictedTo(HasForMoisture()).keys.toSet
       val lands = updated.findFacesWith(Set(!IsWater())) map { updated.faceRef }
       withMoisture must_== lands
