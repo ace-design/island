@@ -32,7 +32,7 @@ case class AssignBiomes(distribution: WhittakerDiagram = WhittakerDiagrams.compl
     val lakeRefs   = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE)))  map { m.faceRef }
     val landRefs   = m.findFacesWith(Set(!IsWater())) map { m.faceRef }
 
-    info("Assigning biomes to faces defined in the map")
+    info("Assigning biomes to the faces defined in the map")
     val oceans = (oceanRefs map { o => o -> OCEAN }).toMap                                  // oceans are oceans
     val lakes  = (lakeRefs  map { l => l -> distribution.freshWater(elevations(l)) }).toMap // lakes: glacier or lake
     val lands  = (landRefs  map { l => l -> distribution(moistures(l), elevations(l)) }).toMap

@@ -29,7 +29,7 @@ class GenerateRiversTest extends ProcessTestTrait {
       GenerateRivers(distance = 2)  must throwAn[IllegalArgumentException]
     }
 
-    "Annotate edges with river flow" in {
+    "annotate edges with river flow" in {
       val rivers = updated.findEdgesWith(Set(RiverFlow()))
       rivers must not(beEmpty)
     }
