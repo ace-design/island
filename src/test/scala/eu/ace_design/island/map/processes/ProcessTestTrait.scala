@@ -10,29 +10,54 @@ import org.specs2.mutable.SpecificationWithJUnit
 
 trait ProcessTestTrait extends SpecificationWithJUnit {
 
+  /**
+   * The preconditions to apply to a map to make it an acceptable entry for the process under test
+   */
+  protected val preconditions: IslandMap => IslandMap
+
+
+  protected final val nothing: IslandMap => IslandMap = m => m
+
+  /**
+   * The process under test, to be applied to 'entry' after 'preconditions' to produce 'result'
+   */
+  protected val processUnderTest: Process
+
   final val SIZE = 800
   final val FACES = 400
 
-  protected val generator = new SquaredGrid(SIZE)
-
+  private val generator = new SquaredGrid(SIZE)
   // A rectangular grid, 600 x 600.
-  protected val builder = new MeshBuilder(SIZE)
+  private val builder = new MeshBuilder(SIZE)
 
   // A mesh builder for 600 x 600 grids
   protected val mesh = builder(generator(FACES))
-
   // generating the mesh, with 100 faces involved in the grid
-  protected val entry = IslandMap(mesh)
+  protected final val entry = IslandMap(mesh)
 
+  protected val seed: Option[Long] = None
 
-  protected val preconditions: IslandMap => IslandMap
-  protected val updated: IslandMap
+  protected lazy val phi: IslandMap => IslandMap = processUnderTest match {
+    case put: RandomizedProcess => {
+      val s = seed match {
+        case None => new scala.util.Random().nextLong()
+        case Some(v) => v
+      }
+      debug(s"${this.getClass.getSimpleName} using seed [$s]")
+      put.apply(new scala.util.Random(s))
+    }
+    case _ => processUnderTest.apply
+  }
 
+  protected final lazy val result: IslandMap = phi(preconditions(entry))
 
+  /**
+   * Draw the result map into a PDF file (usually for debug purpose)  
+   */
   protected def draw() {
     val name = s"./Test-${this.getClass.getSimpleName}.pdf"
     val pdf = new eu.ace_design.island.viewer.PDFViewer()
-    pdf(updated).renameTo(new File(name))
+    pdf(result).renameTo(new File(name))
   }
 
 

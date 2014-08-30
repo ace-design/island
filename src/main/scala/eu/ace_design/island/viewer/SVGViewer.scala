@@ -84,8 +84,9 @@ class SVGViewer extends Viewer  {
     try {
       val biome = map.faceProps.getValue(idx, HasForBiome())
       g.setColor(biomePalette(biome))
-    } catch { case e: IllegalArgumentException => g.setColor(BLACK) }
-
+    } catch { case e: IllegalArgumentException => g.setColor(WHITE) }
+    g.setStroke(new BasicStroke(2f))
+    g.draw(path)
     g.fill(path)
   }
 

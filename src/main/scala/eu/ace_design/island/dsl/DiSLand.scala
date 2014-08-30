@@ -104,7 +104,7 @@ trait DiSLand {
    * @param uuid an unique identifier (a Java UUID) used to initialize the random generator (if used)
    */
   protected case class Configuration(mapSize: Int        = 800,
-                                     faces: Int          = 1024,
+                                     faces: Int          = 2048,
                                      waterThreshold: Int = 30,
                                      generator: PointGeneratorDirective = smoothly,
                                      shape: ShapeDirective = radial(1.27),

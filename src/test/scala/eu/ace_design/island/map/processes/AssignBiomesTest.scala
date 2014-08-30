@@ -21,43 +21,40 @@ class AssignBiomesTest extends ProcessTestTrait {
                 AlignVertexWaterBasedOnFaces(
                   IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))))))
   }
-
-  override val updated = AssignBiomes()(preconditions(entry))
+  override val processUnderTest = AssignBiomes()
+  //override val result = AssignBiomes()(preconditions(entry))
 
   private val BiomeProperty = HasForBiome(SNOW) // SNOW for type compliance, working with the type for set restriction
 
   "The AssignBiomes process" should {
 
     "assign a biome to each face defined in the map" in {
-      val biomes = updated.faceProps.restrictedTo(BiomeProperty)
-      biomes.keys must_== updated.faceRefs
+      val biomes = result.faceProps.restrictedTo(BiomeProperty)
+      biomes.keys must_== result.faceRefs
     }
 
     "identify oceans faces with the 'OCEAN' biome" in {
-      val oceanKinds = updated.findFacesWith(Set(WaterKind(ExistingWaterKind.OCEAN))) map { updated.faceRef }
-      val oceanBiomes = updated.findFacesWith(Set(HasForBiome(OCEAN))) map { updated.faceRef }
+      val oceanKinds = result.findFacesWith(Set(WaterKind(ExistingWaterKind.OCEAN))) map { result.faceRef }
+      val oceanBiomes = result.findFacesWith(Set(HasForBiome(OCEAN))) map { result.faceRef }
       oceanBiomes must_== oceanKinds
     }
 
     "identify lake faces as LAKEs or GLACIERs" in {
-      val lakeKinds = updated.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE))) map { updated.faceRef }
-      val lakeBiomes = updated.findFacesWith(Set(HasForBiome(LAKE))) map { updated.faceRef }
-      val glacierBiomes = updated.findFacesWith(Set(HasForBiome(GLACIER))) map { updated.faceRef }
+      val lakeKinds = result.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE))) map { result.faceRef }
+      val lakeBiomes = result.findFacesWith(Set(HasForBiome(LAKE))) map { result.faceRef }
+      val glacierBiomes = result.findFacesWith(Set(HasForBiome(GLACIER))) map { result.faceRef }
       lakeBiomes ++ glacierBiomes must_== lakeKinds
     }
 
     "identify land faces as anything that is not a LAKE, an OCEAN or a GLACIER" in {
-      val landFaces = updated.findFacesWith(Set(!IsWater())) map { updated.faceRef }
+      val landFaces = result.findFacesWith(Set(!IsWater())) map { result.faceRef }
       val rejected = Set(OCEAN, GLACIER, LAKE)
-      landFaces foreach { l => rejected.contains(updated.faceProps.getValue(l, BiomeProperty)) must beFalse }
+      landFaces foreach { l => rejected.contains(result.faceProps.getValue(l, BiomeProperty)) must beFalse }
       true must beTrue
     }
 
   }
-
 }
-
-
 
 class WhittakerDiagramsTest extends SpecificationWithJUnit {
 

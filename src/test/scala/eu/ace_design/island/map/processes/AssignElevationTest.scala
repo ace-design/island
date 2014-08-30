@@ -14,31 +14,31 @@ class AssignElevationTest extends ProcessTestTrait {
           AlignVertexWaterBasedOnFaces(
             IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
   }
-  override val updated =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
+  override val processUnderTest = AssignElevation(ElevationFunctions.identity)
 
   "The AssignElevation process" should {
 
-    val coastline = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
+    val coastline = result.findVerticesWith(Set(IsCoast())) map { p => result.vertexRef(p) }
     import ExistingWaterKind._
-    val raw = updated.findFacesWith(Set(WaterKind(OCEAN))) flatMap { f => updated.cornerRefs(f) + f.center }
+    val raw = result.findFacesWith(Set(WaterKind(OCEAN))) flatMap { f => result.cornerRefs(f) + f.center }
     val oceans = raw diff coastline // taking all the vertices involved in oceans, removing coastline
-    val lakes = updated.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => updated.cornerRefs(f) + f.center }
+    val lakes = result.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => result.cornerRefs(f) + f.center }
 
     "not annotate ocean vertices with elevation annotation" in {
-      oceans foreach { updated.vertexProps.isAnnotatedAs(_, HasForHeight()) must beFalse }
+      oceans foreach { result.vertexProps.isAnnotatedAs(_, HasForHeight()) must beFalse }
       true must beTrue // glitch to allow implicit conversion (thus compilation). real test is above.
     }
     "give an elevation >= 0 to any land vertex (!ocean, !lake) " in {
-      val land = updated.vertexRefs diff oceans diff lakes
+      val land = result.vertexRefs diff oceans diff lakes
       land must not be empty
       land foreach { l =>
-        updated.vertexProps.isAnnotatedAs(l, HasForHeight()) must beTrue
-        updated.vertexProps.getValue(l, HasForHeight()) must beGreaterThanOrEqualTo(0.0)
+        result.vertexProps.isAnnotatedAs(l, HasForHeight()) must beTrue
+        result.vertexProps.getValue(l, HasForHeight()) must beGreaterThanOrEqualTo(0.0)
       }
       true must beTrue
     }
     "assign elevations to lakes (including centers)" in {
-      lakes foreach { updated.vertexProps.isAnnotatedAs(_, HasForHeight()) must beTrue }
+      lakes foreach { result.vertexProps.isAnnotatedAs(_, HasForHeight()) must beTrue }
       lakes must not(beEmpty)
     }
   }

@@ -1,5 +1,7 @@
 package eu.ace_design.island.map.processes
 
+import eu.ace_design.island.map.ExistingWaterKind
+import eu.ace_design.island.map.ExistingWaterKind._
 import eu.ace_design.island.map._
 
 import scala.util.Random
@@ -42,13 +44,14 @@ case class AssignMoisture(propagation: Int => Double => Double,
 
     info("Computing moisture for vertices")
     val landRefs = m.findVerticesWith(Set(!IsWater())) map { m.vertexRef }
+    val lakesRefs = m.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => m.cornerRefs(f) + f.center }
+    val vertices = landRefs ++ lakesRefs
     val elevations = m.vertexProps.restrictedTo(HasForHeight())
-    val moistureMap = (landRefs map { vRef => vRef -> moisturize(vRef, m, sources, elevations) }).toMap
+    val moistureMap = (vertices map { vRef => vRef -> moisturize(vRef, m, sources, elevations) }).toMap
 
     debug(s"Vertex: min_moist = ${moistureMap.values.min}, max_moist = ${moistureMap.values.max} ")
 
-
-    val vProps = (m.vertexProps /: landRefs) { (acc, r) => acc + (r -> HasForMoisture(moistureMap(r)) )}
+    val vProps = (m.vertexProps /: vertices) { (acc, r) => acc + (r -> HasForMoisture(moistureMap(r)) )}
 
     info("Computing moisture for faces")
     val landFaceRefs = m.findFacesWith(Set(!IsWater())) map { m.faceRef }

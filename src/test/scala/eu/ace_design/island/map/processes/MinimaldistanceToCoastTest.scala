@@ -11,19 +11,19 @@ class MinimalDistanceToCoastTest extends ProcessTestTrait {
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     IdentifyCoastLine(IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))
   }
-  override val updated = MinimalDistanceToCoast(preconditions(entry))
+  override val processUnderTest = MinimalDistanceToCoast
 
   "The DistanceToCoast process" should {
 
     "consider coastal vertices as lowest distance (0)" in {
-      val coast = updated.findVerticesWith(Set(IsCoast())) map { p => updated.vertexRef(p) }
-      coast foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must_== 0 }
+      val coast = result.findVerticesWith(Set(IsCoast())) map { p => result.vertexRef(p) }
+      coast foreach { result.vertexProps.getValue(_, DistanceToCoast()) must_== 0 }
       true must beTrue
     }
 
     "assign a distance to each land vertices" in {
-      val land = updated.findVerticesWith(Set(!IsWater())) map { p => updated.vertexRef(p)  }
-      land foreach { updated.vertexProps.getValue(_, DistanceToCoast()) must be greaterThanOrEqualTo(0.0) }
+      val land = result.findVerticesWith(Set(!IsWater())) map { p => result.vertexRef(p)  }
+      land foreach { result.vertexProps.getValue(_, DistanceToCoast()) must be greaterThanOrEqualTo(0.0) }
       true must beTrue
     }
   }
