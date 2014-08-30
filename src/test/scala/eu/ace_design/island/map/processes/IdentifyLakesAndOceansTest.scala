@@ -12,15 +12,15 @@ class IdentifyLakesAndOceansTest extends ProcessTestTrait {
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
   }
-  override val updated = IdentifyLakesAndOcean(preconditions(entry))
+  override val result = IdentifyLakesAndOcean(preconditions(entry))
 
   "The IdentifyLakesAndOcean process" should {
 
     // preconditions:  only works on faces => neglect AlignVertex...  Requires borders and IdentifyWaterArea
 
-    val waters = updated.findFacesWith(Set(IsWater()))
-    val oceans = updated.findFacesWith(Set(WaterKind(OCEAN)))
-    val lakes = updated.findFacesWith(Set(WaterKind(LAKE)))
+    val waters = result.findFacesWith(Set(IsWater()))
+    val oceans = result.findFacesWith(Set(WaterKind(OCEAN)))
+    val lakes = result.findFacesWith(Set(WaterKind(LAKE)))
 
     "annotate all the water faces with WaterKind properties" in { lakes ++ oceans must_== waters }
     "identify the external ocean" in { oceans.size must be greaterThan 0 }

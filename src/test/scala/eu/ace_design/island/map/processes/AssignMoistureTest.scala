@@ -17,34 +17,34 @@ class AssignMoistureTest extends ProcessTestTrait {
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
   val moisturizer = AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)
-  override val updated = moisturizer(preconditions(entry))
+  override val result = moisturizer(preconditions(entry))
 
   "The AssignMoisture process" should {
 
     // vertices tagged as land
-    val lands = updated.findVerticesWith(Set(!IsWater())) map {
-      updated.vertexRef
+    val lands = result.findVerticesWith(Set(!IsWater())) map {
+      result.vertexRef
     }
 
     // vertices involved in rivers (riverflow is defined on the edges => finding the involved vertices)
-    val riverFlow = updated.edgeProps.restrictedTo(RiverFlow())
-    val rivers = (riverFlow.keys flatMap { r => val e = updated.edge(r); Seq(e.p1, e.p2)}).toSet
+    val riverFlow = result.edgeProps.restrictedTo(RiverFlow())
+    val rivers = (riverFlow.keys flatMap { r => val e = result.edge(r); Seq(e.p1, e.p2)}).toSet
 
     "assign a moisture to each vertex identified as land" in {
       lands foreach {
-        updated.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
+        result.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
       }
       lands must not(beEmpty)
     }
 
     "assign an high moisture level (100) for vertices involved in rivers" in {
-      rivers foreach { updated.vertexProps.getValue(_, HasForMoisture()) must_== 100.0 }
+      rivers foreach { result.vertexProps.getValue(_, HasForMoisture()) must_== 100.0 }
       rivers must not(beEmpty)
     }
 
     "assign a moisture to each land face" in {
-      val withMoisture = updated.faceProps.restrictedTo(HasForMoisture()).keys.toSet
-      val lands = updated.findFacesWith(Set(!IsWater())) map { updated.faceRef }
+      val withMoisture = result.faceProps.restrictedTo(HasForMoisture()).keys.toSet
+      val lands = result.findFacesWith(Set(!IsWater())) map { result.faceRef }
       withMoisture must_== lands
     }
 
