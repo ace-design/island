@@ -14,7 +14,7 @@ class AssignElevationTest extends ProcessTestTrait {
           AlignVertexWaterBasedOnFaces(
             IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
   }
-  override val result =  AssignElevation(ElevationFunctions.identity)(preconditions(entry))
+  override val processUnderTest = AssignElevation(ElevationFunctions.identity)
 
   "The AssignElevation process" should {
 

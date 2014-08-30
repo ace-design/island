@@ -6,8 +6,8 @@ class ComputeAreaTest extends ProcessTestTrait {
 
   "ComputeAreaTest Specifications".title
 
-  override val preconditions: IslandMap => IslandMap = m => m
-  override val result = ComputeArea(preconditions(entry))
+  override val preconditions: IslandMap => IslandMap = nothing
+  override val processUnderTest = ComputeArea
 
   val areas = result.faceProps.restrictedTo(HasForArea())
 

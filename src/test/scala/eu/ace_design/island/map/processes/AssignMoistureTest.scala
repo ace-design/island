@@ -16,8 +16,8 @@ class AssignMoistureTest extends ProcessTestTrait {
               AlignVertexWaterBasedOnFaces(
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
-  val moisturizer = AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)
-  override val result = moisturizer(preconditions(entry))
+  override val processUnderTest = AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)
+
 
   "The AssignMoisture process" should {
 

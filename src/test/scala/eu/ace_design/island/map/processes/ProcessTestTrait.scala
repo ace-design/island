@@ -15,6 +15,9 @@ trait ProcessTestTrait extends SpecificationWithJUnit {
    */
   protected val preconditions: IslandMap => IslandMap
 
+
+  protected final val nothing: IslandMap => IslandMap = m => m
+
   /**
    * The process under test, to be applied to 'entry' after 'preconditions' to produce 'result'
    */
@@ -24,16 +27,14 @@ trait ProcessTestTrait extends SpecificationWithJUnit {
   final val FACES = 400
 
   private val generator = new SquaredGrid(SIZE)
-
   // A rectangular grid, 600 x 600.
   private val builder = new MeshBuilder(SIZE)
 
   // A mesh builder for 600 x 600 grids
-  private val mesh = builder(generator(FACES))
-
+  protected val mesh = builder(generator(FACES))
   // generating the mesh, with 100 faces involved in the grid
   protected final val entry = IslandMap(mesh)
-  protected final val result: IslandMap = processUnderTest(preconditions(entry))
+  protected final lazy val result: IslandMap = processUnderTest(preconditions(entry))
 
   /**
    * Draw the result map into a PDF file (usually for debug purpose)  

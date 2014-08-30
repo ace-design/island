@@ -12,7 +12,7 @@ class IdentifyLakesAndOceansTest extends ProcessTestTrait {
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     IdentifyWaterArea(shape = donuts, threshold = 30)(IdentifyBorders(m))
   }
-  override val result = IdentifyLakesAndOcean(preconditions(entry))
+  override val processUnderTest = IdentifyLakesAndOcean
 
   "The IdentifyLakesAndOcean process" should {
 

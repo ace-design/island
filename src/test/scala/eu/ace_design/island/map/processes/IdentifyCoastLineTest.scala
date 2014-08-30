@@ -11,7 +11,7 @@ class IdentifyCoastLineTest extends ProcessTestTrait {
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     IdentifyLakesAndOcean(AlignVertexWaterBasedOnFaces(IdentifyWaterArea(donuts,30)(IdentifyBorders(m))))
   }
-  override val result = IdentifyCoastLine(preconditions(entry))
+  override val processUnderTest =  IdentifyCoastLine
 
   "The IdentifyCoastLine process" should {
 

@@ -7,8 +7,8 @@ class IdentifyBordersTest extends ProcessTestTrait {
 
   "IdentifyBordersTest Specifications".title
 
-  override val preconditions: IslandMap => IslandMap = m => m
-  override val result = IdentifyBorders(preconditions(entry))  // no pre-conditions
+  override val preconditions = nothing
+  override val processUnderTest = IdentifyBorders
 
   "The IdentifyBorders process" should {
 

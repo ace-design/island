@@ -21,8 +21,8 @@ class AssignBiomesTest extends ProcessTestTrait {
                 AlignVertexWaterBasedOnFaces(
                   IdentifyWaterArea(donuts, 30)(IdentifyBorders(m)))))))))
   }
-
-  override val result = AssignBiomes()(preconditions(entry))
+  override val processUnderTest = AssignBiomes()
+  //override val result = AssignBiomes()(preconditions(entry))
 
   private val BiomeProperty = HasForBiome(SNOW) // SNOW for type compliance, working with the type for set restriction
 
@@ -54,10 +54,7 @@ class AssignBiomesTest extends ProcessTestTrait {
     }
 
   }
-
 }
-
-
 
 class WhittakerDiagramsTest extends SpecificationWithJUnit {
 

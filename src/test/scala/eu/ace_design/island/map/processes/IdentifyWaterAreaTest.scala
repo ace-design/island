@@ -7,10 +7,8 @@ class IdentifyWaterAreaTest extends ProcessTestTrait {
 
   "IdentifyWaterAreaTest Specifications".title
 
-  val process = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
-
-  override val preconditions: IslandMap => IslandMap = m => m
-  override val result: IslandMap = process(entry)
+  override val processUnderTest = IdentifyWaterArea(shape = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8), threshold = 30)
+  override val preconditions = nothing
 
   "The IdentifyWaterArea process" should {
 
@@ -27,11 +25,11 @@ class AlignVertexWaterBasedOnFacesTest extends ProcessTestTrait {
   "AlignVertexWaterBasedOnFacesTest Specifications".title
 
   val disk = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)
+
   override val preconditions: IslandMap => IslandMap = m => IdentifyWaterArea(shape = disk, threshold = 30)(m)
-  override val result = AlignVertexWaterBasedOnFaces(preconditions(entry))
+  override val processUnderTest = AlignVertexWaterBasedOnFaces
 
   "The AlignVertexWaterBasedOnFaces process" should {
-
 
     "consider vertices involved in land faces as land" in {
       val vertices = result.findFacesWith(Set(!IsWater())) flatMap { f => result.cornerRefs(f) }

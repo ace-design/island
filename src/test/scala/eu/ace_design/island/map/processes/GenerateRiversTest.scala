@@ -15,7 +15,7 @@ class GenerateRiversTest extends ProcessTestTrait {
             AlignVertexWaterBasedOnFaces(
               IdentifyWaterArea(disk, 30)(IdentifyBorders(m)))))))
   }
-  override val result =  GenerateRivers(sources = 1)(preconditions(entry))
+  override val processUnderTest = GenerateRivers(sources = 1)
 
   "The GenerateRivers process " should {
 
