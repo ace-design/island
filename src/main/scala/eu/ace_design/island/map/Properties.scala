@@ -64,3 +64,7 @@ object ExistingBiomes extends Enumeration {
        TEMPERATE_DESERT, TAIGA, SUB_TROPICAL_DESERT, TEMPERATE_RAIN_FOREST, SHRUBLAND, TEMPERATE_DECIDUOUS_FOREST,
        OCEAN, LAKE, GLACIER = Value
 }
+
+case class HasForArea(override val value: Double = 0.0) extends Property[Double] {
+  override val key = "area"
+}
