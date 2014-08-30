@@ -42,6 +42,15 @@ class IslandMap private (
   def faceRef(f: Face): Int = _mesh.faces(f).get
   def cornerRefs(f: Face): Set[Int] = f.vertices(_mesh.edges)
 
+  // Compute the convex hull of a given face (for geometrical purpose)
+  def convexHull(f: Face): Seq[Point] = {
+    import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
+    val coordinates = (cornerRefs(f) map { vertex } map { p => new Coordinate(p.x, p.y) }).toSeq
+    val closed = coordinates :+ new Coordinate(coordinates(0).x, coordinates(0).y)
+    val raw = new GeometryFactory().createPolygon(closed.toArray).convexHull.getCoordinates.toSeq
+    raw map { c => Point(c.x, c.y) }
+  }
+
   def findFacesWith: Set[Property[_]] => Set[Face]   = faceProps.project(_mesh.faces)
   def findFaceRefsWith(p: Face => Boolean): Set[Int] = _mesh.faces.queryReferences(p)
 

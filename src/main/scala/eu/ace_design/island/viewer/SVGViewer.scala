@@ -70,15 +70,12 @@ class SVGViewer extends Viewer  {
     val f = map.face(idx)
 
     // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
-    val coords = (map.cornerRefs(f) map { i => map.vertex(i) } map { p => new Coordinate(p.x, p.y) }).toSeq
-    val linear = coords :+ new Coordinate(coords(0).x, coords(0).y)
-    val factory = new GeometryFactory()
-    val convexCoords = factory.createPolygon(linear.toArray).convexHull.getCoordinates
+    val convexHull = map.convexHull(f)
 
     // Create a path for the Polygon frontier, and fill it according to the computed convex hull
     val path = new Path2D.Double()
-    path.moveTo(convexCoords(0).x,convexCoords(0).y)
-    convexCoords.slice(1,convexCoords.length) foreach { c => path.lineTo(c.x, c.y) }
+    path.moveTo(convexHull(0).x,convexHull(0).y)
+    convexHull.slice(1,convexHull.length) foreach { c => path.lineTo(c.x, c.y) }
     path.closePath()
 
     try {
