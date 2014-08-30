@@ -65,6 +65,6 @@ object ExistingBiomes extends Enumeration {
        OCEAN, LAKE, GLACIER = Value
 }
 
-case class HasForArea(override val value: Double) extends Property[Double] {
+case class HasForArea(override val value: Double = 0.0) extends Property[Double] {
   override val key = "area"
 }

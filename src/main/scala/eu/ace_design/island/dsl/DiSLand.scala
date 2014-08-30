@@ -84,7 +84,7 @@ trait DiSLand {
   // the initialisation process used to build island, **always** executed
   private val initProcess: Seq[Process] = Seq(
     IdentifyBorders, AlignVertexWaterBasedOnFaces, IdentifyLakesAndOcean,
-    IdentifyCoastLine, MinimalDistanceToCoast)
+    IdentifyCoastLine, MinimalDistanceToCoast, ComputeArea)
 
   // the process used by default
   private val defaultProcess: Seq[Process] = Seq(
