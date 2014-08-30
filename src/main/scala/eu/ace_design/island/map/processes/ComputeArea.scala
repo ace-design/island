@@ -41,9 +41,8 @@ object ComputeArea extends Process {
    */
   private def process(faceRef: Int, map: IslandMap): Double = {
     val f = map.face(faceRef)
-    val coordinates = (map.cornerRefs(f) map { i => map.vertex(i) } map { p => new Coordinate(p.x, p.y) }).toSeq
-    val closed = (coordinates :+ new Coordinate(coordinates(0).x, coordinates(0).y)).toArray
-    val convexHull = new GeometryFactory().createPolygon(closed).convexHull
+    val coordinates = map.convexHull(f) map { p => new Coordinate(p.x, p.y) }
+    val convexHull = new GeometryFactory().createPolygon(coordinates.toArray)
     convexHull.getArea * (PIXEL_FACTOR * PIXEL_FACTOR) // convert squaredPixel to squared meters
   }
 
