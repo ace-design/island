@@ -22,10 +22,10 @@ object Main extends App with Logger with DiSLand {
     withMoisture(soils.wet, distance = 200),
     usingBiomes()
   )
-  export(large)
+  //export(large)
 
   val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834"
-  //export(always)
+  export(always)
 
 
   private def export(m: IslandMap, name: String = "./map") {

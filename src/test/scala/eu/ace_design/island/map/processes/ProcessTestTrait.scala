@@ -34,7 +34,22 @@ trait ProcessTestTrait extends SpecificationWithJUnit {
   protected val mesh = builder(generator(FACES))
   // generating the mesh, with 100 faces involved in the grid
   protected final val entry = IslandMap(mesh)
-  protected final lazy val result: IslandMap = processUnderTest(preconditions(entry))
+
+  protected val seed: Option[Long] = None
+
+  protected lazy val phi: IslandMap => IslandMap = processUnderTest match {
+    case put: RandomizedProcess => {
+      val s = seed match {
+        case None => new scala.util.Random().nextLong()
+        case Some(v) => v
+      }
+      debug(s"${this.getClass.getSimpleName} using seed [$s]")
+      put.apply(new scala.util.Random(s))
+    }
+    case _ => processUnderTest.apply
+  }
+
+  protected final lazy val result: IslandMap = phi(preconditions(entry))
 
   /**
    * Draw the result map into a PDF file (usually for debug purpose)  

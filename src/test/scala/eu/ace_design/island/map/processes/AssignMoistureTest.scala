@@ -17,28 +17,35 @@ class AssignMoistureTest extends ProcessTestTrait {
                 IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))))
   }
   override val processUnderTest = AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)
-
+  //draw()
 
   "The AssignMoisture process" should {
+    import ExistingWaterKind._
 
     // vertices tagged as land
-    val lands = result.findVerticesWith(Set(!IsWater())) map {
-      result.vertexRef
-    }
+    val lands = result.findVerticesWith(Set(!IsWater())) map { result.vertexRef }
+    val lakes = result.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => result.cornerRefs(f) + f.center }
 
     // vertices involved in rivers (riverflow is defined on the edges => finding the involved vertices)
     val riverFlow = result.edgeProps.restrictedTo(RiverFlow())
     val rivers = (riverFlow.keys flatMap { r => val e = result.edge(r); Seq(e.p1, e.p2)}).toSet
 
-    "assign a moisture to each vertex identified as land" in {
+    "assign a moisture to each vertex identified inside the island (lakes + lands)" in {
       lands foreach {
         result.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
       }
+      lakes foreach {
+        result.vertexProps.getValue(_, HasForMoisture()) must beGreaterThanOrEqualTo(0.0)
+      }
       lands must not(beEmpty)
+      lakes must not(beEmpty)
     }
 
     "assign an high moisture level (100) for vertices involved in rivers" in {
-      rivers foreach { result.vertexProps.getValue(_, HasForMoisture()) must_== 100.0 }
+      rivers foreach { r =>
+        //println(s"$r => ${result.vertexProps.get(r)}")
+        result.vertexProps.getValue(r, HasForMoisture()) must_== 100.0
+      }
       rivers must not(beEmpty)
     }
 
