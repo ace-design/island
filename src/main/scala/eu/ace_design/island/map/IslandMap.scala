@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom._
+import eu.ace_design.island.map.processes.Statistics
 
 
 /**
@@ -26,7 +27,7 @@ object IslandMap { def apply(mesh: Mesh) = new IslandMap(mesh) }
 class IslandMap private (
     private val _mesh: Mesh,
     val uuid: Option[String]     = None,
-    val stats: Option[Map[String, String]] = None,
+    val stats: Option[Map[Statistics.StatName, String]] = None,
     val faceProps: PropertySet   = PropertySet(),
     val vertexProps: PropertySet = PropertySet(),
     val edgeProps: PropertySet   = PropertySet()) {
@@ -90,7 +91,7 @@ class IslandMap private (
    */
   def copy(faceProps: PropertySet = this.faceProps, vertexProps: PropertySet = this.vertexProps,
            edgeProps: PropertySet = this.edgeProps, uuid: Option[String] = this.uuid,
-           stats: Option[Map[String, String]] = this.stats): IslandMap =
+           stats: Option[Map[Statistics.StatName, String]] = this.stats): IslandMap =
     new IslandMap(this._mesh, uuid, stats, faceProps, vertexProps, edgeProps)
 
   /**
