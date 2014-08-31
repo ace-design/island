@@ -133,7 +133,8 @@ trait DiSLand {
       val mesh = meshBuilder(sites)
       val mapBuilder = new IslandBuilder {
         override def size: Int = mapSize
-        override protected val steps: Seq[Process] = shape(mapSize, waterThreshold, random) +: (initProcess ++ process)
+        override protected val steps: Seq[Process] =
+          (shape(mapSize, waterThreshold, random) +: (initProcess ++ process)) :+ ComputeStatistics
       }
       mapBuilder(mesh, random).copy(uuid = Some(uuid))
     }

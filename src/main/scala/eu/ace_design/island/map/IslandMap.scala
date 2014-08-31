@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
 import eu.ace_design.island.geom._
+import eu.ace_design.island.map.processes.Statistics
 
 
 /**
@@ -21,10 +22,12 @@ object IslandMap { def apply(mesh: Mesh) = new IslandMap(mesh) }
  * @param vertexProps a propertySet associated to the vertices stored in mesh
  * @param edgeProps a PropertySet associated to the edges stored in the mesh
  * @param uuid if given, it contains the UUID used to initialise the random generator
+ * @param stats statistics about the map (optional)
  */
 class IslandMap private (
     private val _mesh: Mesh,
     val uuid: Option[String]     = None,
+    val stats: Option[Map[Statistics.StatName, String]] = None,
     val faceProps: PropertySet   = PropertySet(),
     val vertexProps: PropertySet = PropertySet(),
     val edgeProps: PropertySet   = PropertySet()) {
@@ -41,6 +44,15 @@ class IslandMap private (
   def face(i: Int): Face    = _mesh.faces(i)
   def faceRef(f: Face): Int = _mesh.faces(f).get
   def cornerRefs(f: Face): Set[Int] = f.vertices(_mesh.edges)
+
+  // Compute the convex hull of a given face (for geometrical purpose)
+  def convexHull(f: Face): Seq[Point] = {
+    import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
+    val coordinates = (cornerRefs(f) map { vertex } map { p => new Coordinate(p.x, p.y) }).toSeq
+    val closed = coordinates :+ new Coordinate(coordinates(0).x, coordinates(0).y)
+    val raw = new GeometryFactory().createPolygon(closed.toArray).convexHull.getCoordinates.toSeq
+    raw map { c => Point(c.x, c.y) }
+  }
 
   def findFacesWith: Set[Property[_]] => Set[Face]   = faceProps.project(_mesh.faces)
   def findFaceRefsWith(p: Face => Boolean): Set[Int] = _mesh.faces.queryReferences(p)
@@ -74,11 +86,13 @@ class IslandMap private (
    * @param vertexProps
    * @param edgeProps
    * @param uuid
+   * @param stats
    * @return
    */
   def copy(faceProps: PropertySet = this.faceProps, vertexProps: PropertySet = this.vertexProps,
-           edgeProps: PropertySet = this.edgeProps, uuid: Option[String] = this.uuid): IslandMap =
-    new IslandMap(this._mesh, uuid, faceProps, vertexProps, edgeProps)
+           edgeProps: PropertySet = this.edgeProps, uuid: Option[String] = this.uuid,
+           stats: Option[Map[Statistics.StatName, String]] = this.stats): IslandMap =
+    new IslandMap(this._mesh, uuid, stats, faceProps, vertexProps, edgeProps)
 
   /**
    * Structural equality for maps

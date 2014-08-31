@@ -15,20 +15,8 @@ object ComputeArea extends Process {
     val props = (m.faceProps /: m.faceRefs) { (acc, ref) => acc + (ref -> HasForArea(process(ref, m))) }
     val areas = props.restrictedTo(HasForArea())
 
-    val total = (0.0 /: areas.values) { (acc, v) => acc + v }
-    val min = toHectares(areas.values.min)
-    val max = toHectares(areas.values.max)
-    info(f"total = ${toHectares(total)}%2.2fha, avg=${toHectares(total)/areas.size}%2.2fha")
-
     m.copy(faceProps = props)
   }
-
-  /**
-   * Transform an amount of squared meters into hectares (1km2 = 100ha, 1ha = 10,000m2, ~ 300m x 300m square)
-   * @param m2
-   * @return
-   */
-  private def toHectares(m2: Double): Double = m2 / 10000 // 1ha == 10,000 m2
 
   /**
    * Compute the area of a given face by computing the convex hull of its border and then the associated area
@@ -41,9 +29,8 @@ object ComputeArea extends Process {
    */
   private def process(faceRef: Int, map: IslandMap): Double = {
     val f = map.face(faceRef)
-    val coordinates = (map.cornerRefs(f) map { i => map.vertex(i) } map { p => new Coordinate(p.x, p.y) }).toSeq
-    val closed = (coordinates :+ new Coordinate(coordinates(0).x, coordinates(0).y)).toArray
-    val convexHull = new GeometryFactory().createPolygon(closed).convexHull
+    val coordinates = map.convexHull(f) map { p => new Coordinate(p.x, p.y) }
+    val convexHull = new GeometryFactory().createPolygon(coordinates.toArray)
     convexHull.getArea * (PIXEL_FACTOR * PIXEL_FACTOR) // convert squaredPixel to squared meters
   }
 

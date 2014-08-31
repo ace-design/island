@@ -28,16 +28,10 @@ object ViewerHelpers {
    * @return a sequence of face description, referencing vertices as a convex hull of each faces
    */
   def buildFaces(map: IslandMap): Seq[Seq[Int]] = {
-    import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
     val data = map.faceRefs.toSeq.sorted map { idx =>
-      val involved = map.cornerRefs(map.face(idx))
-      // We need to build the convex hull of the polygon to obtain a convex representation of the face
-      val coords = (involved map { i => map.vertex(i) } map { p => new Coordinate(p.x, p.y)}).toSeq
-      val linear = coords :+ new Coordinate(coords(0).x, coords(0).y)
-      val factory = new GeometryFactory()
-      val convexCoords = factory.createPolygon(linear.toArray).convexHull.getCoordinates
+      val convexHull = map.convexHull(map.face(idx))
       // Mapping back the convex polygon to vertices references
-      val indexes = convexCoords map { c => map.vertexRef(Point(c.x, c.y))}
+      val indexes = convexHull map { c => map.vertexRef(Point(c.x, c.y))}
       indexes.slice(1, indexes.size).toSeq // removing the last one (the face is not a closed path)
     }
     (Seq[Seq[Int]]() /: data) { (acc, face) => acc :+ face }
