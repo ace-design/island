@@ -5,8 +5,10 @@ import eu.ace_design.island.map._
 /**
  * The compute statistics process generate useful statistics about the map
  *
+ * This process should be the last one applied to the map to benefit from the complete chain
+ *
  * Pre-conditions:
- *   - This process should be the last one applied to the map to benefit from the complete chain
+ *   - Faces annotated by: HasForArea, WaterKind, IsWater
  *
  * Post-conditions:
  *   - The map "stats" slot is now filed.
@@ -59,7 +61,7 @@ object ComputeStatistics extends Process {
       LAKE_PERCENTAGE -> f"${lakesArea/totalArea*100}%2.2f", LAND_PERCENTAGE -> f"${landsArea/totalArea*100}%2.2f",
       OCEAN_PERCENTAGE -> f"${oceansArea/totalArea*100}%2.2f"
     )
-    info(result.mkString("Map(",",",")"))
+    debug(result.mkString("Map(",",",")"))
     result
   }
 
@@ -72,8 +74,13 @@ object ComputeStatistics extends Process {
 
 object Statistics extends Enumeration {
   type StatName = Value
-  val TOTAL_AREA, AVERAGE_AREA,
-      LAND_AREA, LAKE_AREA, OCEAN_AREA,
-      LAND_PERCENTAGE, OCEAN_PERCENTAGE, LAKE_PERCENTAGE = Value
+  val TOTAL_AREA        = Value("Map area (ha)")
+  val AVERAGE_AREA      = Value("Average face area (ha)")
+  val LAND_AREA         = Value("Area occupied by lands (ha)")
+  val LAKE_AREA         = Value("Area occupied by lakes (ha)")
+  val OCEAN_AREA        = Value("Area occupied by the ocean (ha)")
+  val LAND_PERCENTAGE   = Value("% of map occupied by lands")
+  val OCEAN_PERCENTAGE  = Value("% of map occupied by the ocean")
+  val LAKE_PERCENTAGE   = Value("% of map occupied by lakes")
 }
 

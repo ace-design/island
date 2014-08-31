@@ -22,17 +22,25 @@ object Main extends App with Logger with DiSLand {
     withMoisture(soils.wet, distance = 200),
     usingBiomes()
   )
-  export(large)
+  //export(large)
 
   val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834"
-  //export(always)
+  export(always)
 
 
   private def export(m: IslandMap, name: String = "./map") {
     m -> (name as pdf)
     m -> (name as obj)
     //m -> (name as json)
+    statistics(m)
   }
 
+  protected def statistics(m: IslandMap) = {
+    info("Available statistics")
+    m.stats match {
+      case None =>
+      case Some(d) => d.toSeq sortBy { _._1.toString  } foreach { case (stat, value) => info(s"  - $stat => $value") }
+    }
+  }
 }
 
