@@ -129,6 +129,13 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
   }
 
   /**
+   * Clean a property set by only keeping the properties given in 'toKeep', deleting all the others
+   * @param toKeep
+   * @return
+   */
+  def keep(toKeep: Set[Property[_]]): PropertySet = this
+
+  /**
    * Two property sets are equals if their underlying maps are equals
    * @param other the object to check equality with
    * @return this == that <=> this._contents == that._contents

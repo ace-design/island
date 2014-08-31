@@ -98,6 +98,31 @@ class PropertiesTest extends SpecificationWithJUnit {
       pSet.getValue(1, HasForHeight()) must_== 3.4
     }
 
+    "support a cleanup mechanism" in {
+      val pSet = empty bulkAdd(Set(1), IsWater()) bulkAdd(Set(1,2), IsCoast()) bulkAdd(Set(1,2,3), IsBorder())
+
+      pSet.keep(Set()) must_== empty             // keeping no property => empty property set
+      pSet.keep(Set(HasForArea())) must_== empty // keeping an unused property => empty property set
+
+      val water = pSet.keep(Set(IsWater()))  // keeping only the IsWater property
+      water.references must_== Set(1)
+      water.get(1) must_== Set(IsWater())
+
+      val coast = pSet.keep(Set(IsCoast()))
+      coast.references must_== Set(1,2)
+      coast.get(1) must_== Set(IsCoast()); coast.get(2) must_== Set(IsCoast())
+
+      val border = pSet.keep(Set(IsBorder()))
+      border.references must_== Set(1,2,3)
+      border.get(1) must_== Set(IsBorder()); border.get(2) must_== Set(IsBorder()); border.get(3) must_== Set(IsBorder())
+
+      val waterBorder = pSet.keep(Set(IsWater(), IsBorder()))
+      waterBorder.references must_== Set(1,2,3)
+      waterBorder.get(1) must_== Set(IsWater())
+      waterBorder.get(2) must_== Set(IsBorder())
+      waterBorder.get(3) must_== Set(IsBorder())
+    }
+
   }
 
 }
