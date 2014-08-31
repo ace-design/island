@@ -118,7 +118,7 @@ class PropertiesTest extends SpecificationWithJUnit {
 
       val waterBorder = pSet.keep(Set(IsWater(), IsBorder()))
       waterBorder.references must_== Set(1,2,3)
-      waterBorder.get(1) must_== Set(IsWater())
+      waterBorder.get(1) must_== Set(IsWater(), IsBorder())
       waterBorder.get(2) must_== Set(IsBorder())
       waterBorder.get(3) must_== Set(IsBorder())
     }
