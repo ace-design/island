@@ -2,6 +2,7 @@ package eu.ace_design.island.viewer
 
 import java.io.{PrintWriter, File}
 import eu.ace_design.island.geom._
+import eu.ace_design.island.map.processes.Statistics
 import org.json
 import org.json._
 import eu.ace_design.island.map._
@@ -37,6 +38,10 @@ class JsonViewer extends Viewer with Logger {
     val result = new JSONObject()
     result.put("geometry", geom)
     result.put("properties", props)
+    m.stats match {
+      case None =>
+      case Some(stats) => result.put("stats", buildStatistics(stats))
+    }
     result.put("_comments", "JSON representation of an Island, automatically generated")
 
     val out = initOutput
@@ -66,14 +71,23 @@ class JsonViewer extends Viewer with Logger {
    * @return
    */
   def buildProperties(reg: PropertySet): JSONArray = {
-    val objects = reg.references map { ref =>
-      val props = (new JSONObject() /: reg.get(ref)) { (acc, prop) => acc.put(prop.key,prop.value) }
-      new JSONObject().put("i",ref).put("p",props)
+    val objects = reg.references.toSeq.sorted map { ref =>
+      (new JSONObject() /: reg.get(ref)) { (acc, prop) => acc.put(prop.key,prop.value) }
     }
     (new JSONArray() /: objects) { (acc, obj) => acc.put(obj) }
   }
 
-  //def buildStatistics(stats: Map[Statistics.])
+  /**
+   * Build a JSON array of statistics stored in a map
+   * @param stats
+   * @return
+   */
+  def buildStatistics(stats: Map[Statistics.StatName, String]): JSONArray = {
+    val objects = stats map { case (k, v) =>
+      new JSONObject().put("id", k.id).put("stat", k.toString).put("value", v)
+    }
+    (new JSONArray() /: objects) { (acc, obj) => acc.put(obj) }
+  }
 
 
 }
