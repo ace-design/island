@@ -32,7 +32,15 @@ object Main extends App with Logger with DiSLand {
     m -> (name as pdf)
     m -> (name as obj)
     //m -> (name as json)
+    statistics(m)
   }
 
+  protected def statistics(m: IslandMap) = {
+    info("Available statistics")
+    m.stats match {
+      case None =>
+      case Some(d) => d.toSeq sortBy { _._1.toString  } foreach { case (stat, value) => info(s"  - $stat => $value") }
+    }
+  }
 }
 
