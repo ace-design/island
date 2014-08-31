@@ -31,7 +31,7 @@ object Main extends App with Logger with DiSLand {
   private def export(m: IslandMap, name: String = "./map") {
     m -> (name as pdf)
     m -> (name as obj)
-    //m -> (name as json)
+    m -> (name as json)
   }
 
 }

@@ -21,8 +21,8 @@ class JsonViewer extends Viewer with Logger {
     info("Building JSON file")
     val vertices = buildVertices(m)
     val faces = buildFaces(m)
-    val vProps = buildProperties(m.vertexProps)
-    val fProps = buildProperties(m.faceProps)
+    val vProps = buildProperties(m.vertexProps.keep(Set()))
+    val fProps = buildProperties(m.faceProps.keep(Set(HasForBiome())))
 
 
     val geom = new JSONObject()
@@ -72,5 +72,8 @@ class JsonViewer extends Viewer with Logger {
     }
     (new JSONArray() /: objects) { (acc, obj) => acc.put(obj) }
   }
+
+  //def buildStatistics(stats: Map[Statistics.])
+
 
 }
