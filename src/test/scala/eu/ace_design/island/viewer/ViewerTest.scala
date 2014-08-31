@@ -1,7 +1,8 @@
 package eu.ace_design.island.viewer
 
 import eu.ace_design.island.geom.Point
-import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.map.{HasForHeight, IslandMap}
+import eu.ace_design.island.map.processes.{ElevationFunctions, AssignElevation}
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
 
@@ -14,7 +15,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "ViewerTest Specifications".title
 
   val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
-  val map = IslandMap(mesh)
+  val map = AssignElevation(ElevationFunctions.identity)(IslandMap(mesh))
   val tika =  new org.apache.tika.Tika()
 
   "The SVG viewer" should {
@@ -67,13 +68,15 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
       tika.detect(file.getAbsolutePath) must_== toObj.mimeType
     }
     "contain each stored vertex" in {
-      def isValid(data: Seq[String]) = {  // v $x $y $z
+      def isValid(idx: Int, data: Seq[String]) = {  // v $x $y $z
         data must haveSize(4)
         data(0) must_== "v"
         map.vertices must contain(Point(data(1).toDouble, data(2).toDouble))
+        val z = try { map.vertexProps.getValue(idx, HasForHeight()) } catch { case e: IllegalArgumentException => 0.0 }
+        data(3).toDouble must_== z
       }
       val vertices = contents filter { s => s.startsWith("v") }
-      vertices foreach { s => isValid(s.split(" ")) }
+      (0 until vertices.size) foreach { idx => isValid(idx, vertices(idx).split(" ")) }
       vertices must haveSize(map.vertices.size)
     }
     "contain the same number of faces" in {

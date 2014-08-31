@@ -129,6 +129,22 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
   }
 
   /**
+   * Clean a property set by only keeping the properties given in 'toKeep', deleting all the others. If a reference
+   * is not annotated with at least one property after the cleanup, it is removed from the set. Thus, keeping
+   * nothing (toKeep = Set()) yields the empty property set.
+   *
+   * @param toKeep the properties to keep (any instance, we rely on the property key at runtime)
+   * @return a cleaned property set
+   */
+  def keep(toKeep: Set[Property[_]]): PropertySet = {
+    val keys: Set[String] = toKeep map { _.key }
+    val data = _contents map {
+      case (key, values) => key -> (values  filter { p => keys.contains(p.key) })
+    } filter { case (key, value) => value.nonEmpty }
+    new PropertySet(data)
+  }
+
+  /**
    * Two property sets are equals if their underlying maps are equals
    * @param other the object to check equality with
    * @return this == that <=> this._contents == that._contents
