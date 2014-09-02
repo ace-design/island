@@ -51,30 +51,9 @@ class AssignElevationTest extends ProcessTestTrait {
 
     "define the linear function" in {
       val result = ElevationFunctions.linear(100)(vertices)
-
-      result.toSet must_== (for(v <- vertices) yield (v -> v)).toMap
+      result foreach { case (k, v) => k.toDouble must beCloseTo(v, 0.0001) }
+      result must haveSize(vertices.size)
     }
-
-    /*"define the peak function that re-scale the elevation" in {
-      val summit = 2706 // Lets build the "Monte Cinto", Corsica highest mountain
-      val result = ElevationFunctions.peak(summit)(distances)
-      result foreach { case (k,v) =>
-        distances.get(k) must beSome
-        v must beLessThanOrEqualTo(summit.toDouble)
-      }
-      result must haveValue(summit.toDouble)
-      result must haveSize(distances.size)
-    }
-
-    "define the redistribute function to redistribute the elevation based on a cumulative function" in {
-      val factor = 0.5 ; val max = distances.values.max
-      val result = ElevationFunctions.redistribute(factor)(distances)
-      result foreach { case (k,v) =>
-        distances.get(k) must beSome
-        v must beLessThanOrEqualTo(factor * max)
-      }
-      result must haveSize(distances.size)
-    }    */
 
   }
 

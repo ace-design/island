@@ -21,9 +21,10 @@ case class AssignElevation(mapper: ElevationFunctions.DistributionMapper = Eleva
                            elevator: ElevationFunctions.ElevationFunction) extends Process {
 
   override def apply(m: IslandMap): IslandMap = {
-    info("Identifying emerged lands area")
-    val oceans = m.findFacesWith(Set(WaterKind(ExistingWaterKind.OCEAN))) flatMap { f => m.cornerRefs(f) + f.center }
-    val emerged = m.vertexRefs diff oceans // everything that is not in the ocean can be elevated.
+    info("Identifying corners for emerged lands area")
+    val lakes = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE))) flatMap { f => m.cornerRefs(f)  }
+    val lands = m.findFacesWith(Set(!IsWater())) flatMap { f => m.cornerRefs(f)  }
+    val emerged = lakes ++ lands // everything that is not in the ocean can be elevated.
 
     info("Assigning initial elevation for emerged vertices")
     // vertices are mapped to a double value that is used for sorting, and the ordered sequence of vertices is returned

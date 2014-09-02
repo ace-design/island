@@ -110,9 +110,9 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
    * @return the value of p for ref (as a T), an IllegalArgumentException elsewhere
    */
   def getValue[T](ref: Int, p: Property[T]): T = _contents.get(ref) match {
-    case None => throw new IllegalArgumentException("ref must exists!")
+    case None => throw new IllegalArgumentException(s"Reference [$ref] must exists!")
     case Some(existing) => existing find { e => e.key == p.key} match {
-      case None =>  throw new IllegalArgumentException("No value stored for this property")
+      case None =>  throw new IllegalArgumentException(s"No value [${p.key}] stored for reference [$ref]")
       case Some(prop) => prop.asInstanceOf[Property[T]].value
     }
   }

@@ -18,13 +18,17 @@ import eu.ace_design.island.map._
  **/
 object MinimalDistanceToCoast extends Process {
 
+  import ExistingWaterKind.LAKE
+
   override def apply(m: IslandMap): IslandMap = {
     info("Computing minimal distance to coast for land vertices")
     val coast = m.findVerticesWith(Set(IsCoast()))
     val land =  m.findVerticesWith(Set(!IsWater()))
+    val lakes = m.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => m.cornerRefs(f) + f.center } map { m.vertex }
+
     // TODO coastal vertices can be precomputed as 0.0
     // computing distances
-    val distances = (m.vertexProps /: land) { (acc, point) =>
+    val distances = (m.vertexProps /: (land ++ lakes)) { (acc, point) =>
       val distance = (coast map { point --> _ }).min  // finding the minimal one
       acc + (m.vertexRef(point) -> DistanceToCoast(distance))
     }
