@@ -4,6 +4,8 @@ import eu.ace_design.island.map._
 
 class AssignElevationTest extends ProcessTestTrait {
 
+  import ElevationFunctions._
+
   "AssignElevationTest Specifications".title
 
   override val preconditions: IslandMap => IslandMap = { m =>
@@ -14,7 +16,8 @@ class AssignElevationTest extends ProcessTestTrait {
           AlignVertexWaterBasedOnFaces(
             IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
   }
-  override val processUnderTest = AssignElevation(ElevationFunctions.identity)
+  val elev = linear(10) _
+  override val processUnderTest = AssignElevation(mapper = distance, elevator = elev)
 
   "The AssignElevation process" should {
 
@@ -44,14 +47,15 @@ class AssignElevationTest extends ProcessTestTrait {
   }
 
   "The ElevationFunctions library" should {
-    val distances = (for(i <- 0 until 100) yield i -> i*2.0).toMap
+    val vertices = 0 until 100
 
-    "define the identity function" in {
-      val result = ElevationFunctions.identity(distances)
-      result.toSet must_== distances.toSet
+    "define the linear function" in {
+      val result = ElevationFunctions.linear(100)(vertices)
+
+      result.toSet must_== (for(v <- vertices) yield (v -> v)).toMap
     }
 
-    "define the peak function that re-scale the elevation" in {
+    /*"define the peak function that re-scale the elevation" in {
       val summit = 2706 // Lets build the "Monte Cinto", Corsica highest mountain
       val result = ElevationFunctions.peak(summit)(distances)
       result foreach { case (k,v) =>
@@ -70,7 +74,7 @@ class AssignElevationTest extends ProcessTestTrait {
         v must beLessThanOrEqualTo(factor * max)
       }
       result must haveSize(distances.size)
-    }
+    }    */
 
   }
 

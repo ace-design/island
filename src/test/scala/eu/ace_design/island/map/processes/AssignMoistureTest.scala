@@ -9,7 +9,7 @@ class AssignMoistureTest extends ProcessTestTrait {
   override val preconditions: IslandMap => IslandMap = { m =>
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     GenerateRivers(sources = 2, distance = 0.2)(
-      AssignElevation(ElevationFunctions.identity)(
+      AssignElevation(elevator = ElevationFunctions.linear(100))(
         MinimalDistanceToCoast(
           IdentifyCoastLine(
             IdentifyLakesAndOcean(

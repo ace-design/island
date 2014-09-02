@@ -61,9 +61,8 @@ trait DiSLand {
    * functions as syntactical element to instantiate map building processes
    */
   // Elevations
-  def whereDistanceIsHeight: Process                       = AssignElevation(ElevationFunctions.identity)
-  def withCulminatingPeak(i: Int): Process                 = AssignElevation(ElevationFunctions.peak(i))
-  def withElevationRedistribution(factor: Double): Process = AssignElevation(ElevationFunctions.redistribute(factor))
+  def flat(culmination: Double): Process = AssignElevation(mapper = ElevationFunctions.distance,
+                                                           elevator = ElevationFunctions.flat(culmination))
 
   // Rivers
   protected def flowing(rivers: Int, distance: Double): Process = GenerateRivers(rivers, distance)
@@ -88,7 +87,7 @@ trait DiSLand {
 
   // the process used by default
   private val defaultProcess: Seq[Process] = Seq(
-    withElevationRedistribution(factor = 0.5),
+    flat(20.0),
     flowing(rivers = 10, distance = 0.4),
     withMoisture(soils.normal),
     usingBiomes()
