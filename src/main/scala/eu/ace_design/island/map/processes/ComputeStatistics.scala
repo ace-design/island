@@ -1,5 +1,6 @@
 package eu.ace_design.island.map.processes
 
+import eu.ace_design.island.geom.Face
 import eu.ace_design.island.map._
 
 /**
@@ -18,7 +19,7 @@ object ComputeStatistics extends Process {
   import Statistics._
 
   override def apply(m: IslandMap): IslandMap = {
-    val stats = computeAreas(m)
+    val stats = computeAreas(m) ++ computeElevations(m) ++ computePitches(m)
     m.copy(stats = Some(stats))
   }
 
@@ -57,12 +58,55 @@ object ComputeStatistics extends Process {
 
     val result: Map[StatName, String] = Map(
       TOTAL_AREA -> f"$totalArea%2.2f", AVERAGE_AREA -> f"${totalArea / areas.size}%2.2f",
-      LAKE_AREA -> f"$lakesArea%2.2f", OCEAN_AREA -> f"$oceansArea%2.2f", LAND_AREA -> f"$landsArea%2.2f",
-      LAKE_PERCENTAGE -> f"${lakesArea/totalArea*100}%2.2f", LAND_PERCENTAGE -> f"${landsArea/totalArea*100}%2.2f",
-      OCEAN_PERCENTAGE -> f"${oceansArea/totalArea*100}%2.2f"
+      LAKE_AREA -> f"$lakesArea%2.2f",  OCEAN_AREA -> f"$oceansArea%2.2f",
+      LAND_AREA -> f"$landsArea%2.2f",  LAKE_PERCENTAGE -> f"${lakesArea/totalArea*100}%2.2f",
+      LAND_PERCENTAGE -> f"${landsArea/totalArea*100}%2.2f", OCEAN_PERCENTAGE -> f"${oceansArea/totalArea*100}%2.2f"
     )
     debug(result.mkString("Map(",",",")"))
     result
+  }
+
+
+  /**
+   * Compute statistics related to vertices elevations (min, max, avg)
+   * @param m
+   * @return
+   */
+  private def computeElevations(m: IslandMap): Map[StatName, String] = {
+    info("Computing statistics about the elevation of the map")
+    val elevations = m.vertexProps.restrictedTo(HasForHeight())
+    val avg = (0.0 /: elevations.values) { _ + _ } / elevations.size
+    Map(ELEVATION_MAX -> f"${elevations.values.max * PIXEL_FACTOR}%2.2f",
+        ELEVATION_MIN -> f"${elevations.values.min * PIXEL_FACTOR}%2.2f",
+        ELEVATION_AVG -> f"${avg * PIXEL_FACTOR}%2.2f")
+  }
+
+  /**
+   * Compute statisctics about faces pitches (in %)
+   * ref: http://en.wikipedia.org/wiki/Grade_(slope)#mediaviewer/File:Grades_degrees.svg
+   *
+   * @param m
+   * @return
+   */
+  private def computePitches(m: IslandMap): Map[StatName, String] = {
+    info("Computing statistics about faces' pitches")
+    val elevations = m.vertexProps.restrictedTo(HasForHeight())
+
+    def compute(face: Face): Double = {
+      val corners = m.cornerRefs(face) map { c => c -> elevations.getOrElse(c,0.0) }
+      val lowest  = corners minBy  { _._2 }
+      val highest = corners maxBy  { _._2 }
+      val run     = m.vertex(lowest._1) --> m.vertex(highest._1)
+      val rise    = highest._2 - lowest._2
+      if (rise == 0) 0.0 else (100.0 * rise / run)
+    }
+
+    val pitches = m.faces map { compute }
+    val avg = (0.0 /: pitches) { _ + _ } / pitches.size
+
+    Map(PITCH_MAX -> f"${pitches.max}%2.2f",
+      PITCH_MIN -> f"${pitches.min}%2.2f",
+      PITCH_AVG -> f"$avg%2.2f")
   }
 
   import ExistingWaterKind._
@@ -75,12 +119,19 @@ object ComputeStatistics extends Process {
 object Statistics extends Enumeration {
   type StatName = Value
   val TOTAL_AREA        = Value("Map area (ha)")
-  val AVERAGE_AREA      = Value("Average face area (ha)")
+  val AVERAGE_AREA      = Value("Face area (ha) [avg]")
   val LAND_AREA         = Value("Area occupied by lands (ha)")
   val LAKE_AREA         = Value("Area occupied by lakes (ha)")
   val OCEAN_AREA        = Value("Area occupied by the ocean (ha)")
   val LAND_PERCENTAGE   = Value("% of map occupied by lands")
   val OCEAN_PERCENTAGE  = Value("% of map occupied by the ocean")
   val LAKE_PERCENTAGE   = Value("% of map occupied by lakes")
+  val ELEVATION_MIN     = Value("Land elevation (m) [min] ")
+  val ELEVATION_MAX     = Value("Land elevation (m) [max]")
+  val ELEVATION_AVG     = Value("Land elevation (m) [avg]")
+  val PITCH_MIN         = Value("Pitch (%) [min]")
+  val PITCH_MAX         = Value("Pitch (%) ]max]")
+  val PITCH_AVG         = Value("Pitch (%) [avg]")
+
 }
 

@@ -3,74 +3,6 @@ package eu.ace_design.island.map.processes
 import eu.ace_design.island.geom.{Face, EdgeRegistry}
 import eu.ace_design.island.map._
 
-/**
- * This object defines several elevation function used to assign the elevation (z coordinate) of each point
- */
-object ElevationFunctions {
-
-  // An elevation functions transforms a map of VertexRef -> DistanceToCoast into a map VertexRef -> Height
-  type ElevationFunction =  Map[Int,Double] => Map[Int,Double]
-
-  /**
-   * The identity function consider that the elevation of a point is equivalent to its distance to the coastline
-   * @return the elevation map
-   */
-  def identity: ElevationFunction = m => m
-
-  /**
-   * The peak function works like the identity one, and allows one to specify the elevation of the culminating point
-   * @param summit the maximal elevation
-   * @return the elevation map
-   */
-  def peak(summit: Int): ElevationFunction = distances => {
-    val max = distances.values.max
-    distances map { case (key, distance) => key -> distance / max * summit }
-  }
-
-  /**
-   * This algorithm is used to redistribute the elevations according to the y = 1 - (1-x)**2 function.
-   * (see http://www-cs-students.stanford.edu/~amitp/game-programming/polygon-map-generation/)
-   *
-   * The idea is to sort the points based on their distance to the coast. The redistribution function reshape the island
-   * by defining the number of points having an elevation lesser than s given one. In this function, y is the number of
-   * points handled, and x is the associated elevation. We rely on a normalized function, i.e., (x,y) \in [0,1]**2
-   *
-   * By sorting the distance map, we know the y value, assimilated to the position of the point in the sorted list. It
-   * is then our responsibility to find the x, which maps to the elevation to be assigned to the associated points. I
-   * must admit it looks like magic at first sight, but it is quite logic after all (Read Patel's blog post to see an
-   * illustration).
-   *
-   * y = 1  - (1-x)**2
-   *   = 2x - x**2
-   *
-   * - x**2 +2x - y = 0
-   *
-   * A y is known, this is a simple quadratic equation.  delta = 4 - 4y, and as y \in [0,1], delta > 0 \forall y
-   * It admits 2 solutions :
-   * s = (2 ± sqrt(4 - 4y) )  / 2
-   *   = (2 ± sqrt(4(1 - y))) / 2
-   *   = (2 ± 2.sqrt(1 - y))  / 2
-   *   = 2 (1 ± sqrt(1 - y))  / 2
-   *   = (1 ± sqrt(1 - y))        As (x,y) \in [0,1]**2, the only solution is (1 - sqrt(1 - y))
-   *
-   * Like Patel, we use a glitch (replacing 1 by 1.1) in s to strengthen the slopes a little bit.
-   *
-   * @param factor a factor used to rescale the slopes of the island
-   * @return the elevation map
-   */
-  def redistribute(factor: Double = 1): ElevationFunction = distances => {
-    val max = distances.values.max * factor; val sorted = distances.toSeq.sortBy(_._2)
-    val yMax = sorted.length
-    val redistributed = for(index <- 0 until yMax)
-      yield {
-        val y = index.toDouble / yMax ; val x = 1.1 - math.sqrt(1.1-y)
-        sorted(index)._1 -> max * (if (x >=1) 1 else x)
-      }
-    redistributed.toMap
-  }
-
-}
-
 
 /**
  * This process assigns an elevation (z coordinate) to the vertices stored in the map, according to a given function.
@@ -85,28 +17,34 @@ object ElevationFunctions {
  *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
  *     to be at the sea level by default (HasForHeight(0.0))
  */
-case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Process {
+case class AssignElevation(mapper: ElevationFunctions.DistributionMapper = ElevationFunctions.distance,
+                           elevator: ElevationFunctions.ElevationFunction) extends Process {
 
   override def apply(m: IslandMap): IslandMap = {
-    info("Assigning initial elevation for corner vertices")
-    val corners =  m.vertexRefs diff (m.faces map { _.center })
-    val distances = (m.vertexProps restrictedTo DistanceToCoast()) filter { case (k,_) => corners contains k }
-    val cornersElevation = phi(distances)
+    info("Identifying corners for emerged lands area")
+    val lakes = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE))) flatMap { f => m.cornerRefs(f)  }
+    val lands = m.findFacesWith(Set(!IsWater())) flatMap { f => m.cornerRefs(f)  }
+    val emerged = lakes ++ lands // everything that is not in the ocean can be elevated.
+
+    info("Assigning initial elevation for emerged vertices")
+    // vertices are mapped to a double value that is used for sorting, and the ordered sequence of vertices is returned
+    val mapped = (emerged map { vertex => vertex -> mapper(vertex,m) }).toSeq.sortBy{ _._2 } map { _._1 }
+    val elevated = elevator(mapped)
 
     info("Computing faces' center elevations as the average of the involved vertices' elevation")
     val land = m.findFacesWith(Set(!IsWater()))
     val centersElevation: Map[Int, Double] = (land map { face =>
       val corners = m.cornerRefs(face)
-      val sum = (0.0 /: corners) { (acc, ref) => acc + cornersElevation(ref) }
+      val sum = (0.0 /: corners) { (acc, ref) => acc + elevated(ref) }
       face.center -> sum / corners.size
     }).toMap
 
     info("Adjusting inner lakes to make them flat")
     val lakeFaces = m.findFacesWith(Set(WaterKind(ExistingWaterKind.LAKE)))
-    val adjustment = adjust(lakeFaces, m, cornersElevation)
+    val adjustment = adjust(lakeFaces, m, elevated)
 
     info("Updating the property sets")
-    val elevations = cornersElevation ++ centersElevation  ++ adjustment // the final elevations to be used
+    val elevations = elevated ++ centersElevation  ++ adjustment // the final elevations to be used
     val props = (m.vertexProps /: elevations) { (acc, pair) => acc + (pair._1 -> HasForHeight(pair._2)) }
     m.copy(vertexProps = props)
   }
@@ -183,5 +121,62 @@ case class AssignElevation(phi: ElevationFunctions.ElevationFunction) extends Pr
 
 }
 
+
+/**
+ * This object defines several elevation function used to assign the elevation (z coordinate) of each point
+ */
+object ElevationFunctions {
+
+  /**
+   * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double is used to
+   * produce the ordered set to be used by the elevation function
+   */
+  type DistributionMapper = (Int, IslandMap) => Double
+
+  val distance:    DistributionMapper = (pRef, m) => m.vertexProps.getValue(pRef, DistanceToCoast())
+  val west2east:   DistributionMapper = (pRef, m) => m.vertex(pRef).x
+  val north2south: DistributionMapper = (pRef, m) => m.vertex(pRef).y
+
+
+  /**
+   * An elevation function consumes an ordered set of point references and map each point to an altitude
+   */
+  type ElevationFunction = Seq[Int] => Map[Int, Double]
+
+
+  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
+    val phi: Double => Double = x => x
+    val length: Double = vertices.length.toDouble
+    val raw = 0 until vertices.size map { index =>
+      val normalized_x: Double = index / length
+      val normalised_y: Double = phi(normalized_x)
+      vertices(index) -> highest * normalised_y
+    }
+    raw.toMap
+  }
+
+
+  def flat(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
+    val phi = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124)) _
+    val length: Double = vertices.length.toDouble
+    val raw = 0 until vertices.size map { index =>
+      val normalized_x: Double = index / length
+      val normalised_y: Double = phi(normalized_x)
+      vertices(index) -> highest * normalised_y
+    }
+    raw.toMap
+  }
+
+
+  /**
+   * Compute the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n) and a given x
+   * @param coefficients the ascending sequence of coefficients to apply
+   * @param x the value
+   * @return the value of this polynomial function for x
+   */
+  private def polynomial(coefficients: Seq[Double])(x: Double): Double = {
+    (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
+  }
+}
 
 

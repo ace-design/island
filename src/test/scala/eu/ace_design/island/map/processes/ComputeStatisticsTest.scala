@@ -11,7 +11,7 @@ class ComputeStatisticsTest extends ProcessTestTrait {
       AssignBiomes()(
         AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)(
           GenerateRivers(sources = 2, distance = 0.2)(
-            AssignElevation(ElevationFunctions.identity)(
+            AssignElevation(elevator = ElevationFunctions.linear(100))(
               MinimalDistanceToCoast(
                 IdentifyCoastLine(
                   IdentifyLakesAndOcean(

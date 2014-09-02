@@ -20,7 +20,7 @@ class ComputeAreaTest extends ProcessTestTrait {
 
     "be precise enough to return the area of the map (in squared meters) while adding all the computed areas" in {
       val total = (0.0 /: areas.values) { _ + _ }
-      total must_== (SIZE * SIZE) * (ComputeArea.PIXEL_FACTOR * ComputeArea.PIXEL_FACTOR)
+      total must_== (SIZE * SIZE) * (PIXEL_FACTOR * PIXEL_FACTOR)
     }
 
   }

@@ -15,7 +15,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "ViewerTest Specifications".title
 
   val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
-  val map = AssignElevation(ElevationFunctions.identity)(IslandMap(mesh))
+  val map = AssignElevation(elevator = ElevationFunctions.linear(100))(IslandMap(mesh))
   val tika =  new org.apache.tika.Tika()
 
   "The SVG viewer" should {
