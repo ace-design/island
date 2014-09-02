@@ -1,5 +1,6 @@
 package eu.ace_design.island.map.processes
 
+import eu.ace_design.island.geom.Face
 import eu.ace_design.island.map._
 
 /**
@@ -18,7 +19,7 @@ object ComputeStatistics extends Process {
   import Statistics._
 
   override def apply(m: IslandMap): IslandMap = {
-    val stats = computeAreas(m) ++ computeElevations(m)
+    val stats = computeAreas(m) ++ computeElevations(m) ++ computePitches(m)
     m.copy(stats = Some(stats))
   }
 
@@ -80,8 +81,33 @@ object ComputeStatistics extends Process {
         ELEVATION_AVG -> f"${avg * PIXEL_FACTOR}%2.2f")
   }
 
+  /**
+   * Compute statisctics about faces pitches (in %)
+   * ref: http://en.wikipedia.org/wiki/Grade_(slope)#mediaviewer/File:Grades_degrees.svg
+   *
+   * @param m
+   * @return
+   */
+  private def computePitches(m: IslandMap): Map[StatName, String] = {
+    info("Computing statistics about faces' pitches")
+    val elevations = m.vertexProps.restrictedTo(HasForHeight())
 
+    def compute(face: Face): Double = {
+      val corners = m.cornerRefs(face) map { c => c -> elevations.getOrElse(c,0.0) }
+      val lowest  = corners minBy  { _._2 }
+      val highest = corners maxBy  { _._2 }
+      val run     = m.vertex(lowest._1) --> m.vertex(highest._1)
+      val rise    = highest._2 - lowest._2
+      if (rise == 0) 0.0 else (100.0 * rise / run)
+    }
 
+    val pitches = m.faces map { compute }
+    val avg = (0.0 /: pitches) { _ + _ } / pitches.size
+
+    Map(PITCH_MAX -> f"${pitches.max}%2.2f",
+      PITCH_MIN -> f"${pitches.min}%2.2f",
+      PITCH_AVG -> f"$avg%2.2f")
+  }
 
   import ExistingWaterKind._
 
