@@ -8,8 +8,6 @@ import eu.ace_design.island.map.{HasForArea, IslandMap}
  */
 object ComputeArea extends Process {
 
-  final val PIXEL_FACTOR: Int = 10 // 1px == PIXEL_FACTOR meters
-
   override def apply(m: IslandMap): IslandMap = {
     info("Computing faces areas")
     val props = (m.faceProps /: m.faceRefs) { (acc, ref) => acc + (ref -> HasForArea(process(ref, m))) }
