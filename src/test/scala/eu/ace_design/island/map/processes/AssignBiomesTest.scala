@@ -14,7 +14,7 @@ class AssignBiomesTest extends ProcessTestTrait {
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
     moisturizer(
       GenerateRivers(sources = 2, distance = 0.2)(
-        AssignElevation(elevator = ElevationFunctions.linear(100))(
+        AssignElevation(elevator = ElevationDistributions.linear(100))(
           MinimalDistanceToCoast(
             IdentifyCoastLine(
               IdentifyLakesAndOcean(

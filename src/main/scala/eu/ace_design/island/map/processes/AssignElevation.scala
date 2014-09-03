@@ -17,8 +17,8 @@ import eu.ace_design.island.map._
  *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
  *     to be at the sea level by default (HasForHeight(0.0))
  */
-case class AssignElevation(mapper: ElevationFunctions.DistributionMapper = ElevationFunctions.distance,
-                           elevator: ElevationFunctions.ElevationFunction) extends Process {
+case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDistributions.distance,
+                           elevator: ElevationDistributions.Distribution) extends Process {
 
   override def apply(m: IslandMap): IslandMap = {
     info("Identifying corners for emerged lands area")
@@ -125,39 +125,33 @@ case class AssignElevation(mapper: ElevationFunctions.DistributionMapper = Eleva
 /**
  * This object defines several elevation function used to assign the elevation (z coordinate) of each point
  */
-object ElevationFunctions {
+object ElevationDistributions {
 
   /**
    * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double is used to
    * produce the ordered set to be used by the elevation function
    */
-  type DistributionMapper = (Int, IslandMap) => Double
+  type Mapper = (Int, IslandMap) => Double
 
-  val distance:    DistributionMapper = (pRef, m) => m.vertexProps.getValue(pRef, DistanceToCoast())
-  val west2east:   DistributionMapper = (pRef, m) => m.vertex(pRef).x
-  val north2south: DistributionMapper = (pRef, m) => m.vertex(pRef).y
+  val distance:    Mapper = (pRef, m) => m.vertexProps.getValue(pRef, DistanceToCoast())
+  val west2east:   Mapper = (pRef, m) => m.vertex(pRef).x
+  val north2south: Mapper = (pRef, m) => m.vertex(pRef).y
 
 
   /**
    * An elevation function consumes an ordered set of point references and map each point to an altitude
    */
-  type ElevationFunction = Seq[Int] => Map[Int, Double]
+  type Distribution = Seq[Int] => Map[Int, Double]
 
 
-  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
-    val phi: Double => Double = x => x
-    val length: Double = vertices.length.toDouble
-    val raw = 0 until vertices.size map { index =>
-      val normalized_x: Double = index / length
-      val normalised_y: Double = phi(normalized_x)
-      vertices(index) -> highest * normalised_y
-    }
-    raw.toMap
-  }
-
+  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = applyPolynomial(x => x)(highest)(vertices)
 
   def flat(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
     val phi = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124)) _
+    applyPolynomial(phi)(highest)(vertices)
+  }
+
+  private def applyPolynomial(phi: Double => Double)(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
     val length: Double = vertices.length.toDouble
     val raw = 0 until vertices.size map { index =>
       val normalized_x: Double = index / length
@@ -175,7 +169,8 @@ object ElevationFunctions {
    * @return the value of this polynomial function for x
    */
   private def polynomial(coefficients: Seq[Double])(x: Double): Double = {
-    (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
+    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
+    math.max(0.0, math.min(1.0, r))
   }
 }
 

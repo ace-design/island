@@ -2,7 +2,7 @@ package eu.ace_design.island.viewer
 
 import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.{HasForHeight, IslandMap}
-import eu.ace_design.island.map.processes.{ElevationFunctions, AssignElevation}
+import eu.ace_design.island.map.processes.{ElevationDistributions, AssignElevation}
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
 
@@ -15,7 +15,7 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "ViewerTest Specifications".title
 
   val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
-  val map = AssignElevation(elevator = ElevationFunctions.linear(100))(IslandMap(mesh))
+  val map = AssignElevation(elevator = ElevationDistributions.linear(100))(IslandMap(mesh))
   val tika =  new org.apache.tika.Tika()
 
   "The SVG viewer" should {

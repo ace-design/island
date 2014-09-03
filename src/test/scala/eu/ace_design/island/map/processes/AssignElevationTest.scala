@@ -4,7 +4,7 @@ import eu.ace_design.island.map._
 
 class AssignElevationTest extends ProcessTestTrait {
 
-  import ElevationFunctions._
+  import ElevationDistributions._
 
   "AssignElevationTest Specifications".title
 
@@ -47,12 +47,20 @@ class AssignElevationTest extends ProcessTestTrait {
   }
 
   "The ElevationFunctions library" should {
-    val vertices = 0 until 100
+    val vertices = (0 until 100).toSeq
 
     "define the linear function" in {
-      val result = ElevationFunctions.linear(100)(vertices)
+      val result = ElevationDistributions.linear(100)(vertices)
       result foreach { case (k, v) => k.toDouble must beCloseTo(v, 0.0001) }
       result must haveSize(vertices.size)
+      result(vertices(0))                  must_== 0.0
+      result(vertices(vertices.size - 1))  must_== 99.0
+    }
+
+    "define the flat function" in {
+      val result = ElevationDistributions.flat(100)(vertices)
+      result(vertices(0))                  must_== 0.0
+      result(vertices(vertices.size - 1))  must beLessThanOrEqualTo(100.0)
     }
 
   }
