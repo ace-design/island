@@ -4,6 +4,7 @@ import eu.ace_design.island.map._
 
 class DistributeElevationTest extends ProcessTestTrait {
 
+  import ElevationMappers._
   import ElevationDistributions._
 
   "AssignElevationTest Specifications".title

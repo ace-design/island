@@ -112,31 +112,68 @@ trait ElevationProcess extends Process {
 }
 
 /**
- * This process assigns an elevation (z coordinate) to the vertices stored in the map, according to a given function.
- * The function (phi) used as parameter is applied to the distance to the coast of each corner. Contrarily to the
- * corners, vertices used as face' center has for elevation the average of the elevation of the vertices used in the
- * border of the face.
+ * This process uses a mapping function to bind each emerged vertex to a double value. This sequence is sorted, and an
+ * elevator function is used to map to each vertex reference an elevation. This leads to more irregular shapes, and
+ * the island looks less "mathematical". The drawback is that it shortens the rivers for flat islands, as it is more
+ * difficult to find a down slope path (and the generateRiver algorithm is naive and does not implement backtracking) to
+ * the coast after the redistribution if the island is too flat.
  *
- * Pre-conditions:
- *   - The map contains "DistanceToCoast(d)" annotations for each land (i.e., !ocean) vertices.
- *
- * Post-conditions:
- *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
- *     to be at the sea level by default (HasForHeight(0.0))
+ * This process requires as pre-condition that the properties used in the mapper are available in the map.
  */
-case class DistributeElevation(mapper: ElevationDistributions.Mapper = ElevationDistributions.distance,
+case class DistributeElevation(mapper: ElevationMappers.Mapper = ElevationMappers.distance,
                            elevator: ElevationDistributions.Distribution) extends ElevationProcess {
 
   override def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double] = {
-    val mapped = (vertices map { vertex => vertex -> mapper(vertex,m) }).toSeq.sortBy{ _._2 } map { _._1 }
+    val mapped = (vertices map { vertex => mapper(vertex,m) }).toSeq.sortBy{ _._2 } map { _._1 }
     elevator(mapped)
+  }
+
+}
+
+case class AssignElevation(mapper: ElevationMappers.Mapper = ElevationMappers.distance,
+                           phi: Double => Double) extends ElevationProcess {
+
+  override def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double] = {
+    val mapped = (vertices map { vertex => mapper(vertex, m) }).toMap
+    val max = mapped.values.max
+    val raw = mapped map { case (ref, value) => ref -> value * phi(value/max) }
+    raw.toMap
+  }
+
+}
+
+object Polynomials {
+
+  def yEqualsToX = polynomial(Seq(0,1))   // y = x
+
+  def plateau = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124))
+
+  /**
+   * Create a function supporting the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n)
+   * @param coefficients the ascending sequence of coefficients to apply
+   * @return the value of this polynomial function for x
+   */
+  private def polynomial(coefficients: Seq[Double]): Double => Double = { x =>
+    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
+    math.max(0.0, math.min(1.0, r))
   }
 
 }
 
 
 
+object ElevationMappers {
 
+  /**
+   * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double
+   * is used to produce the ordered set to be used by the elevation function
+   */
+  type Mapper = (Int, IslandMap) => (Int, Double)
+
+  val distance:    Mapper = (pRef, m) => pRef -> m.vertexProps.getValue(pRef, DistanceToCoast())
+  val west2east:   Mapper = (pRef, m) => pRef -> m.vertex(pRef).x
+  val north2south: Mapper = (pRef, m) => pRef -> m.vertex(pRef).y
+}
 
 /**
  * This object defines several elevation function used to assign the elevation (z coordinate) of each point
@@ -144,28 +181,17 @@ case class DistributeElevation(mapper: ElevationDistributions.Mapper = Elevation
 object ElevationDistributions {
 
   /**
-   * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double
-   * is used to produce the ordered set to be used by the elevation function
-   */
-  type Mapper = (Int, IslandMap) => Double
-
-  val distance:    Mapper = (pRef, m) => m.vertexProps.getValue(pRef, DistanceToCoast())
-  val west2east:   Mapper = (pRef, m) => m.vertex(pRef).x
-  val north2south: Mapper = (pRef, m) => m.vertex(pRef).y
-
-
-  /**
    * An elevation function consumes an ordered set of point references and map each point to an altitude
    */
   type Distribution = Seq[Int] => Map[Int, Double]
 
 
-  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = applyPolynomial(x => x)(highest)(vertices)
+  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] =
+    applyPolynomial(Polynomials.yEqualsToX)(highest)(vertices)
 
-  def flat(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
-    val phi = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124)) _
-    applyPolynomial(phi)(highest)(vertices)
-  }
+  def flat(highest: Double)(vertices: Seq[Int]): Map[Int, Double] =
+    applyPolynomial(Polynomials.plateau)(highest)(vertices)
+
 
   private def applyPolynomial(phi: Double => Double)(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
     val length: Double = vertices.length.toDouble
@@ -175,18 +201,6 @@ object ElevationDistributions {
       vertices(index) -> highest * normalised_y
     }
     raw.toMap
-  }
-
-
-  /**
-   * Compute the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n) and a given x
-   * @param coefficients the ascending sequence of coefficients to apply
-   * @param x the value
-   * @return the value of this polynomial function for x
-   */
-  private def polynomial(coefficients: Seq[Double])(x: Double): Double = {
-    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
-    math.max(0.0, math.min(1.0, r))
   }
 }
 
