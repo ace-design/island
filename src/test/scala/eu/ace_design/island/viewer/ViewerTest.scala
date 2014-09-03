@@ -57,16 +57,15 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   }
 
   "The OBJ viewer" should {
-    val toObj = new OBJViewer()
-    val file = toObj(map)
+    val file = OBJViewer(map)
     val contents = scala.io.Source.fromFile(file).getLines().toSeq
-    "uses obj as extension" in { toObj.extension must_== "obj" }
+    "uses obj as extension" in { OBJViewer.extension must_== "obj" }
     "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as a plain text" in {
-      tika.detect(file.getAbsolutePath) must_== toObj.mimeType
+      tika.detect(file.getAbsolutePath) must_== OBJViewer.mimeType
     }
     "contain each stored vertex" in {
       def isValid(idx: Int, data: Seq[String]) = {  // v $x $y $z
@@ -89,15 +88,14 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
 
 
   "the JSON viewer" should {
-    val toJson = new JsonViewer()
-    val file = toJson(map)
-    "use json as extension" in { toJson.extension must_== "json" }
+    val file = JsonViewer(map)
+    "use json as extension" in { JsonViewer.extension must_== "json" }
     "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as a json" in {
-      tika.detect(file.getAbsolutePath) must_== toJson.mimeType
+      tika.detect(file.getAbsolutePath) must_== JsonViewer.mimeType
     }
   }
 }

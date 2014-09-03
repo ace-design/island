@@ -8,7 +8,7 @@ import eu.ace_design.island.map.{PropertySet, IslandMap}
 /**
  * Create 3d mesh using the OBJ file format [http://en.wikipedia.org/wiki/Wavefront_.obj_file]
  */
-class OBJViewer extends Viewer {
+object OBJViewer extends Viewer {
 
   override val extension: String = "obj"
   override val mimeType: String = "application/octet-stream"
