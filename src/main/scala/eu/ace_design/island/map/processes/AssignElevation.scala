@@ -128,8 +128,8 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
 object ElevationDistributions {
 
   /**
-   * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double is used to
-   * produce the ordered set to be used by the elevation function
+   * a distribution mapper consumes a point reference (of a land vertex) and an IslandMap to produce a double. This double
+   * is used to produce the ordered set to be used by the elevation function
    */
   type Mapper = (Int, IslandMap) => Double
 
