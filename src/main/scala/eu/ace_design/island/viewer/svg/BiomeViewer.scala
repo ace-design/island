@@ -17,7 +17,7 @@ object BiomeViewer extends SVGViewer {
     m.edgeRefs foreach { drawAnEdge(_, m, g) }
     if (m.uuid.isDefined) {
       g.setColor(BLACK)
-      g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5)
+      g.drawString(s"seed: 0x${m.uuid.get.toHexString.toUpperCase}L", 5, m.size - 5)
     }
   }
 

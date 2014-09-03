@@ -2,7 +2,6 @@ package eu.ace_design.island.viewer.svg
 
 import java.awt.geom.Line2D
 import java.awt.{BasicStroke, Color, Graphics2D}
-import eu.ace_design.island.geom.Face
 import eu.ace_design.island.map.{PropertySet, IsWater, IslandMap, Property}
 
 

@@ -19,7 +19,7 @@ object Main extends App with Logger with DiSLand {
   val medium = createIsland shapedAs radial(factor = 1.47)
   //export(medium)
 
-  val large = createIsland shapedAs radial(1.07) usingSeed "9ac771d2-47f7-4037-ad83-919cd4edc1be" withSize 2048 having 4096.faces builtWith Seq(
+  val large = createIsland shapedAs radial(1.07) usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
     //flatDistribution(40), // culminating peak is at ~400meters
     plateau(40), AssignPitch,
     flowing(rivers = 30, distance = 0.4),
@@ -28,7 +28,7 @@ object Main extends App with Logger with DiSLand {
   )
   //export(large)
 
-  val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834"
+  val always = createIsland usingSeed 0x64236166165d47F0L
   export(always)
 
 

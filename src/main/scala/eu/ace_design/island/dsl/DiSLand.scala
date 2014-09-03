@@ -113,7 +113,7 @@ trait DiSLand {
                                      generator: PointGeneratorDirective = smoothly,
                                      shape: ShapeDirective = radial(1.27),
                                      process: Seq[Process] = defaultProcess,
-                                     uuid: String          = UUID.randomUUID.toString) {
+                                     uuid: Long          = Random.nextLong()) {
 
     // The different keywords to be used to update the configuration with specific values
 
@@ -123,7 +123,7 @@ trait DiSLand {
     def distributed(dir: PointGeneratorDirective) = this.copy(generator = dir)
     def shapedAs(s: ShapeDirective)  = this.copy(shape = s)
     def builtWith(seq: Seq[Process]) = this.copy(process = seq)
-    def usingSeed(s: String) = this.copy(uuid = s)
+    def usingSeed(s: Long) = this.copy(uuid = s)
 
 
     /**
@@ -131,7 +131,7 @@ trait DiSLand {
      * @return the map built using this configuration
      */
     def toMap: IslandMap = {
-      val random = new Random(UUID.fromString(uuid).getMostSignificantBits)
+      val random = new Random(uuid)
       val sites = generator(mapSize, faces, random)
       val meshBuilder = new MeshBuilder(mapSize)
       val mesh = meshBuilder(sites)

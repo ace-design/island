@@ -26,7 +26,7 @@ object IslandMap { def apply(mesh: Mesh) = new IslandMap(mesh) }
  */
 class IslandMap private (
     private val _mesh: Mesh,
-    val uuid: Option[String]     = None,
+    val uuid: Option[Long]       = None,
     val stats: Option[Map[Statistics.StatName, String]] = None,
     val faceProps: PropertySet   = PropertySet(),
     val vertexProps: PropertySet = PropertySet(),
@@ -90,7 +90,7 @@ class IslandMap private (
    * @return
    */
   def copy(faceProps: PropertySet = this.faceProps, vertexProps: PropertySet = this.vertexProps,
-           edgeProps: PropertySet = this.edgeProps, uuid: Option[String] = this.uuid,
+           edgeProps: PropertySet = this.edgeProps, uuid: Option[Long] = this.uuid,
            stats: Option[Map[Statistics.StatName, String]] = this.stats): IslandMap =
     new IslandMap(this._mesh, uuid, stats, faceProps, vertexProps, edgeProps)
 
