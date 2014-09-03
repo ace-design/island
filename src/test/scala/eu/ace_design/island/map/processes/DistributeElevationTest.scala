@@ -2,12 +2,12 @@ package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
 
-class AssignElevationTest extends ProcessTestTrait {
+class DistributeElevationTest extends ProcessTestTrait {
 
-  import eu.ace_design.island.map.processes.ElevationFunctions._
-  import eu.ace_design.island.map.processes.ElevationMappers._
+  import ElevationMappers._
+  import ElevationDistributions._
 
-  "AssignElevationTest Specifications".title
+  "DistributeElevationTest Specifications".title
 
   override val preconditions: IslandMap => IslandMap = { m =>
     val donuts = DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2)
@@ -17,12 +17,12 @@ class AssignElevationTest extends ProcessTestTrait {
           AlignVertexWaterBasedOnFaces(
             IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
   }
-  override val processUnderTest = AssignElevation(mapper = distance, phi = linear(10))
+  override val processUnderTest = DistributeElevation(mapper = distance, elevator = linear(10))
 
   "The DistributeElevation process" should {
 
     val coastline = result.findVerticesWith(Set(IsCoast())) map { p => result.vertexRef(p) }
-    import eu.ace_design.island.map.ExistingWaterKind._
+    import ExistingWaterKind._
     val raw = result.findFacesWith(Set(WaterKind(OCEAN))) flatMap { f => result.cornerRefs(f) + f.center }
     val oceans = raw diff coastline // taking all the vertices involved in oceans, removing coastline
     val lakes = result.findFacesWith(Set(WaterKind(LAKE))) flatMap { f => result.cornerRefs(f) + f.center }

@@ -12,7 +12,7 @@ import eu.ace_design.island.util.Logger
  * Transform a map into a JSON file. The JSON file is directly inspired by the OBJ WaveFront file format for
  * vertices and faces indexes.
  **/
-class JsonViewer extends Viewer with Logger {
+object JsonViewer extends Viewer with Logger {
 
   override def extension: String = "json"
   override def mimeType: String = "application/json"

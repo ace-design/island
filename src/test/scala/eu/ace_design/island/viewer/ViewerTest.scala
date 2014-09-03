@@ -2,7 +2,8 @@ package eu.ace_design.island.viewer
 
 import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.{HasForHeight, IslandMap}
-import eu.ace_design.island.map.processes.{ElevationFunctions, AssignElevation}
+import eu.ace_design.island.map.processes.{ElevationDistributions, DistributeElevation}
+import eu.ace_design.island.viewer.svg.MeshViewer
 import org.specs2.mutable._
 import org.specs2.matcher.{XmlMatchers, FileMatchers}
 
@@ -15,11 +16,11 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   "ViewerTest Specifications".title
 
   val mesh = eu.ace_design.island.geom.MeshBuilderTestDataSet.mesh
-  val map = AssignElevation(elevator = ElevationFunctions.linear(100))(IslandMap(mesh))
+  val map = DistributeElevation(elevator = ElevationDistributions.linear(100))(IslandMap(mesh))
   val tika =  new org.apache.tika.Tika()
 
   "The SVG viewer" should {
-    val toSVG = new SVGViewer()
+    val toSVG = MeshViewer
     val file = toSVG(map)
     val xml = scala.xml.XML.loadFile(file)
 
@@ -56,16 +57,15 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
   }
 
   "The OBJ viewer" should {
-    val toObj = new OBJViewer()
-    val file = toObj(map)
+    val file = OBJViewer(map)
     val contents = scala.io.Source.fromFile(file).getLines().toSeq
-    "uses obj as extension" in { toObj.extension must_== "obj" }
+    "uses obj as extension" in { OBJViewer.extension must_== "obj" }
     "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as a plain text" in {
-      tika.detect(file.getAbsolutePath) must_== toObj.mimeType
+      tika.detect(file.getAbsolutePath) must_== OBJViewer.mimeType
     }
     "contain each stored vertex" in {
       def isValid(idx: Int, data: Seq[String]) = {  // v $x $y $z
@@ -88,15 +88,14 @@ class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatche
 
 
   "the JSON viewer" should {
-    val toJson = new JsonViewer()
-    val file = toJson(map)
-    "use json as extension" in { toJson.extension must_== "json" }
+    val file = JsonViewer(map)
+    "use json as extension" in { JsonViewer.extension must_== "json" }
     "process a map into a file" in {
       file must beAFile
       file must beReadable
     }
     "create a file recognized as a json" in {
-      tika.detect(file.getAbsolutePath) must_== toJson.mimeType
+      tika.detect(file.getAbsolutePath) must_== JsonViewer.mimeType
     }
   }
 }

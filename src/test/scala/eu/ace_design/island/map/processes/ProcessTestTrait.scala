@@ -55,8 +55,9 @@ trait ProcessTestTrait extends SpecificationWithJUnit {
    * Draw the result map into a PDF file (usually for debug purpose)  
    */
   protected def draw() {
+    import eu.ace_design.island.viewer._
     val name = s"./Test-${this.getClass.getSimpleName}.pdf"
-    val pdf = new eu.ace_design.island.viewer.PDFViewer()
+    val pdf = new PDFViewer(svg.MeshViewer)
     pdf(result).renameTo(new File(name))
   }
 

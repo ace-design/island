@@ -19,7 +19,7 @@ class DiSLandTest extends SpecificationWithJUnit with DiSLand {
 
   "The output viewers" should {
     "provide the pdf keyword" in { pdf must beAnInstanceOf[Viewer] }
-    "provide the svg keyword" in { svg must beAnInstanceOf[Viewer] }
+    "provide the json keyword" in { json must beAnInstanceOf[Viewer] }
     "provide the obj keyword" in { obj must beAnInstanceOf[Viewer] }
   }
 
