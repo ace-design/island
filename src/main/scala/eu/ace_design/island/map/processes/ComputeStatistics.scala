@@ -83,25 +83,14 @@ object ComputeStatistics extends Process {
 
   /**
    * Compute statisctics about faces pitches (in %)
-   * ref: http://en.wikipedia.org/wiki/Grade_(slope)#mediaviewer/File:Grades_degrees.svg
+   *
    *
    * @param m
    * @return
    */
   private def computePitches(m: IslandMap): Map[StatName, String] = {
-    info("Computing statistics about faces' pitches")
-    val elevations = m.vertexProps.restrictedTo(HasForHeight())
-
-    def compute(face: Face): Double = {
-      val corners = m.cornerRefs(face) map { c => c -> elevations.getOrElse(c,0.0) }
-      val lowest  = corners minBy  { _._2 }
-      val highest = corners maxBy  { _._2 }
-      val run     = m.vertex(lowest._1) --> m.vertex(highest._1)
-      val rise    = highest._2 - lowest._2
-      if (rise == 0) 0.0 else (100.0 * rise / run)
-    }
-
-    val pitches = m.faces map { compute }
+    info("Computing statistics about faces's pitches")
+    val pitches = m.faceProps.restrictedTo(HasForPitch()).values
     val avg = (0.0 /: pitches) { _ + _ } / pitches.size
 
     Map(PITCH_MAX -> f"${pitches.max}%2.2f",

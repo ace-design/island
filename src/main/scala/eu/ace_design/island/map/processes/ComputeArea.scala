@@ -11,8 +11,6 @@ object ComputeArea extends Process {
   override def apply(m: IslandMap): IslandMap = {
     info("Computing faces areas")
     val props = (m.faceProps /: m.faceRefs) { (acc, ref) => acc + (ref -> HasForArea(process(ref, m))) }
-    val areas = props.restrictedTo(HasForArea())
-
     m.copy(faceProps = props)
   }
 
