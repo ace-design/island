@@ -68,3 +68,7 @@ object ExistingBiomes extends Enumeration {
 case class HasForArea(override val value: Double = 0.0) extends Property[Double] {
   override val key = "area"
 }
+
+case class HasForPitch(override val value: Double = 0.0) extends Property[Double] {
+  override val key = "pitch"
+}
