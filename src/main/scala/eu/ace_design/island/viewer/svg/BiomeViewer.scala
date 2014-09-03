@@ -1,18 +1,22 @@
 package eu.ace_design.island.viewer.svg
 
 import java.awt.{Color, BasicStroke, Graphics2D}
-import java.awt.geom.{Line2D}
+import java.awt.geom.Line2D
 
 import eu.ace_design.island.map.{RiverFlow, ExistingBiomes, HasForBiome, IslandMap}
 import eu.ace_design.island.viewer.ColorBrewer._
 
+/**
+ * the BiomeViewer display a map by painting faces according to their biomes, and also rivers (in addition to
+ * oceans).
+ */
 object BiomeViewer extends SVGViewer {
 
   protected def draw(m: IslandMap, g: Graphics2D) {
     m.faceRefs foreach { drawABiome(_, m, g) }
     m.edgeRefs foreach { drawAnEdge(_, m, g) }
     if (m.uuid.isDefined) {
-      g.setColor(BLACK);
+      g.setColor(BLACK)
       g.drawString(s"seed: ${m.uuid.get}", 5, m.size - 5)
     }
   }

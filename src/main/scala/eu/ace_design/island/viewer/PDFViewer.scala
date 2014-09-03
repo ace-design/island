@@ -4,6 +4,10 @@ import java.io.File
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.viewer.svg.{SVGViewer, BiomeViewer}
 
+/**
+ * A PDF viewer is a wrapper to an SVG one, producing a PDF file instead of a n SVG one.
+ * @param toSVG the viewer to wrap (default to BiomeViewer, the most complete).
+ */
 case class PDFViewer(toSVG: SVGViewer = BiomeViewer) extends Viewer {
   import org.apache.batik.apps.rasterizer.{DestinationType, SVGConverter}
 

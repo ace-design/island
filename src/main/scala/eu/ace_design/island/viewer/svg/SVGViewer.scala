@@ -40,6 +40,12 @@ trait SVGViewer extends Viewer  {
     f
   }
 
+  /**
+   * Transform a face into a Path2D that follows the convex hull fo the face.
+   * @param faceRef the face reference
+   * @param map the island map (used to compute the convex hull)
+   * @return a turn-key Path2D (precision: Double)
+   */
   protected def buildPath(faceRef: Int, map: IslandMap): Path2D = {
     val f = map.face(faceRef)
     // Compute the convex hull of this face to be sure that the drawn polygon is OK for the map
@@ -53,10 +59,17 @@ trait SVGViewer extends Viewer  {
   }
 
 
-  protected def gradient(c1: Color, c2: Color, value: Double): Color = {
+  /**
+   * Compute the gradient between two colors, according to a factor in [0,1]
+   * @param c1 the first color  (associated to factor = 1)
+   * @param c2 the second color (associated to factor = 0)
+   * @param factor the factor (in [0,1]) to apply to compute the color to return
+   * @return A color ro be used, corresponding to the gradient color between c1 and c2 for factor.
+   */
+  protected def gradient(c1: Color, c2: Color, factor: Double): Color = {
+    require(factor >= 0.0 && factor <= 1.0, "factor must be in [0,1]")
     val comp1 = c1.getRGBComponents(null)
     val comp2 = c2.getRGBComponents(null)
-    val factor = math.min(value / 100, 1)
     def get(i: Int): Float = (comp1(i)*factor + comp2(i)*(1-factor)).toFloat
     new Color(get(0), get(1), get(2))
   }

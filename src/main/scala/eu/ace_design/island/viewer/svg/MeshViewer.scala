@@ -8,9 +8,11 @@ import eu.ace_design.island.viewer.ColorBrewer
 import eu.ace_design.island.viewer.ColorBrewer._
 
 /**
- * This file is part of the island project
- * @author mosser (03/09/2014, 12:39)
- **/
+ * The MeshViewer is used to display the mesh that is under the map. It differentiates oceans, lakes and land, and
+ * focuses on the mesh relationship (faces borders, centers, corners and neighborhood).
+ *
+ * Pre-condition: Faces must be annotated with WaterKind(). Vertices with IsWater()
+ */
 object MeshViewer extends SVGViewer {
 
   protected def draw(m: IslandMap, g: Graphics2D): Unit = {
@@ -23,7 +25,12 @@ object MeshViewer extends SVGViewer {
 
   }
 
-
+  /**
+   * Draw a face as a polygon.
+   *@param idx the index of the face to draw
+   * @param map the map used as a reference
+   * @param g the graphics2D object used to paint
+   */
   private def drawAPolygon(idx: Int, map: IslandMap, g: Graphics2D): Unit = {
     val path = buildPath(idx, map)
     g.setStroke(new BasicStroke(1f))
@@ -46,7 +53,6 @@ object MeshViewer extends SVGViewer {
    * @param idx the index of the face to draw
    * @param map the map used as a reference
    * @param g the graphics2D object used to paint
-   * @deprecated (useful at the beginning of the project to display the underlying mesh)
    */
   private def drawCenters(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.face(idx)
@@ -61,7 +67,6 @@ object MeshViewer extends SVGViewer {
    * @param idx the index of the face to draw
    * @param map the map used as a reference
    * @param g the graphics2D object used to paint
-   * @deprecated (useful at the beginning of the project to display the underlying mesh)
    */
   private def drawNeighbors(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.face(idx)
@@ -82,7 +87,6 @@ object MeshViewer extends SVGViewer {
    * @param idx the index of the face to draw
    * @param map the map used as a reference
    * @param g the graphics2D object used to paint
-   * @deprecated (useful at the beginning of the project to display the underlying mesh)
    */
   private def drawCorners(idx: Int, map: IslandMap, g: Graphics2D) {
     val f = map.face(idx)
