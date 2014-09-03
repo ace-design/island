@@ -92,7 +92,7 @@ trait DiSLand {
 
   // the process used by default
   private val defaultProcess: Seq[Process] = Seq(
-    flatDistribution(20.0),
+    plateau(30.0), AssignPitch,
     flowing(rivers = 10, distance = 0.4),
     withMoisture(soils.normal),
     usingBiomes()
