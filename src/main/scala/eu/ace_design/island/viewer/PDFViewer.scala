@@ -2,9 +2,9 @@ package eu.ace_design.island.viewer
 
 import java.io.File
 import eu.ace_design.island.map.IslandMap
-import eu.ace_design.island.viewer.svg.BiomeViewer
+import eu.ace_design.island.viewer.svg.{SVGViewer, BiomeViewer}
 
-class PDFViewer extends Viewer {
+case class PDFViewer(toSVG: SVGViewer = BiomeViewer) extends Viewer {
   import org.apache.batik.apps.rasterizer.{DestinationType, SVGConverter}
 
   override val extension: String = "pdf"
@@ -14,7 +14,7 @@ class PDFViewer extends Viewer {
     val result = initOutput
 
     // We first create an SVG file with the SVG viewer:
-    val svgFile = BiomeViewer(m)
+    val svgFile = toSVG(m)
 
     // We leverage the Batik rasterizer
     val converter = new SVGConverter()
