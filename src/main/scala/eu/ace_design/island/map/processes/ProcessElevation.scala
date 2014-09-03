@@ -130,30 +130,20 @@ case class DistributeElevation(mapper: ElevationMappers.Mapper = ElevationMapper
 
 }
 
+/**
+ * This process uses a mapper to compute a reference value, and then use an elevation function applied to each
+ * reference value to assign a given height to each point. This leads to a shape which is purely controlled by the
+ * function used as parameter, which ensure (if strictly decreasing) a way from a river source to the coast.
+ *
+ * The immediate drawback is the mathematical look the island have.
+ *
+ */
 case class AssignElevation(mapper: ElevationMappers.Mapper = ElevationMappers.distance,
                            phi: ElevationFunctions.Function) extends ElevationProcess {
 
   override def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double] = {
     val mapped = (vertices map { vertex => mapper(vertex, m) }).toMap
     phi(mapped)
-  }
-
-}
-
-object Polynomials {
-
-  def yEqualsToX = polynomial(Seq(0,1))   // y = x
-
-  def plateau = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124))
-
-  /**
-   * Create a function supporting the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n)
-   * @param coefficients the ascending sequence of coefficients to apply
-   * @return the value of this polynomial function for x
-   */
-  private def polynomial(coefficients: Seq[Double]): Double => Double = { x =>
-    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
-    math.max(0.0, math.min(1.0, r))
   }
 
 }
@@ -166,13 +156,23 @@ object ElevationFunctions {
 
   def plateau(highest: Double): Function = applyPolynomial(Polynomials.plateau)(highest)
 
+  /**
+   * Apply a polynomial function to a value, mapping valued obtained from a mapper to an elevation
+   * @param phi the elevation function to apply
+   * @param highest the highest elevation to produce
+   * @param values the values obtained from a mapper function
+   * @return the elevations to assign to each vertices
+   */
   def applyPolynomial(phi: Double => Double)(highest: Double)(values: Map[Int,Double]): Map[Int,Double] = {
     val max = values.values.max
     values map { case (ref, value) => ref -> (value * phi(value/max) / max * highest) }
   }
 }
 
-
+/**
+ * A mapper is used to bind each vertex to a reference value, to be used to compute the elevation. Elevation can be
+ * defined through a mapping to the "minimal distance to coast", or based on the geographical location of the vertex
+ */
 object ElevationMappers {
 
   /**
@@ -196,14 +196,19 @@ object ElevationDistributions {
    */
   type Distribution = Seq[Int] => Map[Int, Double]
 
+  def linear(highest: Double): Distribution = applyPolynomial(Polynomials.yEqualsToX)(highest)
+  def flat(highest: Double): Distribution = applyPolynomial(Polynomials.plateau)(highest)
 
-  def linear(highest: Double)(vertices: Seq[Int]): Map[Int, Double] =
-    applyPolynomial(Polynomials.yEqualsToX)(highest)(vertices)
-
-  def flat(highest: Double)(vertices: Seq[Int]): Map[Int, Double] =
-    applyPolynomial(Polynomials.plateau)(highest)(vertices)
-
-
+  /**
+   * This function applies a given polynomial to an ordered sequence of vertices, following a distribution process. For
+   * each vertex, we normalize its position in the sequence and then use the distribution function to compute the
+   * new value.
+   *
+   * @param phi the distribution function
+   * @param highest  the highest elevation to produce (for the last point of the sequence)
+   * @param vertices the ordered sequence of vertices to be re-distributed.
+   * @return the elevation according to the distrbution function
+   */
   private def applyPolynomial(phi: Double => Double)(highest: Double)(vertices: Seq[Int]): Map[Int, Double] = {
     val length: Double = vertices.length.toDouble
     val raw = 0 until vertices.size map { index =>
@@ -215,4 +220,27 @@ object ElevationDistributions {
   }
 }
 
+
+/**
+ * We consider here normalized polynomial function. We are only interested in values in [0,1], for both x and y
+ * coordinates
+ */
+object Polynomials {
+
+  def yEqualsToX = polynomial(Seq(0,1))   // y = x
+
+  def plateau = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124))
+
+  /**
+   * Create a function supporting the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n)
+   * @param coefficients the ascending sequence of coefficients to apply
+   * @return the value of this polynomial function for x, in [0,1] (threshold by construction)
+   */
+  private def polynomial(coefficients: Seq[Double]): Double => Double = { x =>
+    require(x >= 0.0 && x <= 1.0, "x must be in [0,1]")
+    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
+    math.max(0.0, math.min(1.0, r))
+  }
+
+}
 
