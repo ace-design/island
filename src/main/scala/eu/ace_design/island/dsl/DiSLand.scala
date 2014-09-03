@@ -6,7 +6,7 @@ import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
 import eu.ace_design.island.viewer._
 import java.util.UUID
-import eu.ace_design.island.viewer.svg.SVGBiomeViewer
+import eu.ace_design.island.viewer.svg.BiomeViewer
 
 import scala.util.Random
 
@@ -161,7 +161,6 @@ trait DiSLand {
    */
 
   protected val pdf = new PDFViewer()
-  protected val svg = new SVGBiomeViewer()
   protected val obj = new OBJViewer()
   protected val json = new JsonViewer()
 
