@@ -63,7 +63,7 @@ trait DiSLand {
    * functions as syntactical element to instantiate map building processes
    */
   // Elevations
-  def flat(culmination: Double): Process = AssignElevation(mapper = ElevationDistributions.distance,
+  def flat(culmination: Double): Process = DistributeElevation(mapper = ElevationDistributions.distance,
                                                            elevator = ElevationDistributions.flat(culmination))
 
   // Rivers

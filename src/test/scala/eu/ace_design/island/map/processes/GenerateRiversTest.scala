@@ -8,7 +8,7 @@ class GenerateRiversTest extends ProcessTestTrait {
 
   override val preconditions: IslandMap => IslandMap = { m =>
     val disk = DiskShape(SIZE, SIZE.toDouble / 2 * 0.8)
-    AssignElevation(elevator = ElevationDistributions.linear(100))(
+    DistributeElevation(elevator = ElevationDistributions.linear(100))(
       MinimalDistanceToCoast(
         IdentifyCoastLine(
           IdentifyLakesAndOcean(

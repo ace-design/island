@@ -5,20 +5,12 @@ import eu.ace_design.island.map._
 
 
 /**
- * This process assigns an elevation (z coordinate) to the vertices stored in the map, according to a given function.
- * The function (phi) used as parameter is applied to the distance to the coast of each corner. Contrarily to the
- * corners, vertices used as face' center has for elevation the average of the elevation of the vertices used in the
- * border of the face.
- *
- * Pre-conditions:
- *   - The map contains "DistanceToCoast(d)" annotations for each land (i.e., !ocean) vertices.
- *
- * Post-conditions:
- *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
- *     to be at the sea level by default (HasForHeight(0.0))
+ * This trait defines functions to classically handle elevation in a given map (e.g., making lake flats)
  */
-case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDistributions.distance,
-                           elevator: ElevationDistributions.Distribution) extends Process {
+trait ElevationProcess extends Process {
+
+
+  protected def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double]
 
   override def apply(m: IslandMap): IslandMap = {
     info("Identifying corners for emerged lands area")
@@ -28,8 +20,7 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
 
     info("Assigning initial elevation for emerged vertices")
     // vertices are mapped to a double value that is used for sorting, and the ordered sequence of vertices is returned
-    val mapped = (emerged map { vertex => vertex -> mapper(vertex,m) }).toSeq.sortBy{ _._2 } map { _._1 }
-    val elevated = elevator(mapped)
+    val elevated = buildVertexElevations(emerged, m)
 
     info("Computing faces' center elevations as the average of the involved vertices' elevation")
     val land = m.findFacesWith(Set(!IsWater()))
@@ -49,7 +40,6 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
     m.copy(vertexProps = props)
   }
 
-
   /**
    * The adjustment function for inner lakes. It takes as input the set of lakes, and returns a map where vertices
    * involved in an inner lake is bound to a more "normal" elevation (lakes are supposed to be flat ...)
@@ -57,7 +47,7 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
    * @param m the Island map
    * @return the adjustment map to be used to flatten the lakes.
    */
-  private def adjust(lakes: Set[Face], m: IslandMap, elevations: Map[Int, Double]): Map[Int, Double] = {
+  protected def adjust(lakes: Set[Face], m: IslandMap, elevations: Map[Int, Double]): Map[Int, Double] = {
     val clusters: Set[Set[Face]] = buildClusters(lakes, m)
     val adjustments = clusters map { setToMinHeight(_, m, elevations) }
     (Map[Int,Double]() /: adjustments) { (acc, map) => acc ++ map }
@@ -79,7 +69,7 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
           val faceRef = m.faceRef(face)
           val surroundingLake = getLake(faceRef, m)
           val involvedFaces = surroundingLake map { ref => m.face(ref) }
-            loop(ins.tail, acc + involvedFaces)
+          loop(ins.tail, acc + involvedFaces)
         }
       }
     }
@@ -120,6 +110,32 @@ case class AssignElevation(mapper: ElevationDistributions.Mapper = ElevationDist
   }
 
 }
+
+/**
+ * This process assigns an elevation (z coordinate) to the vertices stored in the map, according to a given function.
+ * The function (phi) used as parameter is applied to the distance to the coast of each corner. Contrarily to the
+ * corners, vertices used as face' center has for elevation the average of the elevation of the vertices used in the
+ * border of the face.
+ *
+ * Pre-conditions:
+ *   - The map contains "DistanceToCoast(d)" annotations for each land (i.e., !ocean) vertices.
+ *
+ * Post-conditions:
+ *   - All vertices not in the ocean are tagged with "HasForHeight(h)", where h is the elevation. Not being tagged mean
+ *     to be at the sea level by default (HasForHeight(0.0))
+ */
+case class DistributeElevation(mapper: ElevationDistributions.Mapper = ElevationDistributions.distance,
+                           elevator: ElevationDistributions.Distribution) extends ElevationProcess {
+
+  override def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double] = {
+    val mapped = (vertices map { vertex => vertex -> mapper(vertex,m) }).toSeq.sortBy{ _._2 } map { _._1 }
+    elevator(mapped)
+  }
+
+}
+
+
+
 
 
 /**

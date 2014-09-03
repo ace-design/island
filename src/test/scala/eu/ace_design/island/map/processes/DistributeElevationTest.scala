@@ -2,7 +2,7 @@ package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
 
-class AssignElevationTest extends ProcessTestTrait {
+class DistributeElevationTest extends ProcessTestTrait {
 
   import ElevationDistributions._
 
@@ -17,9 +17,9 @@ class AssignElevationTest extends ProcessTestTrait {
             IdentifyWaterArea(donuts, 30)(IdentifyBorders(m))))))
   }
   val elev = linear(10) _
-  override val processUnderTest = AssignElevation(mapper = distance, elevator = elev)
+  override val processUnderTest = DistributeElevation(mapper = distance, elevator = elev)
 
-  "The AssignElevation process" should {
+  "The DistributeElevation process" should {
 
     val coastline = result.findVerticesWith(Set(IsCoast())) map { p => result.vertexRef(p) }
     import ExistingWaterKind._
@@ -46,7 +46,7 @@ class AssignElevationTest extends ProcessTestTrait {
     }
   }
 
-  "The ElevationFunctions library" should {
+  "The ElevationDistributions library" should {
     val vertices = (0 until 100).toSeq
 
     "define the linear function" in {
