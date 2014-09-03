@@ -66,8 +66,8 @@ trait DiSLand {
   def flatDistribution(culmination: Double): Process =
     DistributeElevation(mapper = ElevationMappers.distance, elevator = ElevationDistributions.flat(culmination))
 
-  def plateau(mapper: ElevationMappers.Mapper = ElevationMappers.distance): Process =
-    AssignElevation(mapper, Polynomials.plateau)
+  def plateau(culmination: Double): Process =
+    AssignElevation(mapper = ElevationMappers.distance, ElevationFunctions.plateau(culmination))
 
   // Rivers
   protected def flowing(rivers: Int, distance: Double): Process = GenerateRivers(rivers, distance)

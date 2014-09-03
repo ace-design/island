@@ -20,20 +20,26 @@ object Main extends App with Logger with DiSLand {
 
   val large = createIsland shapedAs radial(1.07) usingSeed "9ac771d2-47f7-4037-ad83-919cd4edc1be" withSize 2048 having 4096.faces builtWith Seq(
     //flatDistribution(40), // culminating peak is at ~400meters
-    plateau(),
+    plateau(40),
     flowing(rivers = 30, distance = 0.4),
     withMoisture(soils.normal, distance = 400),
     usingBiomes()
   )
-  export(large)
+  //export(large)
 
-  val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834"
-  //export(always)
+  val always = createIsland usingSeed "64236166-165d-47f0-a4fd-ed2c443ff834" builtWith Seq(
+    //flatDistribution(40), // culminating peak is at ~400meters
+    plateau(40),
+    flowing(rivers = 30, distance = 0.4),
+    withMoisture(soils.normal, distance = 400),
+    usingBiomes()
+  )
+  export(always)
 
 
   private def export(m: IslandMap, name: String = "./map") {
     m -> (name as pdf)
-    //m -> (name as obj)
+    m -> (name as obj)
     //m -> (name as json)
     m -> (s"$name-height" as heatMap(HasForHeight()))
     m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))

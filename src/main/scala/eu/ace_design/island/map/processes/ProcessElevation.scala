@@ -131,13 +131,11 @@ case class DistributeElevation(mapper: ElevationMappers.Mapper = ElevationMapper
 }
 
 case class AssignElevation(mapper: ElevationMappers.Mapper = ElevationMappers.distance,
-                           phi: Double => Double) extends ElevationProcess {
+                           phi: ElevationFunctions.Function) extends ElevationProcess {
 
   override def buildVertexElevations(vertices: Set[Int], m: IslandMap): Map[Int, Double] = {
     val mapped = (vertices map { vertex => mapper(vertex, m) }).toMap
-    val max = mapped.values.max
-    val raw = mapped map { case (ref, value) => ref -> value * phi(value/max) }
-    raw.toMap
+    phi(mapped)
   }
 
 }
@@ -160,6 +158,19 @@ object Polynomials {
 
 }
 
+object ElevationFunctions {
+
+  type Function = Map[Int,Double] => Map[Int,Double]
+
+  def linear(highest: Double): Function = applyPolynomial(Polynomials.yEqualsToX)(highest)
+
+  def plateau(highest: Double): Function = applyPolynomial(Polynomials.plateau)(highest)
+
+  def applyPolynomial(phi: Double => Double)(highest: Double)(values: Map[Int,Double]): Map[Int,Double] = {
+    val max = values.values.max
+    values map { case (ref, value) => ref -> (value * phi(value/max) / max * highest) }
+  }
+}
 
 
 object ElevationMappers {
