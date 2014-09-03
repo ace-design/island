@@ -7,17 +7,18 @@ class ComputeStatisticsTest extends ProcessTestTrait {
   "AssignBiomesTest Specifications".title
 
   override val preconditions: IslandMap => IslandMap = { m =>
-    ComputeArea(
-      AssignBiomes()(
-        AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)(
-          GenerateRivers(sources = 2, distance = 0.2)(
-            DistributeElevation(elevator = ElevationDistributions.linear(100))(
-              MinimalDistanceToCoast(
-                IdentifyCoastLine(
-                  IdentifyLakesAndOcean(
-                    AlignVertexWaterBasedOnFaces(
-                      IdentifyWaterArea(DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2), 30)(
-                        IdentifyBorders(m)))))))))))
+    AssignPitch(
+      ComputeArea(
+        AssignBiomes()(
+          AssignMoisture(MoisturePropagation.linear(100), aquifers = 0)(
+            GenerateRivers(sources = 2, distance = 0.2)(
+              DistributeElevation(elevator = ElevationDistributions.linear(100))(
+                MinimalDistanceToCoast(
+                  IdentifyCoastLine(
+                    IdentifyLakesAndOcean(
+                      AlignVertexWaterBasedOnFaces(
+                        IdentifyWaterArea(DonutShape(SIZE, SIZE.toDouble / 2 * 0.8, SIZE.toDouble / 2 * 0.2), 30)(
+                          IdentifyBorders(m))))))))))))
   }
   override val processUnderTest = ComputeStatistics
 
