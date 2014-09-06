@@ -19,23 +19,22 @@ object Main extends App with Logger with DiSLand {
   val medium = createIsland shapedAs radial(factor = 1.47)
   //export(medium)
 
-  val large = createIsland shapedAs radial(1.07) usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
-    //flatDistribution(40), // culminating peak is at ~400meters
-    plateau(40), AssignPitch,
-    flowing(rivers = 30, distance = 0.4),
-    withMoisture(soils.normal, distance = 400),
-    usingBiomes()
-  )
+  // radial(1.07)
+  val large = createIsland shapedAs perlin(seaLevel = 0.3) usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
+    flatDistribution(120), // culminating peak is at ~400meters
+    //plateau(40),
+    flowing(rivers = 30, distance = 0.4), withMoisture(soils.wet, distance = 200), AssignPitch,
+    usingBiomes())
   //export(large)
 
-  val always = createIsland usingSeed 0x64236166165d47F0L
+  val always = createIsland usingSeed 0x64236166165d47F0L shapedAs perlin(seaLevel = 0.7)
   export(always)
 
 
   private def export(m: IslandMap, name: String = "./map") {
     import eu.ace_design.island.viewer.svg.{Mappers,Selectors}
     m -> (name as pdf)
-    m -> (name as obj)
+    //m -> (name as obj)
     //m -> (name as json)
     m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
     m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))

@@ -1,12 +1,16 @@
 package eu.ace_design.island.map
 
+import eu.ace_design.island.geom.Point
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
 /**
  * An IslandShape is a function used to decide if a vertex (not a face) is located on land or not
  */
-trait IslandShape {
+trait IslandShape extends Logger {
+
+  val silo = LogSilos.MAP_GEN
+
   import eu.ace_design.island.geom.Point
   require(size > 0, "The size of an Island cannot be negative or null")
 
@@ -131,9 +135,6 @@ case class RadialShape(override val size: Int,
                        factor: Double,
                        random: Random = new Random()) extends IslandShape with Logger {
 
-  val silo = LogSilos.MAP_GEN
-
-
   import scala.math.{abs, atan2, cos, max, pow, sin, sqrt, Pi}
 
   private val bumps: Int = random.nextInt(5) + 1          // random number between 1 and 6
@@ -154,4 +155,21 @@ case class RadialShape(override val size: Int,
 
     !(length < r1 || (length > r1 * factor && length < r2))
   }
+}
+
+
+
+case class PerlinShape(override val size: Int, seaLevel: Double = 0.3,
+                       seed: Int = new Random().nextInt()) extends IslandShape with Logger {
+
+  require(seaLevel >= 0.0 && seaLevel <= 1.0, "Sea level must be in [0,1]")
+
+  val perlin = new org.j3d.texture.procedural.PerlinNoiseGenerator(seed)
+
+  override protected def check(x: Double, y: Double): Boolean = {
+    val noise = perlin.noise2(x.toFloat,y.toFloat)
+    val elevation = (noise + math.sqrt(2)/2) / math.sqrt(2)
+    elevation >= seaLevel
+  }
+
 }

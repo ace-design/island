@@ -59,6 +59,11 @@ trait DiSLand {
     IdentifyWaterArea(new RadialShape(size, factor, random), threshold)
   }
 
+  protected def perlin(seaLevel: Double): ShapeDirective = (size, threshold, random) => {
+    IdentifyWaterArea(new PerlinShape(size, seaLevel, random.nextInt()), threshold)
+  }
+
+
   /**
    * functions as syntactical element to instantiate map building processes
    */
