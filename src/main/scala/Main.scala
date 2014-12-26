@@ -16,26 +16,22 @@ object Main extends App with Logger with DiSLand {
   val small = createIsland shapedAs donut(80.percent, 20.percent) withSize 400 having 1200.faces
   //export(small)
 
-  val medium = createIsland shapedAs radial(factor = 1.47)
-  //export(medium)
+  val medium = createIsland shapedAs radial(factor = 1.47) usingSeed 0x24F84E32B98D3CF5L
+  export(medium)
 
-  val large = createIsland shapedAs radial(1.07) usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
-    //flatDistribution(40), // culminating peak is at ~400meters
-    plateau(40), AssignPitch,
-    flowing(rivers = 30, distance = 0.4),
-    withMoisture(soils.normal, distance = 400),
-    usingBiomes()
-  )
+  // radial(1.07)
+  val large = createIsland shapedAs radial(factor = 1.26)  usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
+    //flatDistribution(120),
+    plateau(40),
+    flowing(rivers = 30, distance = 0.4), withMoisture(soils.dry, distance = 200), AssignPitch,
+    usingBiomes())
   //export(large)
-
-  val always = createIsland usingSeed 0x64236166165d47F0L
-  export(always)
 
 
   private def export(m: IslandMap, name: String = "./map") {
     import eu.ace_design.island.viewer.svg.{Mappers,Selectors}
     m -> (name as pdf)
-    m -> (name as obj)
+    //m -> (name as obj)
     //m -> (name as json)
     m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
     m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))

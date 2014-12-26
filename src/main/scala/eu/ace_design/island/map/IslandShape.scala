@@ -1,12 +1,16 @@
 package eu.ace_design.island.map
 
+import eu.ace_design.island.geom.Point
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
 /**
  * An IslandShape is a function used to decide if a vertex (not a face) is located on land or not
  */
-trait IslandShape {
+trait IslandShape extends Logger {
+
+  val silo = LogSilos.MAP_GEN
+
   import eu.ace_design.island.geom.Point
   require(size > 0, "The size of an Island cannot be negative or null")
 
@@ -25,7 +29,14 @@ trait IslandShape {
    * @param d the coordinate defined in [0, size]
    * @return the associated projection, in [-1, 1]
    */
-  private def project(d: Double): Double = ((d / size.toDouble) - 0.5) * 2
+  protected  def project(d: Double): Double = ((d / size.toDouble) - 0.5) * 2
+
+  /**
+   * Un-normalize a coordinate (in [-1,1]) according to the size of the map (=> projected into [0, size]).
+   * @param n the normalized coordinate to un-project , in [-1,1]
+   * @return the associated value in [0, size]
+   */
+  protected def unproject(n: Double): Double = (n / 2 + 0.5) * size.toDouble
 
   /**
    * Check if a given couple of normalized coordinates is located in a water area, or not.
@@ -130,9 +141,6 @@ case class DonutShape(override val size: Int, radExt: Double, radInt: Double) ex
 case class RadialShape(override val size: Int,
                        factor: Double,
                        random: Random = new Random()) extends IslandShape with Logger {
-
-  val silo = LogSilos.MAP_GEN
-
 
   import scala.math.{abs, atan2, cos, max, pow, sin, sqrt, Pi}
 
