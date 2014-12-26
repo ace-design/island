@@ -4,6 +4,7 @@ import eu.ace_design.island.geom._
 import eu.ace_design.island.geom.generators.{SquaredGrid, RelaxedRandomGrid, RandomGrid}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
+import eu.ace_design.island.map.resources.{WhittakerDiagrams, WhittakerDiagram}
 import eu.ace_design.island.viewer._
 import java.util.UUID
 import eu.ace_design.island.viewer.svg.{HeatMap, BiomeViewer}
