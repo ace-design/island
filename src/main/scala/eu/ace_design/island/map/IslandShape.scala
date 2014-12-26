@@ -29,7 +29,14 @@ trait IslandShape extends Logger {
    * @param d the coordinate defined in [0, size]
    * @return the associated projection, in [-1, 1]
    */
-  private def project(d: Double): Double = ((d / size.toDouble) - 0.5) * 2
+  protected  def project(d: Double): Double = ((d / size.toDouble) - 0.5) * 2
+
+  /**
+   * Un-normalize a coordinate (in [-1,1]) according to the size of the map (=> projected into [0, size]).
+   * @param n the normalized coordinate to un-project , in [-1,1]
+   * @return the associated value in [0, size]
+   */
+  protected def unproject(n: Double): Double = (n / 2 + 0.5) * size.toDouble
 
   /**
    * Check if a given couple of normalized coordinates is located in a water area, or not.
@@ -155,21 +162,4 @@ case class RadialShape(override val size: Int,
 
     !(length < r1 || (length > r1 * factor && length < r2))
   }
-}
-
-
-
-case class PerlinShape(override val size: Int, seaLevel: Double = 0.3,
-                       seed: Int = new Random().nextInt()) extends IslandShape with Logger {
-
-  require(seaLevel >= 0.0 && seaLevel <= 1.0, "Sea level must be in [0,1]")
-
-  val perlin = new org.j3d.texture.procedural.PerlinNoiseGenerator(seed)
-
-  override protected def check(x: Double, y: Double): Boolean = {
-    val noise = perlin.noise2(x.toFloat,y.toFloat)
-    val elevation = (noise + math.sqrt(2)/2) / math.sqrt(2)
-    elevation >= seaLevel
-  }
-
 }
