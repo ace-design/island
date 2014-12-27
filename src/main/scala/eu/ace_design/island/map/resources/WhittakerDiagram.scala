@@ -3,22 +3,7 @@ package eu.ace_design.island.map.resources
 import eu.ace_design.island.map.resources.ExistingBiomes.Biome
 
 
-object ExistingBiomes extends Enumeration {
-  type Biome = Value
-  val  ALPINE, SNOW, BEACH, TROPICAL_RAIN_FOREST, MANGROVE, TUNDRA, GRASSLAND, TROPICAL_SEASONAL_FOREST,
-  TEMPERATE_DESERT, TAIGA, SUB_TROPICAL_DESERT, TEMPERATE_RAIN_FOREST, SHRUBLAND, TEMPERATE_DECIDUOUS_FOREST,
-  OCEAN, LAKE, GLACIER = Value
 
-  private val _binding: Map[String, Value] = Map(
-    "ALP" -> ALPINE, "SNO" -> SNOW,      "BEA" -> BEACH, "MAN" -> MANGROVE, "TUN" -> TUNDRA, "GRA" -> GRASSLAND,
-    "TAI" -> TAIGA,  "SHR" -> SHRUBLAND, "OCE" -> OCEAN, "LAK" -> LAKE,     "GLA" -> GLACIER,
-    "STD" -> SUB_TROPICAL_DESERT,   "trF" -> TROPICAL_RAIN_FOREST, "trS" -> TROPICAL_SEASONAL_FOREST,
-    "teR" -> TEMPERATE_RAIN_FOREST, "teD" -> TEMPERATE_DESERT,     "teF" -> TEMPERATE_DECIDUOUS_FOREST
-  )
-
-  def apply(key: String): Value = _binding(key)
-
-}
 
 /**
  * In the literature, a Whittaker diagram is used to distribute the different biomes with respect to temperature and
