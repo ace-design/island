@@ -57,26 +57,4 @@ class AssignBiomesTest extends ProcessTestTrait {
   }
 }
 
-class WhittakerDiagramsTest extends SpecificationWithJUnit {
 
-  import WhittakerDiagrams.complete
-
-  "WhittakerDiagramsTest Specifications".title
-
-  "The complete diagram" should {
-
-    "return a glacier when a lake is located above 1300m" in {
-      complete freshWater 129.9 must_== LAKE
-      complete freshWater 130   must_== GLACIER
-    }
-
-    "reject non-relevant values" in {
-      complete(moisture = -1, elevation = 20) must throwAn[IllegalArgumentException]
-      complete(moisture = 101, elevation = 20) must throwAn[IllegalArgumentException]
-      complete(moisture = 50, elevation = -1) must throwAn[IllegalArgumentException]
-    }
-
-    // TODO test the distribution of the 14 biomes
-  }
-
-}
