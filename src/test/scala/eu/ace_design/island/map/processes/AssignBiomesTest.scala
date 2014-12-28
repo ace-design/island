@@ -1,9 +1,10 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
+import eu.ace_design.island.map.resources.WhittakerDiagrams
 import org.specs2.mutable._
 
-import eu.ace_design.island.map.ExistingBiomes._
+import eu.ace_design.island.map.resources.ExistingBiomes._
 
 class AssignBiomesTest extends ProcessTestTrait {
 
@@ -56,26 +57,4 @@ class AssignBiomesTest extends ProcessTestTrait {
   }
 }
 
-class WhittakerDiagramsTest extends SpecificationWithJUnit {
 
-  import WhittakerDiagrams.complete
-
-  "WhittakerDiagramsTest Specifications".title
-
-  "The complete diagram" should {
-
-    "return a glacier when a lake is located above 1300m" in {
-      complete freshWater 129.9 must_== LAKE
-      complete freshWater 130   must_== GLACIER
-    }
-
-    "reject non-relevant values" in {
-      complete(moisture = -1, elevation = 20) must throwAn[IllegalArgumentException]
-      complete(moisture = 101, elevation = 20) must throwAn[IllegalArgumentException]
-      complete(moisture = 50, elevation = -1) must throwAn[IllegalArgumentException]
-    }
-
-    // TODO test the distribution of the 14 biomes
-  }
-
-}

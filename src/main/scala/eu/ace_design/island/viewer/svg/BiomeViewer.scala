@@ -3,7 +3,8 @@ package eu.ace_design.island.viewer.svg
 import java.awt.{Color, BasicStroke, Graphics2D}
 import java.awt.geom.Line2D
 
-import eu.ace_design.island.map.{RiverFlow, ExistingBiomes, HasForBiome, IslandMap}
+import eu.ace_design.island.map.resources.ExistingBiomes
+import eu.ace_design.island.map.{RiverFlow, HasForBiome, IslandMap}
 import eu.ace_design.island.viewer.ColorBrewer._
 
 /**
@@ -40,15 +41,15 @@ object BiomeViewer extends SVGViewer {
       val p1 = map.vertex(edge.p1)
       val p2 = map.vertex(edge.p2)
       g.setStroke(new BasicStroke(2f * flow))
-      //g.setColor(MEDIUM_BLUE)
-      g.setColor(BLACK)
+      g.setColor(MEDIUM_BLUE)
+      //g.setColor(BLACK)
       g.draw(new Line2D.Double(p1.x, p1.y, p2.x, p2.y))
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
 
   private def biomePalette(biome: ExistingBiomes.Biome): Color = {
-    import eu.ace_design.island.map.ExistingBiomes._
+    import eu.ace_design.island.map.resources.ExistingBiomes._
     biome match {
       /** Water faces **/
       case GLACIER => LIGHT_BLUE

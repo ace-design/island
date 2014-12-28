@@ -1,6 +1,7 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map.{HasForArea, IslandMap}
+import eu.ace_design.island.map.resources.PIXEL_FACTOR
 
 class ComputeAreaTest extends ProcessTestTrait {
 

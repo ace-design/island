@@ -2,6 +2,7 @@ package eu.ace_design.island.map.processes
 
 import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate}
 import eu.ace_design.island.map.{HasForArea, IslandMap}
+import eu.ace_design.island.map.resources.PIXEL_FACTOR
 
 /**
  * The ComputeArea Process compute the area of each face based on the polygon present in the mesh.

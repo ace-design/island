@@ -1,7 +1,7 @@
 package eu.ace_design.island.map.processes
 
-import eu.ace_design.island.geom.Face
 import eu.ace_design.island.map._
+import eu.ace_design.island.map.resources.PIXEL_FACTOR
 
 /**
  * The compute statistics process generate useful statistics about the map
