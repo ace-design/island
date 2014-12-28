@@ -27,7 +27,7 @@ object BiomeToResource {
    * The semantics is the following: TEMPERATE_RAIN_FOREST -> Seq((WOOD,0.8),(FUR, 0.2)) means that a temperate rain
    * forest has 80% of chance of producing wood, and 20% of chance of producing furs.
    * The different probabilities might not sum to 1 (e.g., glacier), meaning that nothing (None)
-   * can be produced by this biome
+   * is produced by this biome
    */
   private val _bindings: Map[Biome, Seq[(Resource, Double)]] = Map(
     // Water faces

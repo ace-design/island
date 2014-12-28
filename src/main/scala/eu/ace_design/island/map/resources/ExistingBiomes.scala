@@ -19,10 +19,23 @@ object ExistingBiomes extends Enumeration {
   def apply(key: String): Value = _binding(key)
 
   private val _binding: Map[String, Value] = Map(
-    "ALP" -> ALPINE, "SNO" -> SNOW,      "BEA" -> BEACH, "MAN" -> MANGROVE, "TUN" -> TUNDRA, "GRA" -> GRASSLAND,
-    "TAI" -> TAIGA,  "SHR" -> SHRUBLAND, "OCE" -> OCEAN, "LAK" -> LAKE,     "GLA" -> GLACIER,
-    "STD" -> SUB_TROPICAL_DESERT,   "trF" -> TROPICAL_RAIN_FOREST, "trS" -> TROPICAL_SEASONAL_FOREST,
-    "teR" -> TEMPERATE_RAIN_FOREST, "teD" -> TEMPERATE_DESERT,     "teF" -> TEMPERATE_DECIDUOUS_FOREST
+    "ALP" -> ALPINE,
+    "SNO" -> SNOW,
+    "BEA" -> BEACH,
+    "MAN" -> MANGROVE,
+    "TUN" -> TUNDRA,
+    "GRA" -> GRASSLAND,
+    "TAI" -> TAIGA,
+    "SHR" -> SHRUBLAND,
+    "OCE" -> OCEAN,
+    "LAK" -> LAKE,
+    "GLA" -> GLACIER,
+    "STD" -> SUB_TROPICAL_DESERT,
+    "trF" -> TROPICAL_RAIN_FOREST,
+    "trS" -> TROPICAL_SEASONAL_FOREST,
+    "teR" -> TEMPERATE_RAIN_FOREST,
+    "teD" -> TEMPERATE_DESERT,
+    "teF" -> TEMPERATE_DECIDUOUS_FOREST
   )
 
 }
