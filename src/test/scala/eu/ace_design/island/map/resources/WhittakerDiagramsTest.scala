@@ -54,12 +54,16 @@ class WhittakerDiagramsTest extends SpecificationWithJUnit {
       parsed(0.0,0.0) must_== ExistingBiomes.BEACH
       parsed(33.33, 15.0) must_== ExistingBiomes.GRASSLAND
       parsed(12.2, 220.0) must_== ExistingBiomes.ALPINE
+      parsed.biomes must_== Set(ExistingBiomes.ALPINE, ExistingBiomes.SNOW, ExistingBiomes.TEMPERATE_DESERT,
+                                ExistingBiomes.GRASSLAND, ExistingBiomes.TEMPERATE_DECIDUOUS_FOREST,
+                                ExistingBiomes.SUB_TROPICAL_DESERT, ExistingBiomes.TROPICAL_SEASONAL_FOREST,
+                                ExistingBiomes.TROPICAL_RAIN_FOREST, ExistingBiomes.BEACH, ExistingBiomes.MANGROVE)
     }
 
     "reject non-relevant values" in {
-      parsed(moisture = -1, elevation = 20) must throwAn[IllegalArgumentException]
+      parsed(moisture = -1, elevation = 20)  must throwAn[IllegalArgumentException]
       parsed(moisture = 101, elevation = 20) must throwAn[IllegalArgumentException]
-      parsed(moisture = 50, elevation = -1) must throwAn[IllegalArgumentException]
+      parsed(moisture = 50, elevation = -1)  must throwAn[IllegalArgumentException]
     }
   }
 }

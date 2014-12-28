@@ -46,6 +46,9 @@ trait WhittakerDiagram {
   // implementation of the whittaker diagram, as a function.
   protected def assign(moisture: Double, elevation: Double): Biome
 
+  // the biomes used in this diagram
+  val biomes: Set[Biome]
+
 }
 
 /**
@@ -88,8 +91,15 @@ object WhittakerParser {
       val m = (moisture / 10).toInt
       _internal(key)(m)
     }
+
+    override val biomes: Set[Biome] = _internal.values.flatten.toSet
   }
 
+  /**
+   * Load a diagram from a string based template
+   * @param tpl
+   * @return
+   */
   def apply(tpl: String): WhittakerDiagram = TemplateDiagram(tpl)
 }
 
