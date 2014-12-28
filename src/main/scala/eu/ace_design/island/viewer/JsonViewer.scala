@@ -23,7 +23,7 @@ object JsonViewer extends Viewer with Logger {
     val vertices = buildVertices(m)
     val faces = buildFaces(m)
     val vProps = buildProperties(m.vertexProps.keep(Set()))
-    val fProps = buildProperties(m.faceProps.keep(Set(HasForBiome())))
+    val fProps = buildProperties(m.faceProps.keep(Set(HasForBiome(), HasForCondition(), HasForSoil())))
 
 
     val geom = new JSONObject()

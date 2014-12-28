@@ -41,8 +41,8 @@ object BiomeViewer extends SVGViewer {
       val p1 = map.vertex(edge.p1)
       val p2 = map.vertex(edge.p2)
       g.setStroke(new BasicStroke(2f * flow))
-      //g.setColor(MEDIUM_BLUE)
-      g.setColor(BLACK)
+      g.setColor(MEDIUM_BLUE)
+      //g.setColor(BLACK)
       g.draw(new Line2D.Double(p1.x, p1.y, p2.x, p2.y))
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }

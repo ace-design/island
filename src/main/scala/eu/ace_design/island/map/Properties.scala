@@ -1,6 +1,6 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.map.resources.ExistingBiomes
+import eu.ace_design.island.map.resources.{Soils, Conditions, ExistingBiomes}
 
 /**
  * A property bound a value to an immutable key.  The trait is sealed, and cannot be implemented outside of this file.
@@ -68,3 +68,9 @@ case class HasForArea(override val value: Double = 0.0) extends Property[Double]
 case class HasForPitch(override val value: Double = 0.0) extends Property[Double] {
   override val key = "pitch"
 }
+
+case class HasForCondition(override val value: Conditions.Condition = Conditions.FAIR)
+  extends  Property[Conditions.Condition] { override val key = "conditions" }
+
+case class HasForSoil(override val value: Soils.Soil = Soils.NORMAL)
+  extends  Property[Soils.Soil] { override val key = "soil" }

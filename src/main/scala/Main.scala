@@ -31,8 +31,8 @@ object Main extends App with Logger with DiSLand {
   private def export(m: IslandMap, name: String = "./map") {
     import eu.ace_design.island.viewer.svg.{Mappers,Selectors}
     m -> (name as pdf)
-    //m -> (name as obj)
-    //m -> (name as json)
+    m -> (name as obj)
+    m -> (name as json)
     m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
     m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))
     m -> (s"$name-pitch" as heatMap(HasForPitch(), Color.DARK_GRAY))

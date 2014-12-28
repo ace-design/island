@@ -27,6 +27,7 @@ object AssignPitch extends Process {
 
   /**
    * Compute the pitch (in percentage) for a given face.
+   * Illustration: http://en.wikipedia.org/wiki/Grade_(slope)
    *
    * @param face the face to handle
    * @param m the map to compute the run (distance between highest and lowest corners with z = 0)
