@@ -17,7 +17,10 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT) {
    */
   def apply(map: IslandMap): GameBoard = {                               
     require(map.size % chunk == 0, "the size of the island must be compatible with the size of a tile")
-    GameBoard(map.size)         // TODO implements the contents of the board
+    val maxIdx = map.size / chunk
+    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile()).toMap
+    val empty = GameBoard(map.size, tiles = grid)
+    empty
   }
 
   /**

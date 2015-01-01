@@ -45,7 +45,10 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       coverage.keys.toSet must_== Set((0,0), (0,1), (1,0), (1,1), (1,2), (2,1), (2,2))
     }
 
-    ""
+    "build a game board of size 3 x 3 using the example island" in {
+      val board = builder(GameBoardBuilderDataSet.island)
+      board.tiles.keys.toSet must_== GameBoardBuilderDataSet.tiles
+    }
 
 
   }
