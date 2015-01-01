@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.geom.{Point, MeshBuilderTestDataSet}
+import eu.ace_design.island.geom._
 import eu.ace_design.island.map.IslandMap
 import org.specs2.mutable._
 import org.junit.runner.RunWith
@@ -48,5 +48,62 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
   }
-
 }
+
+object GameBoardBuilderDataSet {
+  import eu.ace_design.island.map.{HasForBiome, HasForArea, HasForCondition, HasForSoil, PropertySet, IslandMap}
+  import eu.ace_design.island.map.resources.ExistingBiomes._
+  import eu.ace_design.island.map.resources.Conditions._
+  import eu.ace_design.island.map.resources.Soils._
+  /**
+   * Minimal representation of an island to be used for test purpose
+   *
+   *                     Vertices:               Edges:
+   *   0              1    - p0 = (0 , 0 )         - e0 = p0 -- p1     - e4 = p3 -- p0
+   *   X----+----+----X    - p1 = (30, 0 )         - e1 = p1 -- p2     - e5 = p3 -- p4
+   *   |    |    |    |    - p2 = (20, 10)         - e2 = p2 -- p0     - e6 = p4 -- p2
+   *   |    |  2 |    |    - p3 = (0,  30)         - e3 = p2 -- p3     - e7 = p4 -- p1
+   *   +----+----X----+    - p4 = (30, 30)
+   *   |    |    |    |
+   *   |    |    |    |  Faces: (geometry, Biome, soil \in {FERTILE, NORMAL, POOR}, conditions \in {EASY, FAIR, HARSH})
+   *   +----+----+----+    - f0 = {e0, e1, e2} = (0,1,2), center p5: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
+   *   |    |    |    |    - f1 = {e2, e3, e4} = (0,2,3), center p6: TEMPERATE_DESERT, POOR, FAIR
+   *   |    |    |    |    - f2 = {e3, e5, e6} = (3,2,4), center p7: MANGROVE, FERTILE, HARSH
+   *   X----+----+----X    - f3 = {e6, e1, e7} = (4,2,1), center p8: GLACIER, POOR, EASY
+   *   3              4
+   *                     Resources: (see eu.ace_design.island.map.resources.BiomeToResources for ratios)
+   *                       - TEMPERATE_DECIDUOUS_FOREST produces WOOD (100%)
+   *                       - TEMPERATE_DESERT           produces ORE  (100%)
+   *                       - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
+   *                       - GLACIER                    produces FLOWER (5%) or None   (95%)
+   **/
+
+  private def centroid(pi: Int, pj: Int, pk: Int): Point = 
+    Point((vertices(pi).x + vertices(pj).x + vertices(pk).x)/3, (vertices(pi).y + vertices(pj).y + vertices(pk).y)/3)
+  
+  val vertices = Seq(Point(0.0, 0.0), Point(30.0, 0.0), Point(20.0, 10.0), Point(0.0, 30.0), Point(30.0, 30.0))
+  
+  val vReg = (VertexRegistry() /: vertices) { (acc, point) => acc + point } +
+              centroid(0,1,2) + centroid(0,2,3) + centroid(3,2,4) + centroid(4,2,1)
+  val eReg = EdgeRegistry() + Edge(0,1) + Edge(1,2) + Edge(2,0) + Edge(2,3) +
+                              Edge(3,0) + Edge(3,4) + Edge(4,2) + Edge(4,1)
+  // We do not exploit neighborhood relationship between faces to build the board => set to None (default value)
+  val fReg = FaceRegistry() + Face(5,Seq(0,1,2)) + Face(6, Seq(0,2,3)) + Face(7, Seq(3,2,4)) + Face(8, Seq(4,2,1))
+
+  val properties = PropertySet() +
+                    // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
+                    (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(150.0)) +
+                        (0 -> HasForSoil(NORMAL)) + (0 -> HasForCondition(FAIR)) +
+                    // Face 1: TEMPERATE_DESERT, POOR, FAIR
+                    (1 -> HasForBiome(TEMPERATE_DESERT))           + (1 -> HasForArea(300.0)) +
+                        (1 -> HasForSoil(POOR))   + (1 -> HasForCondition(FAIR)) +
+                    // Face 2: MANGROVE, FERTILE, HARSH
+                    (2 -> HasForBiome(MANGROVE))                   + (2 -> HasForArea(300.0)) +
+                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +
+                    // Face 3: GLACIER, POOR, EASY
+                    (3 -> HasForBiome(GLACIER)) + (3 -> HasForArea(150.0)) +
+                        (3 -> HasForSoil(POOR)) + (3 -> HasForCondition(EASY))
+
+  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
+}
+
