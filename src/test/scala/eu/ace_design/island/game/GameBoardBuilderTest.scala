@@ -35,9 +35,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "identify the bounding box of a given face" in {
       // triangle(0) \in (0,0), triangle(1) \in (1,2) and triangle(2) \in (2,1)
-      builder.boundingBox(triangle) must_== Set( (0,0), (0,1), (0,2),
-                                                 (1,0), (1,1), (1,2),
-                                                 (2,0), (2,1), (2,2) )
+      builder.boundingBox(triangle) must_== GameBoardBuilderDataSet.tiles
     }
 
     "identify the tiles covered by a given face" in {
@@ -46,6 +44,9 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       // The triangle is not located on the upper right (0,2) and lower left (2,0) of its bounding box
       coverage.keys.toSet must_== Set((0,0), (0,1), (1,0), (1,1), (1,2), (2,1), (2,2))
     }
+
+    ""
+
 
   }
 }
@@ -72,10 +73,15 @@ object GameBoardBuilderDataSet {
    *   X----+----+----X    - f3 = {e6, e1, e7} = (4,2,1), center p8: GLACIER, POOR, EASY
    *   3              4
    *                     Resources: (see eu.ace_design.island.map.resources.BiomeToResources for ratios)
-   *                       - TEMPERATE_DECIDUOUS_FOREST produces WOOD (100%)
-   *                       - TEMPERATE_DESERT           produces ORE  (100%)
-   *                       - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
-   *                       - GLACIER                    produces FLOWER (5%) or None   (95%)
+   *  0           1        - TEMPERATE_DECIDUOUS_FOREST produces WOOD (100%)
+   *   X----------X        - TEMPERATE_DESERT           produces ORE  (100%)
+   *   |  \ 2   / |        - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
+   *   |      X   |        - GLACIER                    produces FLOWER (5%) or None   (95%)
+   *   |    /  \  |
+   *   |  /     \ |      Areas:
+   *   |/        \|        - area(f0) = area(f3) = 150 px2
+   *   X----------X        = area(f1) = area(f2) = 300 px2
+   *   3          4
    **/
 
   private def centroid(pi: Int, pj: Int, pk: Int): Point = 
@@ -105,5 +111,7 @@ object GameBoardBuilderDataSet {
                         (3 -> HasForSoil(POOR)) + (3 -> HasForCondition(EASY))
 
   val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
+
+  val tiles = Set( (0,0), (0,1), (0,2),  (1,0), (1,1), (1,2),  (2,0), (2,1), (2,2) )
 }
 
