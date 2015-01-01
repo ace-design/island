@@ -47,6 +47,15 @@ case class GameBoard(size: Int, tiles: Map[(Int,Int), Tile] = Map()) {
     existing map { _._1 }
   }
 
+  /**
+   * Identify which resources are produced by a given tile on the board
+   */
+  def produces(x: Int, y: Int): Set[Resource] = {
+    require(tiles.keys.toSet.contains((x,y)), "The (x,y) location must exist")
+    tiles((x,y)).stock map { _.resource }
+  }
+
+
 }
 
 object Directions extends Enumeration {
@@ -66,7 +75,9 @@ object Directions extends Enumeration {
  */
 case class Tile(stock: Set[Stock] = Set()) {
 
-  def +(s: Stock): Tile = this.copy(stock = stock + s)
+  def +(s: Stock): Tile = this.copy(stock = stock + s) // TODO check consistency when adding two stocks for the same resource
+
+  def ++(s: Set[Stock]): Tile = this.copy(stock = stock ++ s)
 
 }
 

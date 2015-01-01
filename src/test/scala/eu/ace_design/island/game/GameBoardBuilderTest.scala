@@ -16,6 +16,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     val m = IslandMap(MeshBuilderTestDataSet.mesh) // m.size == 200
     val builder = new GameBoardBuilder()   // chunk = DEFAULT_TILE_UNIT = 10
     val triangle = Set(Point(5.0, 6.0), Point(18.9, 28.3), Point(26.4, 15.5))
+    val board = builder(GameBoardBuilderDataSet.island)
 
     "reject a chunk size incompatible with the size of the map" in {
       val erroneous = new GameBoardBuilder(chunk = 11)
@@ -23,9 +24,8 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "ensure that the size of the game board is the size of the used map" in {
-      val board = builder(m)
       board must beAnInstanceOf[GameBoard]
-      board.size must_== m.size
+      board.size must_== GameBoardBuilderDataSet.island.size
     }
 
     "identify in which tile is located a given point" in {
@@ -46,8 +46,58 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "build a game board of size 3 x 3 using the example island" in {
-      val board = builder(GameBoardBuilderDataSet.island)
       board.tiles.keys.toSet must_== GameBoardBuilderDataSet.tiles
+    }
+
+
+    "Identify the resources associated to a given face" in {
+      import eu.ace_design.island.map.resources.ExistingResources._
+      import eu.ace_design.island.map.resources.Soils._
+      import eu.ace_design.island.map.resources.Conditions._
+
+      val f0 = Set(Point(0.0,0.0), Point(30.0, 0.0), Point(20.0, 10.0))
+      val p0 = builder.production(f0, WOOD, NORMAL, FAIR, 150.0).toMap
+      p0.keys must_== Set((0,0), (1,0), (2,0))
+      (p0.values map { _.resource }).toSet must_== Set(WOOD)
+
+      val f1 = Set(Point(0.0,0.0), Point(0.0, 30.0), Point(20.0, 10.0))
+      val p1 = builder.production(f1, ORE, POOR, FAIR, 300.0).toMap
+      p1.keys must_== Set((0,0), (0,1), (0,2), (1,0), (1,1))
+      (p1.values map { _.resource }).toSet must_== Set(ORE)
+
+      val f2 = Set(Point(30.0,30.0), Point(0.0, 30.0), Point(20.0, 10.0))
+      val p2 = builder.production(f2, FLOWER, FERTILE, HARSH, 300.0).toMap
+      p2.keys must_== Set((0,2), (1,2), (2,2), (1,1), (2,1))
+      (p2.values map { _.resource }).toSet must_== Set(FLOWER)
+
+      val f3 = Set(Point(30.0,30.0), Point(30.0, 0.0), Point(20.0, 10.0))
+      val p3 = builder.production(f3, None, POOR, EASY, 300.0).toMap
+      p3.keys must_== Set()
+      (p3.values map { _.resource }).toSet must_== Set()
+
+    }
+
+    "Assign relevant resources to each tile" in {
+      import eu.ace_design.island.map.resources.ExistingResources._
+      def oracle(x: Int, y: Int): Set[Set[Resource]] = (x,y) match {
+        case (0,0) => Set(Set(WOOD, ORE))
+        case (1,0) => Set(Set(WOOD, ORE))
+        case (2,0) => Set(Set(WOOD, FLOWER), Set(WOOD))
+        case (0,1) => Set(Set(ORE))
+        case (1,1) => Set(Set(ORE, WOOD), Set(ORE, FLOWER))
+        case (2,1) => Set(Set(WOOD, FLOWER), Set(FLOWER))
+        case (0,2) => Set(Set(ORE, WOOD), Set(ORE, FLOWER))
+        case (1,2) => Set(Set(WOOD), Set(FLOWER))
+        case (2,2) => Set(Set(WOOD, FLOWER), Set(FLOWER))
+        case _ => throw new IllegalArgumentException()
+      }
+      board.tiles.keys foreach { case (x,y) =>
+        val expected = oracle(x,y)
+        val actual = board.produces(x,y)
+        println(s"($x,$y) / expected: $expected / actual: $actual")
+        expected.intersect(Set(actual)) must not(beEmpty)
+      }
+      true must beTrue
     }
 
 

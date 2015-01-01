@@ -30,6 +30,11 @@ class GameBoardTest extends SpecificationWithJUnit {
       complete.neighbors(1,1) must_== Directions.values
       complete.neighbors(-10,-10) must_== Set()
     }
+    "identify the production of a given location" in {
+      val local = complete + ((0,0) -> (Tile() + Stock(ExistingResources.FISH,10) + Stock(ExistingResources.ORE, 10)))
+      local.produces(0,1) must_== Set(ExistingResources.FISH)
+      local.produces(0,0) must_== Set(ExistingResources.FISH, ExistingResources.ORE)
+    }
   }
 
   "A Tile" should {
