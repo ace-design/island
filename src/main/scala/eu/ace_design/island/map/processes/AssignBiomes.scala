@@ -2,8 +2,8 @@ package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources._
-import eu.ace_design.island.stdlib.{WhittakerDiagrams, ExistingBiomes}
-import ExistingBiomes._
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, Biomes}
+import Biomes._
 
 /**
  * This process relies on the map elevation and moisture to assign a biome to each face.

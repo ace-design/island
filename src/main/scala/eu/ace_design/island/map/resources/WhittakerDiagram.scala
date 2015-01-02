@@ -1,7 +1,6 @@
 package eu.ace_design.island.map.resources
 
-import eu.ace_design.island.stdlib.ExistingBiomes
-import ExistingBiomes.Biome
+import eu.ace_design.island.stdlib.Biomes
 
 
 
@@ -20,7 +19,7 @@ import ExistingBiomes.Biome
  *
  */
 trait WhittakerDiagram {
-  import ExistingBiomes.{Biome, GLACIER, LAKE}
+  import Biomes.{GLACIER, LAKE}
 
   /**
    * Compute the biome for a land faces
@@ -77,8 +76,8 @@ object WhittakerParser {
       val (lasts, others) = data filterNot { _.startsWith("@") } partition {  _.startsWith("-") }
       (others map { line =>
         val l = clean(line)
-        l(0).toInt -> (l.tail map { ExistingBiomes(_) }).toSeq
-      }).toMap + (Int.MaxValue -> (clean(lasts.head).tail map { ExistingBiomes(_) }).toSeq)
+        l(0).toInt -> (l.tail map { Biomes(_) }).toSeq
+      }).toMap + (Int.MaxValue -> (clean(lasts.head).tail map { Biomes(_) }).toSeq)
     } catch {
       case e: Exception => throw new IllegalArgumentException("Something went wrong while parsing the diagram" + e)
     }

@@ -4,8 +4,7 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
-import eu.ace_design.island.stdlib.{BiomeToResource, ExistingResources}
-import ExistingResources.Resource
+import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
@@ -39,7 +38,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     // Computing the resources associated to tile, face by face
     info("Binding resources produced by faces to game tiles")
     val productions = map.faceRefs.toSeq map { i =>
-      val resource = BiomeToResource(biomes(i), rand)
+      val resource = biomes(i)(rand)
       production(map.convexHull(map.face(i)).toSet, resource, soils.get(i), conditions.get(i), areas(i))
     }
     // Aggregate each resource produced by tile location
@@ -65,7 +64,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
    */
   def production(hull: Set[Point], res: Resource, soil: Option[Soil], cond: Option[Condition], area: Double):
     Seq[((Int, Int), Stock)] = res match {
-      case ExistingResources.None => Seq()  // producing none means  to disappear
+      case NoResource => Seq()  // producing none means  to disappear
       case r => (coverage(hull) map { case ((x, y), percent) => ((x, y), Stock(res, 100))}).toSeq
   }
 

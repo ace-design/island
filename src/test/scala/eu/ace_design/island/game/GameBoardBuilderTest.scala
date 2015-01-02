@@ -2,7 +2,8 @@ package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
 import eu.ace_design.island.map.IslandMap
-import eu.ace_design.island.stdlib.{ExistingBiomes, ExistingResources}
+import eu.ace_design.island.map.resources.{Resource, NoResource}
+import eu.ace_design.island.stdlib.{Biomes, Resources}
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -72,7 +73,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
 
     "Identify the resources associated to a given face" in {
-      import ExistingResources._
+      import Resources._
       import eu.ace_design.island.map.resources.Soils._
       import eu.ace_design.island.map.resources.Conditions._
       import GameBoardBuilderDataSet.island
@@ -99,7 +100,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       }).toSet must_== Set(FLOWER)
 
       val f3 = island.convexHull(island.face(3)).toSet
-      val p3 = builder.production(f3, None, Some(POOR), Some(EASY), 300.0).toMap
+      val p3 = builder.production(f3, NoResource, Some(POOR), Some(EASY), 300.0).toMap
       p3.keys must_== Set()
       (p3.values map {
         _.resource
@@ -108,7 +109,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "Assign relevant resources to each tile" in {
-      import ExistingResources._
+      import Resources._
       def oracle(x: Int, y: Int): Set[Set[Resource]] = (x, y) match {
         case (0, 0) => Set(Set(WOOD, ORE))
         case (1, 0) => Set(Set(WOOD, ORE))
@@ -142,7 +143,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
 object GameBoardBuilderDataSet {
   import eu.ace_design.island.map.{HasForBiome, HasForArea, HasForCondition, HasForSoil, PropertySet, IslandMap}
-  import ExistingBiomes._
+  import Biomes._
   import eu.ace_design.island.map.resources.Conditions._
   import eu.ace_design.island.map.resources.Soils._
   /**

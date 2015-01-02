@@ -5,7 +5,7 @@ import eu.ace_design.island.geom.generators.{SquaredGrid, RelaxedRandomGrid, Ran
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
 import eu.ace_design.island.map.resources.{ExploitationDistribution, WhittakerDiagram}
-import eu.ace_design.island.stdlib.{WhittakerDiagrams, StandardDistribution}
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, StandardExploitationDistribution}
 import eu.ace_design.island.viewer._
 import java.util.UUID
 import eu.ace_design.island.viewer.svg.{HeatMap, BiomeViewer}
@@ -96,7 +96,7 @@ trait DiSLand {
 
   protected def usingBiomes(diagram: WhittakerDiagram = WhittakerDiagrams.complete): Process = AssignBiomes(diagram)
 
-  protected def withResources(distribution: ExploitationDistribution = StandardDistribution): Process =
+  protected def withResources(distribution: ExploitationDistribution = StandardExploitationDistribution): Process =
     AssignExploitationConditions(distribution)
 
   // the initialisation process used to build island, **always** executed

@@ -1,6 +1,6 @@
 package eu.ace_design.island.map.resources
 
-import eu.ace_design.island.stdlib.{WhittakerDiagrams, ExistingBiomes}
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, Biomes}
 import org.specs2.mutable.SpecificationWithJUnit
 
 /**
@@ -10,7 +10,7 @@ import org.specs2.mutable.SpecificationWithJUnit
 class WhittakerDiagramsTest extends SpecificationWithJUnit {
 
   import WhittakerDiagrams.complete
-  import ExistingBiomes.{LAKE, GLACIER}
+  import Biomes.{LAKE, GLACIER}
 
   "WhittakerDiagramsTest Specifications".title
 
@@ -52,13 +52,13 @@ class WhittakerDiagramsTest extends SpecificationWithJUnit {
 
     "build relevant diagrams" in {
       parsed.iceLevel must_== 600.0
-      parsed(0.0,0.0) must_== ExistingBiomes.BEACH
-      parsed(33.33, 15.0) must_== ExistingBiomes.GRASSLAND
-      parsed(12.2, 220.0) must_== ExistingBiomes.ALPINE
-      parsed.biomes must_== Set(ExistingBiomes.ALPINE, ExistingBiomes.SNOW, ExistingBiomes.TEMPERATE_DESERT,
-                                ExistingBiomes.GRASSLAND, ExistingBiomes.TEMPERATE_DECIDUOUS_FOREST,
-                                ExistingBiomes.SUB_TROPICAL_DESERT, ExistingBiomes.TROPICAL_SEASONAL_FOREST,
-                                ExistingBiomes.TROPICAL_RAIN_FOREST, ExistingBiomes.BEACH, ExistingBiomes.MANGROVE)
+      parsed(0.0,0.0) must_== Biomes.BEACH
+      parsed(33.33, 15.0) must_== Biomes.GRASSLAND
+      parsed(12.2, 220.0) must_== Biomes.ALPINE
+      parsed.biomes must_== Set(Biomes.ALPINE, Biomes.SNOW, Biomes.TEMPERATE_DESERT,
+                                Biomes.GRASSLAND, Biomes.TEMPERATE_DECIDUOUS_FOREST,
+                                Biomes.SUB_TROPICAL_DESERT, Biomes.TROPICAL_SEASONAL_FOREST,
+                                Biomes.TROPICAL_RAIN_FOREST, Biomes.BEACH, Biomes.MANGROVE)
     }
 
     "reject non-relevant values" in {

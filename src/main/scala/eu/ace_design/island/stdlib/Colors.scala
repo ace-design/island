@@ -1,11 +1,11 @@
-package eu.ace_design.island.viewer
+package eu.ace_design.island.stdlib
 
 import java.awt.Color
 
 /**
  * Color Palettes extracted from Cynthia Brewer colorbrewer awesome tool (http://colorbrewer2.org/)
  */
-object ColorBrewer {
+object Colors {
 
   // Classical colors (not from Brewer's palettes)
   final val BLACK = new Color(0,   0,   0)
