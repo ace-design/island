@@ -40,10 +40,14 @@ class GameBoardTest extends SpecificationWithJUnit {
   "A Tile" should {
     val t = Tile()
     "not produce resources by default" in { t.stock must beEmpty }
-    "accepts stock units added to its stock" in {
+    "accept stock units added to its stock" in {
       val item = Stock(ExistingResources.FISH, 1)
       (t + item).stock must_== Set(item)
       t.stock must beEmpty
+    }
+    "reject the add of an already existing stock" in {
+      val item = Stock(ExistingResources.FISH, 1)
+      (t + item + item) must throwAn[IllegalArgumentException]
     }
 
   }

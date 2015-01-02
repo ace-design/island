@@ -75,9 +75,14 @@ object Directions extends Enumeration {
  */
 case class Tile(stock: Set[Stock] = Set()) {
 
-  def +(s: Stock): Tile = this.copy(stock = stock + s) // TODO check consistency when adding two stocks for the same resource
+  def +(s: Stock): Tile = {
+    require(! stock.exists {_.resource == s.resource }, "Cannot add an already existing stock")
+    this.copy(stock = stock + s)
+  }
 
-  def ++(s: Set[Stock]): Tile = this.copy(stock = stock ++ s)
+  def ++(s: Set[Stock]): Tile = {
+    this.copy(stock = stock ++ s)
+  }
 
 }
 
