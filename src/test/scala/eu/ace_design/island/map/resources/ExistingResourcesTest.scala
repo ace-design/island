@@ -1,5 +1,6 @@
 package eu.ace_design.island.map.resources
 
+import eu.ace_design.island.stdlib.{ExistingBiomes, BiomeToResource}
 import org.specs2.mutable.SpecificationWithJUnit
 
 class ExistingResourcesTest extends SpecificationWithJUnit {

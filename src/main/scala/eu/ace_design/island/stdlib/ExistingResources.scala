@@ -1,4 +1,6 @@
-package eu.ace_design.island.map.resources
+package eu.ace_design.island.stdlib
+
+import eu.ace_design.island.stdlib.ExistingBiomes.Biome
 
 import scala.util.Random
 
@@ -19,8 +21,8 @@ object ExistingResources extends Enumeration {
 
 
 object BiomeToResource {
-  import ExistingBiomes._
-  import ExistingResources._
+  import eu.ace_design.island.stdlib.ExistingResources._
+  import eu.ace_design.island.stdlib.ExistingBiomes._
 
   /**
    * This binding maps a biome to the associated resources, with a given probability.

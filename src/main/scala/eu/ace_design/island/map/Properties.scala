@@ -1,6 +1,7 @@
 package eu.ace_design.island.map
 
-import eu.ace_design.island.map.resources.{Soils, Conditions, ExistingBiomes}
+import eu.ace_design.island.map.resources.{Soils, Conditions}
+import eu.ace_design.island.stdlib.ExistingBiomes
 
 /**
  * A property bound a value to an immutable key.  The trait is sealed, and cannot be implemented outside of this file.

@@ -1,4 +1,4 @@
-package eu.ace_design.island.map.resources
+package eu.ace_design.island.stdlib
 
 /**
  * the different biomes availabel to build islands

@@ -1,5 +1,6 @@
 import java.awt.Color
 
+import eu.ace_design.island.game.GameBoardBuilder
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes.AssignPitch
 import eu.ace_design.island.util.{LogSilos, Logger}
@@ -23,25 +24,28 @@ object Main extends App with Logger with DiSLand {
   //export(tortuga)
 
   val ozRealm = createIsland shapedAs oz() usingSeed 0x24F84E32B98D3CF5L
-  export(ozRealm)
+  //export(ozRealm)
 
   // radial(1.07)
-  val large = createIsland shapedAs radial(factor = 1.26)  usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
+  val large = createIsland shapedAs radial(factor = 1.26)  usingSeed 0x9AC771d247f74037L withSize 2000 having 4096.faces builtWith Seq(
     //flatDistribution(120),
     plateau(40),
     flowing(rivers = 30, distance = 0.4), withMoisture(soils.dry, distance = 200), AssignPitch,
     usingBiomes())
-  //export(large)
+
+  val island: IslandMap = large
+  export(island)
+  val board = new GameBoardBuilder()(island)
 
 
   private def export(m: IslandMap, name: String = "./map") {
     import eu.ace_design.island.viewer.svg.{Mappers,Selectors}
     m -> (name as pdf)
-    m -> (name as obj)
-    m -> (name as json)
-    m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
-    m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))
-    m -> (s"$name-pitch" as heatMap(HasForPitch(), Color.DARK_GRAY))
+    //m -> (name as obj)
+    //m -> (name as json)
+    //m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
+    //m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))
+    //m -> (s"$name-pitch" as heatMap(HasForPitch(), Color.DARK_GRAY))
     statistics(m)
   }
 

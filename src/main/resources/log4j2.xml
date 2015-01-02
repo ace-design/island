@@ -25,5 +25,8 @@
         <Logger name="eu.ace_design.Island/Viewer" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="eu.ace_design.Island/Board" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

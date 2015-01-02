@@ -2,9 +2,8 @@ package eu.ace_design.island.viewer.svg
 
 import java.awt.{Color, BasicStroke, Graphics2D}
 import java.awt.geom.Line2D
-
-import eu.ace_design.island.map.resources.ExistingBiomes
 import eu.ace_design.island.map.{RiverFlow, HasForBiome, IslandMap}
+import eu.ace_design.island.stdlib.ExistingBiomes
 import eu.ace_design.island.viewer.ColorBrewer._
 
 /**
@@ -49,7 +48,7 @@ object BiomeViewer extends SVGViewer {
 
 
   private def biomePalette(biome: ExistingBiomes.Biome): Color = {
-    import eu.ace_design.island.map.resources.ExistingBiomes._
+    import ExistingBiomes._
     biome match {
       /** Water faces **/
       case GLACIER => LIGHT_BLUE
