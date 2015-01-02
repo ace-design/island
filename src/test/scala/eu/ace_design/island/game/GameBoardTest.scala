@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.stdlib.ExistingResources
+import eu.ace_design.island.stdlib.Resources
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -10,7 +10,7 @@ class GameBoardTest extends SpecificationWithJUnit {
 
   "GameBoardTest Specifications".title
 
-  import ExistingResources._
+  import Resources._
 
   "A GameBoard" should {
     val empty = GameBoard(20)

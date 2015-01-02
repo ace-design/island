@@ -4,8 +4,8 @@ import java.awt.geom.Line2D
 import java.awt.{BasicStroke, Graphics2D}
 
 import eu.ace_design.island.map._
-import eu.ace_design.island.viewer.ColorBrewer
-import eu.ace_design.island.viewer.ColorBrewer._
+import eu.ace_design.island.stdlib.Colors
+import Colors._
 
 /**
  * The MeshViewer is used to display the mesh that is under the map. It differentiates oceans, lakes and land, and
@@ -37,10 +37,10 @@ object MeshViewer extends SVGViewer {
     g.draw(path)
     try {
       val color = if (map.faceProps.check(idx, WaterKind(ExistingWaterKind.OCEAN)))
-        ColorBrewer.DARK_BLUE
+        Colors.DARK_BLUE
       else if (map.faceProps.check(idx, WaterKind(ExistingWaterKind.LAKE)))
-        ColorBrewer.MEDIUM_BLUE
-      else ColorBrewer.WHITE
+        Colors.MEDIUM_BLUE
+      else Colors.WHITE
       g.setColor(color)
       g.fill(path)
 

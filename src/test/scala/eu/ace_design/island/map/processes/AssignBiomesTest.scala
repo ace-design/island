@@ -1,10 +1,10 @@
 package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.map._
-import eu.ace_design.island.stdlib.{WhittakerDiagrams, ExistingBiomes}
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, Biomes}
 import org.specs2.mutable._
 
-import ExistingBiomes._
+import Biomes._
 
 class AssignBiomesTest extends ProcessTestTrait {
 

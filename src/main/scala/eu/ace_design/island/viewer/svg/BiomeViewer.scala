@@ -2,9 +2,10 @@ package eu.ace_design.island.viewer.svg
 
 import java.awt.{Color, BasicStroke, Graphics2D}
 import java.awt.geom.Line2D
+import eu.ace_design.island.map.resources.Biome
 import eu.ace_design.island.map.{RiverFlow, HasForBiome, IslandMap}
-import eu.ace_design.island.stdlib.ExistingBiomes
-import eu.ace_design.island.viewer.ColorBrewer._
+import eu.ace_design.island.stdlib.{Colors, Biomes}
+import Colors._
 
 /**
  * the BiomeViewer display a map by painting faces according to their biomes, and also rivers (in addition to
@@ -25,7 +26,7 @@ object BiomeViewer extends SVGViewer {
     val path = buildPath(idx, map)
     try {
       val biome = map.faceProps.getValue(idx, HasForBiome())
-      g.setColor(biomePalette(biome))
+      g.setColor(biome.color)
     } catch { case e: IllegalArgumentException => g.setColor(WHITE) }
     g.setStroke(new BasicStroke(1f))
     g.draw(path)
@@ -46,40 +47,4 @@ object BiomeViewer extends SVGViewer {
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
-
-  private def biomePalette(biome: ExistingBiomes.Biome): Color = {
-    import ExistingBiomes._
-    biome match {
-      /** Water faces **/
-      case GLACIER => LIGHT_BLUE
-      case LAKE    => MEDIUM_BLUE
-      case OCEAN   => DARK_BLUE
-
-      /** Dry biomes: beach, deserts and alpine rocks **/
-      case BEACH               => LIGHT_YELLOW
-      case SUB_TROPICAL_DESERT => MEDIUM_YELLOW
-      case TEMPERATE_DESERT    => DARK_YELLOW
-      case ALPINE              => DARK_GREY
-
-      /** Dry biomes: grassland, shrubland and tundra **/
-      case GRASSLAND => LIGHT_ORANGE
-      case SHRUBLAND => MEDIUM_ORANGE
-      case TUNDRA    => DARK_ORANGE
-
-      /** Half-wet biomes: forests and taiga **/
-      case TROPICAL_SEASONAL_FOREST   => ULTRA_LIGHT_GREEN
-      case TEMPERATE_RAIN_FOREST      => LIGHT_GREEN
-      case TROPICAL_RAIN_FOREST       => DARK_GREEN
-
-      case TEMPERATE_DECIDUOUS_FOREST => MEDIUM_GREEN
-      case TAIGA                      => ULTRA_DARK_GREEN
-
-      /** Wet biomes: mangroves and snow  **/
-      case MANGROVE => BROWN
-      case SNOW     => WHITE
-
-      /** Terra incognita **/
-      case _ => BLACK
-    }
-  }
 }
