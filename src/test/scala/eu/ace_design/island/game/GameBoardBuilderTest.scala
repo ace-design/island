@@ -77,28 +77,28 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       import GameBoardBuilderDataSet.island
 
 
-      val p0 = builder.production(f0, WOOD, NORMAL, FAIR, 150.0).toMap
+      val p0 = builder.production(f0, WOOD, Some(NORMAL), Some(FAIR), 150.0).toMap
       p0.keys must_== Set((0, 0), (1, 0), (2, 0))
       (p0.values map {
         _.resource
       }).toSet must_== Set(WOOD)
 
       val f1 = island.convexHull(island.face(1)).toSet
-      val p1 = builder.production(f1, ORE, POOR, FAIR, 300.0).toMap
+      val p1 = builder.production(f1, ORE, Some(POOR), Some(FAIR), 300.0).toMap
       p1.keys must_== Set((0, 0), (0, 1), (0, 2), (1, 0), (1, 1))
       (p1.values map {
         _.resource
       }).toSet must_== Set(ORE)
 
       val f2 = island.convexHull(island.face(2)).toSet
-      val p2 = builder.production(f2, FLOWER, FERTILE, HARSH, 300.0).toMap
+      val p2 = builder.production(f2, FLOWER, Some(FERTILE), Some(HARSH), 300.0).toMap
       p2.keys must_== Set((0, 2), (1, 2), (2, 2), (1, 1), (2, 1))
       (p2.values map {
         _.resource
       }).toSet must_== Set(FLOWER)
 
       val f3 = island.convexHull(island.face(3)).toSet
-      val p3 = builder.production(f3, None, POOR, EASY, 300.0).toMap
+      val p3 = builder.production(f3, None, Some(POOR), Some(EASY), 300.0).toMap
       p3.keys must_== Set()
       (p3.values map {
         _.resource

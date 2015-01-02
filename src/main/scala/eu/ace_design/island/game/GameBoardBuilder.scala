@@ -6,6 +6,7 @@ import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
 import eu.ace_design.island.map.resources.ExistingResources.Resource
 import eu.ace_design.island.map.resources.{ExistingResources, BiomeToResource}
+import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
 
@@ -17,35 +18,43 @@ import scala.util.Random
  * @param chunk the size of each tile (map.size must be a factor of chunk when applied)
  * @param rand a random generator, to be forwarded to the Biome2Resource mapper
  */
-class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random()) {
+class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random()) extends Logger {
+
+  override val silo = LogSilos.BOARD_GEN
 
   /**
    * Build a game board on top of a given map
    * @param map the map to use as input
    * @return the associated game board
    */
-  def apply(map: IslandMap): GameBoard = {                               
+  def apply(map: IslandMap): GameBoard = {
     require(map.size % chunk == 0, "the size of the island must be compatible with the size of a tile")
+    info("Starting GameBoard building process")
     // Extracting relevant information from the map
     val biomes     = map.faceProps.restrictedTo(HasForBiome())
     val soils      = map.faceProps.restrictedTo(HasForSoil())
     val conditions = map.faceProps.restrictedTo(HasForCondition())
     val areas      = map.faceProps.restrictedTo(HasForArea())
+
     // Computing the resources associated to tile, face by face
+    info("Binding resources produced by faces to game tiles")
     val productions = map.faceRefs.toSeq map { i =>
       val resource = BiomeToResource(biomes(i), rand)
-      production(map.convexHull(map.face(i)).toSet, resource, soils(i), conditions(i), areas(i))
+      production(map.convexHull(map.face(i)).toSet, resource, soils.get(i), conditions.get(i), areas(i))
     }
     // Aggregate each resource produced by tile location
     val aggregated = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
-    //val asTiles = aggregated map { case ((x,y),stocks) => (x,y) -> Tile(stocks.toSet) }
+
     // Returning the grid
+    info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
     val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile()).toMap
     val tiles = (grid /: aggregated) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
       acc + (loc -> (existing bulkAdd stocks.toSet))
     }
+
+    info("GameBoard building process ended")
     GameBoard(map.size, tiles)
   }
 
@@ -54,11 +63,10 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
    *
    * @return the empty sequence if the resource is "None". A sequence of tile location associated to a Stock elsewhere.
    */
-  def production(hull: Set[Point], res: Resource, soil: Soil, cond: Condition, area: Double): Seq[((Int, Int), Stock)] = {
-    res match {
+  def production(hull: Set[Point], res: Resource, soil: Option[Soil], cond: Option[Condition], area: Double):
+    Seq[((Int, Int), Stock)] = res match {
       case ExistingResources.None => Seq()  // producing none means  to disappear
       case r => (coverage(hull) map { case ((x, y), percent) => ((x, y), Stock(res, 100))}).toSeq
-    }
   }
 
   /**
