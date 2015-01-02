@@ -1,7 +1,5 @@
 package eu.ace_design.island.map.resources
 
-import eu.ace_design.island.stdlib.Resources._
-
 import scala.util.Random
 
 /**
@@ -10,8 +8,17 @@ import scala.util.Random
  **/
 trait Biome {
 
+  // the key code to be used in Whittaker diagrams to represent this biome
   val code: String
+
+  /** the primary resource produced by this biome.
+   * e.g., Seq((WOOD, 0.4), (SUGAR_CANE, 0.4), (FRUITS, 0.2)) means that this biome as 40% of chance to produce Wood,
+   * 40% of chance to produce SUGAR_CANE and 20% of chance to produce FRUITS. The percentage might not sum to 1, meaning
+   * that this biome can be sterile.
+   **/
   protected val production: Seq[(PrimaryResource, Double)]
+
+  // the color to be used to represent this Biome on the map
   val color: java.awt.Color
 
   /**
