@@ -1,19 +1,48 @@
 package eu.ace_design.island.stdlib
 
+import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
+
 
 /**
  * Represents the resources available in the game
  **/
-object Resources extends Enumeration {
-  type Resource = Value
+object Resources  {
 
-  val NoResource = Value // The none resource
+  val primaries: Set[PrimaryResource] = Set(FISH, SILICA, ORE, WOOD, FRUITS, SUGAR_CANE, FLOWER, FUR)
 
-  // Primary Resources
-  val FISH, SILICA, ORE, WOOD, FRUITS, SUGAR_CANE, FLOWER, FUR = Value
+  object FISH extends PrimaryResource {
 
-  // Transformed Resources
-  val GLASS, INGOT, PLANK, RUM, ELIXIR, LEATHER = Value
+  }
+
+  object SILICA extends PrimaryResource {
+
+  }
+
+  object ORE extends PrimaryResource {
+
+  }
+
+  object WOOD extends PrimaryResource {
+
+  }
+  object FRUITS extends PrimaryResource {
+
+  }
+  object SUGAR_CANE extends PrimaryResource {
+
+  }
+  object FLOWER extends PrimaryResource {
+
+  }
+  object FUR extends PrimaryResource {
+
+  }
+
+  val manufactured: Set[ManufacturedResource] = Set()
+  //val GLASS, INGOT, PLANK, RUM, ELIXIR, LEATHER
+
+  val values: Set[Resource] = primaries ++ manufactured
+
 }
 
 

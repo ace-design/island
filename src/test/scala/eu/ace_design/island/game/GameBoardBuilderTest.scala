@@ -2,6 +2,7 @@ package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
 import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
 import org.specs2.mutable._
 import org.junit.runner.RunWith

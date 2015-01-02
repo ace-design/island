@@ -11,7 +11,7 @@ import scala.util.Random
 trait Biome {
 
   val code: String
-  protected val production: Seq[(Resource, Double)]
+  protected val production: Seq[(PrimaryResource, Double)]
   val color: java.awt.Color
 
   /**
