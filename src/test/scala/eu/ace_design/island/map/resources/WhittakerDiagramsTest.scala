@@ -1,5 +1,6 @@
 package eu.ace_design.island.map.resources
 
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, ExistingBiomes}
 import org.specs2.mutable.SpecificationWithJUnit
 
 /**
@@ -8,8 +9,8 @@ import org.specs2.mutable.SpecificationWithJUnit
  **/
 class WhittakerDiagramsTest extends SpecificationWithJUnit {
 
-  import eu.ace_design.island.map.resources.WhittakerDiagrams.complete
-  import eu.ace_design.island.map.resources.ExistingBiomes.{LAKE, GLACIER}
+  import WhittakerDiagrams.complete
+  import ExistingBiomes.{LAKE, GLACIER}
 
   "WhittakerDiagramsTest Specifications".title
 

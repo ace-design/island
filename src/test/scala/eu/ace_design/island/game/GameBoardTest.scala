@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.ExistingResources
+import eu.ace_design.island.stdlib.ExistingResources
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner

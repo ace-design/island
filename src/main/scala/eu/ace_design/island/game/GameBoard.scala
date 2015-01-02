@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.ExistingResources.Resource
+import eu.ace_design.island.stdlib.ExistingResources
+import ExistingResources.Resource
 
 
 /**

@@ -4,7 +4,8 @@ import eu.ace_design.island.geom._
 import eu.ace_design.island.geom.generators.{SquaredGrid, RelaxedRandomGrid, RandomGrid}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes._
-import eu.ace_design.island.map.resources.{StandardDistribution, ExploitationDistribution, WhittakerDiagrams, WhittakerDiagram}
+import eu.ace_design.island.map.resources.{ExploitationDistribution, WhittakerDiagram}
+import eu.ace_design.island.stdlib.{WhittakerDiagrams, StandardDistribution}
 import eu.ace_design.island.viewer._
 import java.util.UUID
 import eu.ace_design.island.viewer.svg.{HeatMap, BiomeViewer}

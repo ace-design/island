@@ -2,6 +2,7 @@ package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
 import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.stdlib.{ExistingBiomes, ExistingResources}
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -71,7 +72,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
 
     "Identify the resources associated to a given face" in {
-      import eu.ace_design.island.map.resources.ExistingResources._
+      import ExistingResources._
       import eu.ace_design.island.map.resources.Soils._
       import eu.ace_design.island.map.resources.Conditions._
       import GameBoardBuilderDataSet.island
@@ -107,7 +108,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "Assign relevant resources to each tile" in {
-      import eu.ace_design.island.map.resources.ExistingResources._
+      import ExistingResources._
       def oracle(x: Int, y: Int): Set[Set[Resource]] = (x, y) match {
         case (0, 0) => Set(Set(WOOD, ORE))
         case (1, 0) => Set(Set(WOOD, ORE))
@@ -141,7 +142,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
 object GameBoardBuilderDataSet {
   import eu.ace_design.island.map.{HasForBiome, HasForArea, HasForCondition, HasForSoil, PropertySet, IslandMap}
-  import eu.ace_design.island.map.resources.ExistingBiomes._
+  import ExistingBiomes._
   import eu.ace_design.island.map.resources.Conditions._
   import eu.ace_design.island.map.resources.Soils._
   /**
