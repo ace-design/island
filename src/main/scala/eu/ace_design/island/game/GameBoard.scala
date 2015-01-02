@@ -2,6 +2,7 @@ package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.ExistingResources.Resource
 
+
 /**
  * The gameBoard is composed by a squared grid of Tiles (containing resources)
  * @param size the size of the grid (i.e., max for coordinates)
@@ -52,7 +53,7 @@ case class GameBoard(size: Int, tiles: Map[(Int,Int), Tile] = Map()) {
    */
   def produces(x: Int, y: Int): Set[Resource] = {
     require(tiles.keys.toSet.contains((x,y)), "The (x,y) location must exist")
-    tiles((x,y)).stock map { _.resource }
+    tiles((x,y)).resources
   }
 
 
@@ -75,15 +76,47 @@ object Directions extends Enumeration {
  */
 case class Tile(stock: Set[Stock] = Set()) {
 
+  /**
+   * Add a given stock to the tile. Require that no stock of the very same resource is already available
+   * inside the tile (see ++ to add a set of homogeneous resources)
+   * @param s the stock unit to add
+   * @return the tile containing the stock unit
+   */
   def +(s: Stock): Tile = {
     require(! stock.exists {_.resource == s.resource }, "Cannot add an already existing stock")
     this.copy(stock = stock + s)
   }
 
-  def ++(s: Set[Stock]): Tile = {
-    this.copy(stock = stock ++ s)
+  /**
+   * Add a set of homogeneous resources to the tiles. The resources are composed according to the following semantics:
+   *   - the amount of the summed stock is the sum of the contents of the set
+   *   - the extraction factor is the average
+   * @param s  the set of stock unit to add
+   * @return the tile containing the summed stock
+   */
+  def ++(s: Set[Stock]): Tile = s.isEmpty match {
+    case true => this
+    case false => {
+      require(s.forall( _.resource == s.head.resource), "Cannot add a set of heterogeneous resources")
+      val amount = (s map {_.amount}).sum
+      val factor = (s map {_.extraction}).sum / s.size
+      this + Stock(s.head.resource, amount, factor)
+    }
   }
 
+  /**
+   * Add a set of heterogeneous resources, supporting multiple instances of the same resources in ≠ stock unit.
+   * @param s
+   * @return
+   */
+  def bulkAdd(s: Set[Stock]): Tile =(this /: (s groupBy { _.resource }).values) { (acc, elem) => acc ++ elem }
+
+  /**
+   * the resources produced by this tile
+   * @return
+   */
+  def resources: Set[Resource] = stock map { _.resource }
+  
 }
 
 case class Stock(resource: Resource, amount: Int, extraction: Double = 1.0) {

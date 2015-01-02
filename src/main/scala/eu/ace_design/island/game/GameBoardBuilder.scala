@@ -44,7 +44,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile()).toMap
     val tiles = (grid /: aggregated) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
-      acc + (loc -> (existing ++ stocks.toSet))
+      acc + (loc -> (existing bulkAdd stocks.toSet))
     }
     GameBoard(map.size, tiles)
   }
@@ -109,6 +109,4 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     // Apply the cover function to each tile, removing the uncovered tile and returning the associated map
     (tiles map { case (x,y) => cover(x, y) } filter { case (_, value) => value > 0.0 }).toMap
   }
-
-
 }
