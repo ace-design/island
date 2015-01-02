@@ -108,6 +108,29 @@ case class DiskShape(override val size: Int, radius: Double) extends IslandShape
 }
 
 /**
+ * Shape based on the Ellipsis cartesian formula. Will generate a circle if a = b
+ * @param size the size of the map, unused here
+ * @param a the % (in [0.0,1.0] of the x axis to be covered by the ellipsis
+ * @param b the % (in [0.0,1.0] of the y axis to be covered by the ellipsis
+ */
+case class EllipsisShape(override val size: Int, a: Double, b: Double) extends IslandShape {
+  require(a >= 0.0 && a <= 1.0, "a must be in [0.0, 1.0]")
+  require(b >= 0.0 && b <= 1.0, "b must be in [0.0, 1.0]")
+
+  // return true if the point (x,y) is outside the ellipsis
+  override protected def check(x: Double, y: Double): Boolean = math.pow(x/a, 2) + math.pow(y/b, 2) >= 1.0
+}
+
+/**
+ * Shape based on the Land of Oz map (a squared territory, bordered by an impassable desert)
+ * @param size
+ */
+case class OzShape(override val size: Int) extends IslandShape {
+
+  override protected def check(x: Double, y: Double): Boolean = false // Everything is considered as land
+}
+
+/**
  * Implements a shape made by two circles (internal and external). Produces island with a lake in the middle.
  * @param size the size of the map
  * @param radExt radius of the external circle (outer ocean)

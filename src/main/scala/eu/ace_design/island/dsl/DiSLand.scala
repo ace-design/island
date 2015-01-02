@@ -47,17 +47,26 @@ trait DiSLand {
 
   // The disk shape is defined as "disk(surface = 80.percent)"
   protected def disk(surface: Percentage): ShapeDirective = (size, threshold, _) => {
-    IdentifyWaterArea(new DiskShape(size, size.toDouble/2 * surface.value), threshold)
+    IdentifyWaterArea(DiskShape(size, size.toDouble/2 * surface.value), threshold)
   }
 
   // the donut shape is defined as "donut(external = 80.percent, lake = 10.percent)"
   protected def donut(external: Percentage, lake: Percentage): ShapeDirective = (size, threshold, _) => {
-    IdentifyWaterArea(new DonutShape(size, size.toDouble/2 * external.value, size.toDouble/2 * lake.value), threshold)
+    IdentifyWaterArea(DonutShape(size, size.toDouble/2 * external.value, size.toDouble/2 * lake.value), threshold)
   }
+
+  // the Ellipsis shape is defined as "ellipsis(x = 80.percent, y = 10.percent)" (x == y == 100 => circular)
+  protected def ellipsis(x: Percentage, y: Percentage): ShapeDirective = (size, threshold, _) => {
+    IdentifyWaterArea(EllipsisShape(size, x.value, y.value), threshold)
+  }
+
+  protected def oz(): ShapeDirective = (size, threshold, _) => IdentifyWaterArea(OzShape(size), threshold)
+
+
 
   // the radial shape is defined as "radial(factor = 1.57)"
   protected def radial(factor: Double): ShapeDirective = (size, threshold, random) => {
-    IdentifyWaterArea(new RadialShape(size, factor, random), threshold)
+    IdentifyWaterArea(RadialShape(size, factor, random), threshold)
   }
 
   /**
