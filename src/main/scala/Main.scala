@@ -17,7 +17,13 @@ object Main extends App with Logger with DiSLand {
   //export(small)
 
   val medium = createIsland shapedAs radial(factor = 1.47) usingSeed 0x24F84E32B98D3CF5L
-  export(medium)
+  //export(medium)
+
+  val tortuga = createIsland shapedAs ellipsis(x = 90.percent, y = 40.percent) usingSeed 0x24F84E32B98D3CF5L
+  //export(tortuga)
+
+  val ozRealm = createIsland shapedAs oz() usingSeed 0x24F84E32B98D3CF5L
+  export(ozRealm)
 
   // radial(1.07)
   val large = createIsland shapedAs radial(factor = 1.26)  usingSeed 0x9AC771d247f74037L withSize 2048 having 4096.faces builtWith Seq(
