@@ -1,5 +1,6 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
 
 
@@ -8,7 +9,7 @@ import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
  * @param size the size of the grid (i.e., max for coordinates)
  * @param tiles the tiles composing the grid
  */
-case class GameBoard(size: Int, tiles: Map[(Int,Int), Tile] = Map()) {
+case class GameBoard(size: Int, m: IslandMap, tiles: Map[(Int,Int), Tile] = Map()) {
 
   /**
    * Add a location/tile couple to the current GameBoard (update if already existing)
@@ -56,14 +57,15 @@ case class GameBoard(size: Int, tiles: Map[(Int,Int), Tile] = Map()) {
     tiles((x,y)).resources
   }
 
+  /**
+   * Return the contents (available resources and quantities) stored in this board
+   * @return
+   */
   def contents: Map[PrimaryResource, Int] = {
     val all = tiles.values flatMap { _.stock }
     val grouped = all groupBy { _.resource } map { case (k,v) => k -> (v map { _.amount}).sum }
     grouped
   }
-
-
-
 }
 
 object Directions extends Enumeration {

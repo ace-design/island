@@ -13,9 +13,9 @@ class GameBoardTest extends SpecificationWithJUnit {
   import Resources._
 
   "A GameBoard" should {
-    val empty = GameBoard(20)
+    val empty = GameBoard(20, null)
     val contents = for(x <- 0 until 3; y <- 0 until 3) yield (x,y) -> (Tile() + Stock(FISH, 10*x+y))
-    val complete = (GameBoard(3) /: contents) { _ + _ }
+    val complete = (GameBoard(3, null) /: contents) { _ + _ }
     "be composed of tiles associated to locations" in {
       val bPrime = empty + ((0,0) -> Tile())
       bPrime.at(0,0) must_== Tile()
