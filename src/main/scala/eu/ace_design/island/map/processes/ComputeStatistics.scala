@@ -73,8 +73,10 @@ object ComputeStatistics extends Process {
    * @return
    */
   private def computeElevations(m: IslandMap): Map[StatName, String] = {
-    info("Computing statistics about the elevation of the map")
-    val elevations = m.vertexProps.restrictedTo(HasForHeight())
+    info("Computing statistics about the elevation of the map (land faces)")
+    val all = m.vertexProps.restrictedTo(HasForHeight()) ;
+    val landVertexRefs = m.findVerticesWith(Set(!IsWater())) map { m.vertexRef(_) }
+    val elevations = all filter { case (key, _) => landVertexRefs.contains(key) }
     val avg = (0.0 /: elevations.values) { _ + _ } / elevations.size
     Map(ELEVATION_MAX -> f"${elevations.values.max * PIXEL_FACTOR}%2.2f",
         ELEVATION_MIN -> f"${elevations.values.min * PIXEL_FACTOR}%2.2f",
@@ -82,20 +84,18 @@ object ComputeStatistics extends Process {
   }
 
   /**
-   * Compute statisctics about faces pitches (in %)
-   *
-   *
+   * Compute statistics about faces pitches (in %)
    * @param m
    * @return
    */
   private def computePitches(m: IslandMap): Map[StatName, String] = {
-    info("Computing statistics about faces's pitches")
-    val pitches = m.faceProps.restrictedTo(HasForPitch()).values
+    info("Computing statistics about lands pitches")
+    val all = m.faceProps.restrictedTo(HasForPitch())
+    val landsRefs = lands(m)
+    val pitches = (all filter { case (key, _) => landsRefs.contains(key) }).values
     val avg = (0.0 /: pitches) { _ + _ } / pitches.size
 
-    Map(PITCH_MAX -> f"${pitches.max}%2.2f",
-      PITCH_MIN -> f"${pitches.min}%2.2f",
-      PITCH_AVG -> f"$avg%2.2f")
+    Map(PITCH_MAX -> f"${pitches.max}%2.2f", PITCH_MIN -> f"${pitches.min}%2.2f", PITCH_AVG -> f"$avg%2.2f")
   }
 
   import ExistingWaterKind._
@@ -107,20 +107,20 @@ object ComputeStatistics extends Process {
 
 object Statistics extends Enumeration {
   type StatName = Value
-  val TOTAL_AREA        = Value("Map area (ha)")
-  val AVERAGE_AREA      = Value("Face area (ha) [avg]")
-  val LAND_AREA         = Value("Area occupied by lands (ha)")
-  val LAKE_AREA         = Value("Area occupied by lakes (ha)")
+  val TOTAL_AREA        = Value("Map area (ha)                  ")
+  val AVERAGE_AREA      = Value("Face area (ha) [avg]           ")
+  val LAND_AREA         = Value("Area occupied by lands (ha)    ")
+  val LAKE_AREA         = Value("Area occupied by lakes (ha)    ")
   val OCEAN_AREA        = Value("Area occupied by the ocean (ha)")
-  val LAND_PERCENTAGE   = Value("% of map occupied by lands")
-  val OCEAN_PERCENTAGE  = Value("% of map occupied by the ocean")
-  val LAKE_PERCENTAGE   = Value("% of map occupied by lakes")
-  val ELEVATION_MIN     = Value("Land elevation (m) [min] ")
-  val ELEVATION_MAX     = Value("Land elevation (m) [max]")
-  val ELEVATION_AVG     = Value("Land elevation (m) [avg]")
-  val PITCH_MIN         = Value("Pitch (%) [min]")
-  val PITCH_MAX         = Value("Pitch (%) ]max]")
-  val PITCH_AVG         = Value("Pitch (%) [avg]")
+  val LAND_PERCENTAGE   = Value("% of map occupied by lands     ")
+  val OCEAN_PERCENTAGE  = Value("% of map occupied by the ocean ")
+  val LAKE_PERCENTAGE   = Value("% of map occupied by lakes     ")
+  val ELEVATION_MIN     = Value("Land elevation (m) [min]       ")
+  val ELEVATION_MAX     = Value("Land elevation (m) [max]       ")
+  val ELEVATION_AVG     = Value("Land elevation (m) [avg]       ")
+  val PITCH_MIN         = Value("Pitch for lands (%) [min]      ")
+  val PITCH_MAX         = Value("Pitch for lands (%) ]max]      ")
+  val PITCH_AVG         = Value("Pitch for lands (%) [avg]      ")
 
 }
 
