@@ -30,7 +30,7 @@ object Main extends App with Logger with DiSLand {
   val large = createIsland shapedAs radial(factor = 1.26)  usingSeed 0x9AC771d247f74037L withSize 2000 having 4096.faces builtWith Seq(
     //flatDistribution(120),
     plateau(40),
-    flowing(rivers = 30, distance = 0.4), withMoisture(soils.dry, distance = 200), AssignPitch,
+    flowing(rivers = 30, distance = 0.4), withMoisture(soils.wet, distance = 200), AssignPitch,
     usingBiomes())
 
   val island: IslandMap = large
