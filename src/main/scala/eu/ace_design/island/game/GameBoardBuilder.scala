@@ -56,7 +56,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     }
 
     info("GameBoard building process ended")
-    GameBoard(map.size, tiles)
+    GameBoard(map.size, map, tiles)
   }
 
   /**
