@@ -73,7 +73,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
         val extraction = res.extraction(pitch, cond, rand)
         val dispatch = coverage(hull) map {
           case ((x, y), percent) => {
-            ((x, y), Stock(res, (amount * (percent/100)).toInt, extraction))
+            ((x, y), Stock(res, (amount * (percent/100)).ceil.toInt, extraction))
           }
         }
         debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {case (k,s) => k -> s.amount}}")
