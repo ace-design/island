@@ -106,19 +106,19 @@ object Biomes {
 
   object BEACH extends Biome {
     override val code = "BEA"
-    override protected val production = Seq((SILICA, 0.5), (FISH, 0.5))
+    override protected val production = Seq((FISH, 0.4))
     override val color = LIGHT_YELLOW
   }
 
   object SUB_TROPICAL_DESERT extends Biome {
     override val code = "STD"
-    override protected val production = Seq((ORE,1.0))
+    override protected val production = Seq((ORE,0.2), (QUARTZ, 0.4))
     override val color = MEDIUM_YELLOW
   }
 
   object TEMPERATE_DESERT extends Biome {
     override val code = "teD"
-    override protected val production = Seq((ORE,1.0))
+    override protected val production = Seq((ORE,0.3), (QUARTZ, 0.3))
     override val color = DARK_YELLOW
   }
 

@@ -4,7 +4,7 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
-import eu.ace_design.island.map.resources.{Resource, NoResource}
+import eu.ace_design.island.map.resources.{PrimaryResource, NoResource}
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
@@ -34,12 +34,14 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     val soils      = map.faceProps.restrictedTo(HasForSoil())
     val conditions = map.faceProps.restrictedTo(HasForCondition())
     val areas      = map.faceProps.restrictedTo(HasForArea())
+    val pitches    = map.faceProps.restrictedTo(HasForPitch())
 
     // Computing the resources associated to tile, face by face
     info("Binding resources produced by faces to game tiles")
     val productions = map.faceRefs.toSeq map { i =>
+      debug(s"  Working on face #$i")
       val resource = biomes(i)(rand)
-      production(map.convexHull(map.face(i)).toSet, resource, soils.get(i), conditions.get(i), areas(i))
+      production(map.convexHull(map.face(i)).toSet, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
     }
     // Aggregate each resource produced by tile location
     val aggregated = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
@@ -62,10 +64,20 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
    *
    * @return the empty sequence if the resource is "None". A sequence of tile location associated to a Stock elsewhere.
    */
-  def production(hull: Set[Point], res: Resource, soil: Option[Soil], cond: Option[Condition], area: Double):
-    Seq[((Int, Int), Stock)] = res match {
+  def production(hull: Set[Point], res: PrimaryResource,
+                 soil: Option[Soil], cond: Option[Condition],
+                 area: Double, pitch: Double): Seq[((Int, Int), Stock)] = res match {
       case NoResource => Seq()  // producing none means  to disappear
-      case r => (coverage(hull) map { case ((x, y), percent) => ((x, y), Stock(res, 100))}).toSeq
+      case r => {
+        val amount = res.amount(area, soil, rand)
+        val extraction = res.extraction(pitch, cond, rand)
+        debug(s"  Resource amount: $amount, Extraction factor: $extraction")
+        val dispatch = coverage(hull) map {
+          case ((x, y), percent) => ((x, y), Stock(res, (amount * percent).toInt, extraction))
+        }
+        debug(s"  Tile Assignment: $dispatch")
+        dispatch.toSeq
+      }
   }
 
   /**

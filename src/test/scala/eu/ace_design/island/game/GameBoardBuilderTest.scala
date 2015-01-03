@@ -1,7 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.map.{HasForPitch, IslandMap}
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
 import org.specs2.mutable._
@@ -46,16 +46,18 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       // triangle(0) \in (0,0), triangle(1) \in (1,2) and triangle(2) \in (2,1)
       builder.boundingBox(triangle) must_== GameBoardBuilderDataSet.tiles
       builder.boundingBox(f0) must_== Set((0, 0), (1, 0), (2, 0), (3, 0),
-        (0, 1), (1, 1), (2, 1), (3, 1))
+                                          (0, 1), (1, 1), (2, 1), (3, 1))
       builder.boundingBox(f1) must_== Set((0, 0), (1, 0), (2, 0),
-        (0, 1), (1, 1), (2, 1),
-        (0, 2), (1, 2), (2, 2),
-        (0, 3), (1, 3), (2, 3))
+                                          (0, 1), (1, 1), (2, 1),
+                                          (0, 2), (1, 2), (2, 2),
+                                          (0, 3), (1, 3), (2, 3))
       builder.boundingBox(f2) must_== Set((0, 1), (1, 1), (2, 1), (3, 1),
-        (0, 2), (1, 2), (2, 2), (3, 2),
-        (0, 3), (1, 3), (2, 3), (3, 3))
-      builder.boundingBox(f3) must_== Set((2, 0), (2, 1), (2, 2), (2, 3),
-        (3, 0), (3, 1), (3, 2), (3, 3))
+                                          (0, 2), (1, 2), (2, 2), (3, 2),
+                                          (0, 3), (1, 3), (2, 3), (3, 3))
+      builder.boundingBox(f3) must_== Set((2, 0), (3,0),
+                                          (2, 1), (3,1),
+                                          (2, 2), (3,2),
+                                          (2, 3), (3,3))
     }
 
     "identify the tiles covered by a given face" in {
@@ -79,45 +81,37 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       import GameBoardBuilderDataSet.island
 
 
-      val p0 = builder.production(f0, WOOD, Some(NORMAL), Some(FAIR), 150.0).toMap
+      val p0 = builder.production(f0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
       p0.keys must_== Set((0, 0), (1, 0), (2, 0))
-      (p0.values map {
-        _.resource
-      }).toSet must_== Set(WOOD)
+      (p0.values map { _.resource }).toSet must_== Set(WOOD)
 
       val f1 = island.convexHull(island.face(1)).toSet
-      val p1 = builder.production(f1, ORE, Some(POOR), Some(FAIR), 300.0).toMap
+      val p1 = builder.production(f1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
       p1.keys must_== Set((0, 0), (0, 1), (0, 2), (1, 0), (1, 1))
-      (p1.values map {
-        _.resource
-      }).toSet must_== Set(ORE)
+      (p1.values map { _.resource }).toSet must_== Set(ORE)
 
       val f2 = island.convexHull(island.face(2)).toSet
-      val p2 = builder.production(f2, FLOWER, Some(FERTILE), Some(HARSH), 300.0).toMap
+      val p2 = builder.production(f2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
       p2.keys must_== Set((0, 2), (1, 2), (2, 2), (1, 1), (2, 1))
-      (p2.values map {
-        _.resource
-      }).toSet must_== Set(FLOWER)
+      (p2.values map { _.resource }).toSet must_== Set(FLOWER)
 
       val f3 = island.convexHull(island.face(3)).toSet
-      val p3 = builder.production(f3, NoResource, Some(POOR), Some(EASY), 300.0).toMap
+      val p3 = builder.production(f3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
       p3.keys must_== Set()
-      (p3.values map {
-        _.resource
-      }).toSet must_== Set()
+      (p3.values map { _.resource }).toSet must_== Set()
 
     }
 
     "Assign relevant resources to each tile" in {
       import Resources._
       def oracle(x: Int, y: Int): Set[Set[Resource]] = (x, y) match {
-        case (0, 0) => Set(Set(WOOD, ORE))
-        case (1, 0) => Set(Set(WOOD, ORE))
+        case (0, 0) => Set(Set(WOOD, FUR))
+        case (1, 0) => Set(Set(WOOD, FUR))
         case (2, 0) => Set(Set(WOOD, FLOWER), Set(WOOD))
-        case (0, 1) => Set(Set(ORE))
-        case (1, 1) => Set(Set(ORE, WOOD), Set(ORE, FLOWER))
+        case (0, 1) => Set(Set(FUR))
+        case (1, 1) => Set(Set(FUR, WOOD), Set(FUR, FLOWER))
         case (2, 1) => Set(Set(WOOD, FLOWER), Set(FLOWER), Set(WOOD))
-        case (0, 2) => Set(Set(ORE, WOOD), Set(ORE, FLOWER))
+        case (0, 2) => Set(Set(FUR, WOOD), Set(FUR, FLOWER))
         case (1, 2) => Set(Set(WOOD), Set(FLOWER))
         case (2, 2) => Set(Set(WOOD, FLOWER), Set(FLOWER), Set(WOOD))
         case _ => throw new IllegalArgumentException()
@@ -125,7 +119,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       def assess(x: Int, y: Int) = {
         val expected = oracle(x, y)
         val actual = board.produces(x, y)
-        // println(s"($x,$y) / expected: $expected / actual: $actual")
+        //println(s"($x,$y) / expected: $expected / actual: $actual")
         expected.intersect(Set(actual)) must not(beEmpty)
       }
       assess(0, 0)
@@ -158,13 +152,13 @@ object GameBoardBuilderDataSet {
    *   |    |    |    |
    *   |    |    |    |  Faces: (geometry, Biome, soil \in {FERTILE, NORMAL, POOR}, conditions \in {EASY, FAIR, HARSH})
    *   +----+----+----+    - f0 = {e0, e1, e2} = (0,1,2), center p5: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
-   *   |    |    |    |    - f1 = {e2, e3, e4} = (0,2,3), center p6: TEMPERATE_DESERT, POOR, FAIR
+   *   |    |    |    |    - f1 = {e2, e3, e4} = (0,2,3), center p6: TUNDRA, POOR, FAIR
    *   |    |    |    |    - f2 = {e3, e5, e6} = (3,2,4), center p7: MANGROVE, FERTILE, HARSH
    *   X----+----+----X    - f3 = {e6, e1, e7} = (4,2,1), center p8: GLACIER, POOR, EASY
    *   3              4
    *                     Resources: (see eu.ace_design.island.map.resources.BiomeToResources for ratios)
    *  0           1        - TEMPERATE_DECIDUOUS_FOREST produces WOOD (100%)
-   *   X----------X        - TEMPERATE_DESERT           produces ORE  (100%)
+   *   X----------X        - TUNDRA                     produces FUR  (100%)
    *   |  \ 2   / |        - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
    *   |      X   |        - GLACIER                    produces FLOWER (5%) or None   (95%)
    *   |    /  \  |
@@ -188,17 +182,17 @@ object GameBoardBuilderDataSet {
 
   val properties = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
-                    (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(150.0)) +
-                        (0 -> HasForSoil(NORMAL)) + (0 -> HasForCondition(FAIR)) +
+                    (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(150.0)) + (0 -> HasForPitch(0.0)) +
+                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR)) +
                     // Face 1: TEMPERATE_DESERT, POOR, FAIR
-                    (1 -> HasForBiome(TEMPERATE_DESERT))           + (1 -> HasForArea(300.0)) +
-                        (1 -> HasForSoil(POOR))   + (1 -> HasForCondition(FAIR)) +
+                    (1 -> HasForBiome(TUNDRA)) + (1 -> HasForArea(300.0)) + (1 -> HasForPitch(0.0)) +
+                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR)) +
                     // Face 2: MANGROVE, FERTILE, HARSH
-                    (2 -> HasForBiome(MANGROVE))                   + (2 -> HasForArea(300.0)) +
+                    (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(300.0)) + (2 -> HasForPitch(0.0)) +
                         (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +
                     // Face 3: GLACIER, POOR, EASY
-                    (3 -> HasForBiome(GLACIER)) + (3 -> HasForArea(150.0)) +
-                        (3 -> HasForSoil(POOR)) + (3 -> HasForCondition(EASY))
+                    (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(150.0)) + (3 -> HasForPitch(0.0)) +
+                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))
 
   val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
 

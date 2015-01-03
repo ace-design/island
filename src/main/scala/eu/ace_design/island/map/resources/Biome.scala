@@ -6,7 +6,9 @@ import scala.util.Random
  * This file is part of the island project
  * @author mosser (02/01/2015, 18:44)
  **/
-trait Biome {
+trait Biome extends eu.ace_design.island.util.NameAsClassName {
+
+  override def toString = name
 
   // the key code to be used in Whittaker diagrams to represent this biome
   val code: String
@@ -26,7 +28,7 @@ trait Biome {
    * @param rand the random generator to be used
    * @return a Resource
    */
-  def apply(rand: Random = new Random()): Resource = {
+  def apply(rand: Random = new Random()): PrimaryResource = {
     val thresholds = propagate(production)
     val value = rand.nextDouble()
     val result = thresholds((thresholds.keys filter { _ > value }).min)
@@ -42,9 +44,9 @@ trait Biome {
    * @param resources an element defined in _bindings
    * @return
    */
-  private def propagate(resources: Seq[(Resource, Double)]): Map[Double, Resource] = {
-    def loop(lst: Seq[(Resource, Double)], inc: Double):  Map[Double, Resource] = lst match {
-      case Nil => Map[Double, Resource]()
+  private def propagate(resources: Seq[(PrimaryResource, Double)]): Map[Double, PrimaryResource] = {
+    def loop(lst: Seq[(PrimaryResource, Double)], inc: Double):  Map[Double, PrimaryResource] = lst match {
+      case Nil => Map[Double, PrimaryResource]()
       case (r, prob) :: others => loop(others, prob + inc) + ((prob + inc) -> r)
     }
     val res = loop(resources,0.0)

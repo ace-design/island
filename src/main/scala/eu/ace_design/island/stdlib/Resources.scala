@@ -8,34 +8,44 @@ import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource
  **/
 object Resources  {
 
-  val primaries: Set[PrimaryResource] = Set(FISH, SILICA, ORE, WOOD, FRUITS, SUGAR_CANE, FLOWER, FUR)
+  val primaries: Set[PrimaryResource] = Set(FISH, QUARTZ, ORE, WOOD, FRUITS, SUGAR_CANE, FLOWER, FUR)
 
   object FISH extends PrimaryResource {
-
+    override protected val perHectare = 400
+    override protected val difficulty = 1.05
   }
 
-  object SILICA extends PrimaryResource {
-
+  object QUARTZ extends PrimaryResource {
+    override protected val perHectare = 50
+    override protected val difficulty = 0.7
   }
 
   object ORE extends PrimaryResource {
-
+    override protected val perHectare = 150
+    override protected val difficulty = 0.5
   }
 
   object WOOD extends PrimaryResource {
-
+    override protected val perHectare = 400
+    override protected val difficulty = 1.05
   }
-  object FRUITS extends PrimaryResource {
 
+  object FRUITS extends PrimaryResource {
+    override protected val perHectare = 100
+    override protected val difficulty = 1.0
   }
   object SUGAR_CANE extends PrimaryResource {
-
+    override protected val perHectare = 200
+    override protected val difficulty = 0.8
   }
-  object FLOWER extends PrimaryResource {
 
+  object FLOWER extends PrimaryResource {
+    override protected val perHectare = 10
+    override protected val difficulty = 0.2
   }
   object FUR extends PrimaryResource {
-
+    override protected val perHectare = 50
+    override protected val difficulty = 0.95
   }
 
   val manufactured: Set[ManufacturedResource] = Set()
