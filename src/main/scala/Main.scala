@@ -1,6 +1,6 @@
 import java.awt.Color
 
-import eu.ace_design.island.game.GameBoardBuilder
+import eu.ace_design.island.game.{GameBoard, GameBoardBuilder}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes.AssignPitch
 import eu.ace_design.island.util.{LogSilos, Logger}
@@ -35,7 +35,8 @@ object Main extends App with Logger with DiSLand {
 
   val island: IslandMap = large
   export(island)
-  val board = new GameBoardBuilder()(island)
+  val board: GameBoard = (new GameBoardBuilder())(island)
+  boardStatistics(board)
 
 
   private def export(m: IslandMap, name: String = "./map") {
@@ -46,15 +47,20 @@ object Main extends App with Logger with DiSLand {
     //m -> (s"$name-height" as heatMap(HasForHeight(), Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
     //m -> (s"$name-moisture" as heatMap(HasForMoisture(), Color.BLUE))
     //m -> (s"$name-pitch" as heatMap(HasForPitch(), Color.DARK_GRAY))
-    statistics(m)
+    islandStatistics(m)
   }
 
-  protected def statistics(m: IslandMap) = {
-    info("Available statistics")
+  protected def islandStatistics(m: IslandMap) = {
+    info("Available statistics for the Island")
     m.stats match {
       case None =>
       case Some(d) => d.toSeq sortBy { _._1.toString  } foreach { case (stat, value) => info(s"  - $stat => $value") }
     }
+  }
+
+  protected def boardStatistics(b: GameBoard) = {
+    info(s"Available statistics for the Game board (${b.tiles.keySet.size} tiles)")
+    b.contents foreach { case (res, amount) => info(f"  - ${res}%-10s => $amount") }
   }
 }
 

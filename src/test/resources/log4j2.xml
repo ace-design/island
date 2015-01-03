@@ -12,7 +12,7 @@
         <Logger name="eu.ace_design.Island/Map" level="off" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="eu.ace_design.Island/Board" level="off" additivity="false">
+        <Logger name="eu.ace_design.Island/Board" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>

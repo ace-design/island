@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.Resource
+import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
 
 
 /**
@@ -55,6 +55,13 @@ case class GameBoard(size: Int, tiles: Map[(Int,Int), Tile] = Map()) {
     require(tiles.keys.toSet.contains((x,y)), "The (x,y) location must exist")
     tiles((x,y)).resources
   }
+
+  def contents: Map[PrimaryResource, Int] = {
+    val all = tiles.values flatMap { _.stock }
+    val grouped = all groupBy { _.resource } map { case (k,v) => k -> (v map { _.amount}).sum }
+    grouped
+  }
+
 
 
 }
@@ -119,7 +126,7 @@ case class Tile(stock: Set[Stock] = Set()) {
   
 }
 
-case class Stock(resource: Resource, amount: Int, extraction: Double = 1.0) {
+case class Stock(resource: PrimaryResource, amount: Int, extraction: Double = 1.0) {
   require(amount >= 0, "Cannot hold negative value in a Stock")
   require(extraction > 0, "the extraction factor must be positive")
 }

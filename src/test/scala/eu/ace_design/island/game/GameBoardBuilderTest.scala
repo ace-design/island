@@ -144,11 +144,11 @@ object GameBoardBuilderDataSet {
    * Minimal representation of an island to be used for test purpose
    *
    *                     Vertices:               Edges:
-   *   0              1    - p0 = (0 , 0 )         - e0 = p0 -- p1     - e4 = p3 -- p0
-   *   X----+----+----X    - p1 = (30, 0 )         - e1 = p1 -- p2     - e5 = p3 -- p4
-   *   |    |    |    |    - p2 = (20, 10)         - e2 = p2 -- p0     - e6 = p4 -- p2
-   *   |    |  2 |    |    - p3 = (0,  30)         - e3 = p2 -- p3     - e7 = p4 -- p1
-   *   +----+----X----+    - p4 = (30, 30)
+   *   0              1    - p0 = (0 ,  0 )         - e0 = p0 -- p1     - e4 = p3 -- p0
+   *   X----+----+----X    - p1 = (300, 0 )         - e1 = p1 -- p2     - e5 = p3 -- p4
+   *   |    |    |    |    - p2 = (200, 100)        - e2 = p2 -- p0     - e6 = p4 -- p2
+   *   |    |  2 |    |    - p3 = (0,   300)        - e3 = p2 -- p3     - e7 = p4 -- p1
+   *   +----+----X----+    - p4 = (300, 300)
    *   |    |    |    |
    *   |    |    |    |  Faces: (geometry, Biome, soil \in {FERTILE, NORMAL, POOR}, conditions \in {EASY, FAIR, HARSH})
    *   +----+----+----+    - f0 = {e0, e1, e2} = (0,1,2), center p5: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
@@ -162,9 +162,9 @@ object GameBoardBuilderDataSet {
    *   |  \ 2   / |        - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
    *   |      X   |        - GLACIER                    produces FLOWER (5%) or None   (95%)
    *   |    /  \  |
-   *   |  /     \ |      Areas:
-   *   |/        \|        - area(f0) = area(f3) = 150 px2
-   *   X----------X        = area(f1) = area(f2) = 300 px2
+   *   |  /     \ |      Areas:            Total = 90,000 px2
+   *   |/        \|        - area(f0) = area(f3) = 15,000 px2
+   *   X----------X        - area(f1) = area(f2) = 30,000 px2
    *   3          4
    **/
 
@@ -182,16 +182,16 @@ object GameBoardBuilderDataSet {
 
   val properties = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
-                    (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(150.0)) + (0 -> HasForPitch(0.0)) +
+                    (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(15000.0)) + (0 -> HasForPitch(0.0)) +
                         (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR)) +
                     // Face 1: TEMPERATE_DESERT, POOR, FAIR
-                    (1 -> HasForBiome(TUNDRA)) + (1 -> HasForArea(300.0)) + (1 -> HasForPitch(0.0)) +
+                    (1 -> HasForBiome(TUNDRA))           + (1 -> HasForArea(30000.0)) + (1 -> HasForPitch(0.0)) +
                         (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR)) +
                     // Face 2: MANGROVE, FERTILE, HARSH
-                    (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(300.0)) + (2 -> HasForPitch(0.0)) +
+                    (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(30000.0)) + (2 -> HasForPitch(0.0)) +
                         (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +
                     // Face 3: GLACIER, POOR, EASY
-                    (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(150.0)) + (3 -> HasForPitch(0.0)) +
+                    (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(15000.0)) + (3 -> HasForPitch(0.0)) +
                         (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))
 
   val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
