@@ -71,9 +71,9 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
       case r => {
         val amount = res.amount(area, soil, rand)
         val extraction = res.extraction(pitch, cond, rand)
-        debug(s"  Resource amount: $amount, Extraction factor: $extraction")
+        debug(s"  $res: amount: $amount, Extraction factor: $extraction")
         val dispatch = coverage(hull) map {
-          case ((x, y), percent) => ((x, y), Stock(res, (amount * percent).toInt, extraction))
+          case ((x, y), percent) => ((x, y), Stock(res, (amount * (percent/100)).toInt, extraction))
         }
         debug(s"  Tile Assignment: $dispatch")
         dispatch.toSeq
