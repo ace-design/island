@@ -57,8 +57,8 @@ trait DiSLand {
   }
 
   // the Ellipsis shape is defined as "ellipsis(x = 80.percent, y = 10.percent)" (x == y == 100 => circular)
-  protected def ellipsis(x: Percentage, y: Percentage): ShapeDirective = (size, threshold, _) => {
-    IdentifyWaterArea(EllipsisShape(size, x.value, y.value), threshold)
+  protected def ellipsis(x: Percentage, y: Percentage, theta: Int = 0): ShapeDirective = (size, threshold, _) => {
+    IdentifyWaterArea(EllipsisShape(size, x.value, y.value, math.toRadians(theta)), threshold)
   }
 
   protected def oz(): ShapeDirective = (size, threshold, _) => IdentifyWaterArea(OzShape(size), threshold)

@@ -20,7 +20,7 @@ object Main extends App with Logger with DiSLand {
   val medium = createIsland shapedAs radial(factor = 1.47) usingSeed 0x24F84E32B98D3CF5L
   //export(medium)
 
-  val tortuga = createIsland shapedAs ellipsis(x = 90.percent, y = 40.percent) usingSeed 0x24F84E32B98D3CF5L
+  val tortuga = createIsland shapedAs ellipsis(x=90.percent, y=40.percent, theta=45) usingSeed 0x24F84E32B98D3CF5L
   //export(tortuga)
 
   val ozRealm = createIsland shapedAs oz() usingSeed 0x24F84E32B98D3CF5L
@@ -33,7 +33,7 @@ object Main extends App with Logger with DiSLand {
     flowing(rivers = 30, distance = 0.4), withMoisture(soils.wet, distance = 200), AssignPitch,
     usingBiomes())
 
-  val island: IslandMap = large
+  val island: IslandMap = tortuga
   export(island)
   val board: GameBoard = (new GameBoardBuilder())(island)
   boardStatistics(board)
