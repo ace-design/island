@@ -16,7 +16,7 @@ package eu.ace_design.island.util
  * any classical Log4J2 logger.
  *
  */
-trait Logger {
+trait Logger extends NameAsClassName {
   import LogSilos._
 
   import org.apache.logging.log4j.LogManager
@@ -30,11 +30,7 @@ trait Logger {
   // chosen at compilation time, as this variable must be specified (override val) in the targeted class
   protected val silo: Kind
 
-  // the name of the target class, used to generate useful message. Object ending $ (scala convention) are removed.
-  val name = {
-    val n = this.getClass.getSimpleName
-    if ( n endsWith "$") n.substring(0,n.size-1) else n
-  }
+
 
   /**
    ** Functions used to propagate the message to log to the good logger. By default, to the one associated to our silo.
