@@ -1,7 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.map.{HasForPitch, IslandMap}
+import eu.ace_design.island.map.{HasForHeight, HasForPitch, IslandMap}
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
 import org.specs2.mutable._
@@ -78,25 +78,24 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       import Resources._
       import eu.ace_design.island.map.resources.Soils._
       import eu.ace_design.island.map.resources.Conditions._
-      import GameBoardBuilderDataSet.island
 
-
-      val p0 = builder.production(f0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
+      val c0 = builder.coverage(f0)
+      val p0 = builder.production(c0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
       p0.keys must_== Set((0, 0), (1, 0), (2, 0))
       (p0.values map { _.resource }).toSet must_== Set(WOOD)
 
-      val f1 = island.convexHull(island.face(1)).toSet
-      val p1 = builder.production(f1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
+      val c1 = builder.coverage(f1)
+      val p1 = builder.production(c1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
       p1.keys must_== Set((0, 0), (0, 1), (0, 2), (1, 0), (1, 1))
       (p1.values map { _.resource }).toSet must_== Set(ORE)
 
-      val f2 = island.convexHull(island.face(2)).toSet
-      val p2 = builder.production(f2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
+      val c2 = builder.coverage(f2)
+      val p2 = builder.production(c2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
       p2.keys must_== Set((0, 2), (1, 2), (2, 2), (1, 1), (2, 1))
       (p2.values map { _.resource }).toSet must_== Set(FLOWER)
 
-      val f3 = island.convexHull(island.face(3)).toSet
-      val p3 = builder.production(f3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
+      val c3 = builder.coverage(f3)
+      val p3 = builder.production(c3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
       p3.keys must_== Set()
       (p3.values map { _.resource }).toSet must_== Set()
 
@@ -162,9 +161,9 @@ object GameBoardBuilderDataSet {
    *   |  \ 2   / |        - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
    *   |      X   |        - GLACIER                    produces FLOWER (5%) or None   (95%)
    *   |    /  \  |
-   *   |  /     \ |      Areas:            Total = 90,000 px2
-   *   |/        \|        - area(f0) = area(f3) = 15,000 px2
-   *   X----------X        - area(f1) = area(f2) = 30,000 px2
+   *   |  /     \ |      Areas:            Total = 90,000 px2       Altitudes:
+   *   |/        \|        - area(f0) = area(f3) = 15,000 px2         f0: 100     f1: 300
+   *   X----------X        - area(f1) = area(f2) = 30,000 px2         f2: 200     f3: 400
    *   3          4
    **/
 
@@ -180,21 +179,24 @@ object GameBoardBuilderDataSet {
   // We do not exploit neighborhood relationship between faces to build the board => set to None (default value)
   val fReg = FaceRegistry() + Face(5,Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
 
-  val properties = PropertySet() +
+  val vProps = PropertySet() + (5 -> HasForHeight(100.0)) + (6 -> HasForHeight(300.0)) + 
+                                         (7 -> HasForHeight(200.0)) + (8 -> HasForHeight(400.0))
+  
+  val fProps = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
                     (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(15000.0)) + (0 -> HasForPitch(0.0)) +
-                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR)) +
-                    // Face 1: TEMPERATE_DESERT, POOR, FAIR
+                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR))  + 
+                    // Face 1: TUNDRA, POOR, FAIR
                     (1 -> HasForBiome(TUNDRA))           + (1 -> HasForArea(30000.0)) + (1 -> HasForPitch(0.0)) +
-                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR)) +
+                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR))  + 
                     // Face 2: MANGROVE, FERTILE, HARSH
                     (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(30000.0)) + (2 -> HasForPitch(0.0)) +
-                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +
+                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) + 
                     // Face 3: GLACIER, POOR, EASY
                     (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(15000.0)) + (3 -> HasForPitch(0.0)) +
-                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))
+                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))  
 
-  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
+  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(vertexProps = vProps, faceProps = fProps)
 
   val tiles = Set( (0,0), (0,1), (0,2),  (1,0), (1,1), (1,2),  (2,0), (2,1), (2,2) )
 }

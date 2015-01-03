@@ -117,6 +117,9 @@ class PropertySet private (private val _contents: Map[Int, Set[Property[_]]]) {
     }
   }
 
+  def getValueOrElse[T](ref: Int, p: Property[T], default: T): T =
+    try { getValue(ref, p) } catch { case iae: IllegalArgumentException => default }
+
   /**
    * Check if a given index is annotated with a given property (any instance, we rely on the type)
    * @param ref the index reference one is looking for
