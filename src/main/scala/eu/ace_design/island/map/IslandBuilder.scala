@@ -25,7 +25,7 @@ trait IslandBuilder {
   def apply(m: Mesh, random: Random = new Random()): IslandMap = {
     require(m.size.isDefined, "Cannot build an island without knowing its size")
     require(m.size.get == size, "Size of mesh and map must be consistent")
-    (IslandMap(m) /: preProcess(random, steps)) { (map, p) => p(map) }
+    (IslandMap(m, random) /: preProcess(random, steps)) { (map, p) => p(map) }
   }
 
   /**
