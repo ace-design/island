@@ -89,7 +89,7 @@ object WhittakerParser {
       val e = (elevation * PIXEL_FACTOR).toInt // Transforming the elevation, from pixels to meters
       val key = (_internal.keys filter { _ > e }).min
       val m = (moisture / 10).toInt
-      _internal(key)(m)
+      try { _internal(key)(m) } catch { case e: ArrayIndexOutOfBoundsException => _internal(key).last }
     }
 
     override val biomes: Set[Biome] = _internal.values.flatten.toSet
