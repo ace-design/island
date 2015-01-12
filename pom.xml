@@ -121,12 +121,6 @@
             <artifactId>json</artifactId>
             <version>20140107</version>
         </dependency>
-        <!-- Perlin noise generator -->
-        <dependency>
-            <groupId>com.nitayjoffe.thirdparty.org.j3d</groupId>
-            <artifactId>j3d-all</artifactId>
-            <version>1.1</version>
-        </dependency>
     </dependencies>
 
     <distributionManagement>
@@ -240,6 +234,23 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Single jar -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
