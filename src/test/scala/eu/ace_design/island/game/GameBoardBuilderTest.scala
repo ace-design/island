@@ -18,7 +18,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
   "The GameBoardBuilder" should {
 
     val m = IslandMap(MeshBuilderTestDataSet.mesh) // m.size == 200
-    val builder = new GameBoardBuilder() // chunk = DEFAULT_TILE_UNIT = 10
+    val builder = new GameBoardBuilder(100) // DEFAULT_TILE_UNIT = 10
     val triangle = Set(Point(5.0, 6.0), Point(18.9, 28.3), Point(26.4, 15.5))
 
     val board = builder(island)
@@ -131,6 +131,11 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       assess(2, 1)
       assess(2, 2)
     }
+
+    "assign relevant altitudes to each tile" in {
+      board.at(0,1).altitude must_== 300.0
+    }
+
   }
 }
 
@@ -170,7 +175,7 @@ object GameBoardBuilderDataSet {
   private def centroid(pi: Int, pj: Int, pk: Int): Point = 
     Point((vertices(pi).x + vertices(pj).x + vertices(pk).x)/3, (vertices(pi).y + vertices(pj).y + vertices(pk).y)/3)
   
-  val vertices = Seq(Point(0.0, 0.0), Point(30.0, 0.0), Point(20.0, 10.0), Point(0.0, 30.0), Point(30.0, 30.0))
+  val vertices = Seq(Point(0.0, 0.0), Point(300.0, 0.0), Point(200.0, 10.0), Point(0.0, 300.0), Point(300.0, 300.0))
   
   val vReg = (VertexRegistry() /: vertices) { (acc, point) => acc + point } +
               centroid(0,1,2) + centroid(0,2,3) + centroid(3,2,4) + centroid(4,2,1)
@@ -196,7 +201,7 @@ object GameBoardBuilderDataSet {
                     (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(15000.0)) + (3 -> HasForPitch(0.0)) +
                         (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))  
 
-  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(vertexProps = vProps, faceProps = fProps)
+  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(300))).copy(vertexProps = vProps, faceProps = fProps)
 
   val tiles = Set( (0,0), (0,1), (0,2),  (1,0), (1,1), (1,2),  (2,0), (2,1), (2,2) )
 }
