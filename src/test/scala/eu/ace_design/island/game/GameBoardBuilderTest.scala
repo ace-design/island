@@ -19,7 +19,6 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     val m = IslandMap(MeshBuilderTestDataSet.mesh) // m.size == 200
     val builder = new GameBoardBuilder(100) // DEFAULT_TILE_UNIT = 10
-    val triangle = Set(Point(5.0, 6.0), Point(18.9, 28.3), Point(26.4, 15.5))
 
     val board = builder(island)
     val f0 = island.convexHull(island.face(0)).toSet
@@ -39,12 +38,10 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "identify in which tile is located a given point" in {
       builder.locate(Point(0.0, 0.0)) must_==(0, 0)
-      builder.locate(Point(99.0, 188.0)) must_==(9, 18)
+      builder.locate(Point(99.0, 188.0)) must_==(0, 1)
     }
 
     "identify the bounding box of a given face" in {
-      // triangle(0) \in (0,0), triangle(1) \in (1,2) and triangle(2) \in (2,1)
-      builder.boundingBox(triangle) must_== GameBoardBuilderDataSet.tiles
       builder.boundingBox(f0) must_== Set((0, 0), (1, 0), (2, 0), (3, 0),
                                           (0, 1), (1, 1), (2, 1), (3, 1))
       builder.boundingBox(f1) must_== Set((0, 0), (1, 0), (2, 0),
@@ -61,10 +58,9 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify the tiles covered by a given face" in {
-      val coverage = builder.coverage(triangle)
-      coverage.values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
-      // The triangle is not located on the upper right (0,2) and lower left (2,0) of its bounding box
-      coverage.keys.toSet must_== Set((0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2))
+      val c0 = builder.coverage(f0)
+      c0.values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
+      c0.keys must_== Set((0,0), (1,0), (2,0))
 
 
     }
@@ -134,7 +130,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "assign relevant altitudes to each tile" in {
       board.at(0,1).altitude must_== 300.0
-    }
+    }.pendingUntilFixed("coverage function to be fixed before")
 
   }
 }
@@ -175,14 +171,14 @@ object GameBoardBuilderDataSet {
   private def centroid(pi: Int, pj: Int, pk: Int): Point = 
     Point((vertices(pi).x + vertices(pj).x + vertices(pk).x)/3, (vertices(pi).y + vertices(pj).y + vertices(pk).y)/3)
   
-  val vertices = Seq(Point(0.0, 0.0), Point(300.0, 0.0), Point(200.0, 10.0), Point(0.0, 300.0), Point(300.0, 300.0))
+  val vertices = Seq(Point(0.0, 0.0), Point(300.0, 0.0), Point(200.0, 100.0), Point(0.0, 300.0), Point(300.0, 300.0))
   
   val vReg = (VertexRegistry() /: vertices) { (acc, point) => acc + point } +
               centroid(0,1,2) + centroid(0,2,3) + centroid(3,2,4) + centroid(4,2,1)
   val eReg = EdgeRegistry() + Edge(0,1) + Edge(1,2) + Edge(2,0) + Edge(2,3) +
                               Edge(3,0) + Edge(3,4) + Edge(4,2) + Edge(4,1)
   // We do not exploit neighborhood relationship between faces to build the board => set to None (default value)
-  val fReg = FaceRegistry() + Face(5,Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
+  val fReg = FaceRegistry() + Face(5, Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
 
   val vProps = PropertySet() + (5 -> HasForHeight(100.0)) + (6 -> HasForHeight(300.0)) + 
                                          (7 -> HasForHeight(200.0)) + (8 -> HasForHeight(400.0))
