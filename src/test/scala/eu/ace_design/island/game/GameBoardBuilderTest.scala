@@ -59,9 +59,11 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "identify the tiles covered by a given face" in {
       val c0 = builder.coverage(f0)
-      c0.values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
+      (c0 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
       c0.keys must_== Set((0,0), (1,0), (2,0))
-
+      c0((0,0))._1 must beCloseTo(250.0/15, 0.0001)
+      c0((1,0))._1 must beCloseTo(750.0/15, 0.0001)
+      c0((2,0))._1 must beCloseTo(500.0/15, 0.0001)
 
     }
 
@@ -75,22 +77,22 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       import eu.ace_design.island.map.resources.Soils._
       import eu.ace_design.island.map.resources.Conditions._
 
-      val c0 = builder.coverage(f0)
+      val c0 = builder.coverage(f0) map { case (k,(v,_)) => k -> v }
       val p0 = builder.production(c0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
       p0.keys must_== Set((0, 0), (1, 0), (2, 0))
       (p0.values map { _.resource }).toSet must_== Set(WOOD)
 
-      val c1 = builder.coverage(f1)
+      val c1 = builder.coverage(f1) map { case (k,(v,_)) => k -> v }
       val p1 = builder.production(c1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
       p1.keys must_== Set((0, 0), (0, 1), (0, 2), (1, 0), (1, 1))
       (p1.values map { _.resource }).toSet must_== Set(ORE)
 
-      val c2 = builder.coverage(f2)
+      val c2 = builder.coverage(f2) map { case (k,(v,_)) => k -> v }
       val p2 = builder.production(c2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
       p2.keys must_== Set((0, 2), (1, 2), (2, 2), (1, 1), (2, 1))
       (p2.values map { _.resource }).toSet must_== Set(FLOWER)
 
-      val c3 = builder.coverage(f3)
+      val c3 = builder.coverage(f3) map { case (k,(v,_)) => k -> v }
       val p3 = builder.production(c3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
       p3.keys must_== Set()
       (p3.values map { _.resource }).toSet must_== Set()
@@ -130,7 +132,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "assign relevant altitudes to each tile" in {
       board.at(0,1).altitude must_== 300.0
-    }.pendingUntilFixed("coverage function to be fixed before")
+    }//.pendingUntilFixed("coverage function to be fixed before")
 
   }
 }

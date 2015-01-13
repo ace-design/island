@@ -42,9 +42,11 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
       debug(s"  Working on face #$i")
       val resource = biomes(i)(rand)
       val cover = coverage(map.convexHull(map.face(i)).toSet)
-      val prod = production(cover, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
+      val coverByFace = cover map { case (k,(v,_)) => k -> v }
+      val prod = production(coverByFace, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
       val faceAlt = map.vertexProps.getValueOrElse(map.face(i).center, HasForHeight(), 0.0)
-      val alt  = altitude(cover, faceAlt)
+      val coverByTile = cover map { case (k,(_,v)) => k -> v }
+      val alt  = altitude(coverByTile, faceAlt)
       (prod, alt)
     }
 
@@ -120,11 +122,15 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
   }
 
   /**
-   * for a given face, identify the percentage of a tile covered by the face.
+   * For a given face, identify how the face cover each tile.
+   *
+   * Considering a convex hull ch, an entry like (x,y) -> (f%, t%) in the resulting map means that
+   *   - the tile (x,y) contains p % of the area of the polygon modeled by ch.
+   *   - the tile (x,y) is covered by the polygon modeled by ch up to t%.
    * @param hull the hull of the face (a set of point)
-   * @return a map binding each covered tile to the percentage of coverage for this face
+   * @return a map binding each covered tile to the percentage of coverage for this face.
    */
-  def coverage(hull: Set[Point]): Map[(Int,Int), Double] = {
+  def coverage(hull: Set[Point]): Map[(Int,Int), (Double, Double)] = {
     import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
     // building the JTS artifact associated to this face
     val factory = new GeometryFactory()
@@ -134,17 +140,18 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     val tiles = boundingBox(hull)
 
     // Internal function used to compute the coverage of a tile by the face
-    def cover(x: Int, y: Int): ((Int, Int), Double) = {
+    def cover(x: Int, y: Int): ((Int, Int), (Double, Double)) = {
       val minX = (x * chunk).toDouble; val maxX = minX + chunk
       val minY = (y * chunk).toDouble; val maxY = minY + chunk
       val square = factory.createPolygon(Array(new Coordinate(minX, minY), new Coordinate(maxX, minY),
                                                new Coordinate(maxX, maxY), new Coordinate(minX, maxY),
                                                new Coordinate(minX, minY)))
       val intersect = square.intersection(convexHull)
-      (x, y) -> (intersect.getArea / refSurface * 100)
+      val area = intersect.getArea
+      (x, y) -> (area / refSurface * 100, area / square.getArea * 100)
     }
 
     // Apply the cover function to each tile, removing the uncovered tile and returning the associated map
-    (tiles map { case (x,y) => cover(x, y) } filter { case (_, value) => value > 0.0 }).toMap
+    (tiles map { case (x,y) => cover(x, y) } filter { case (_, (value, _)) => value > 0.0 }).toMap
   }
 }
