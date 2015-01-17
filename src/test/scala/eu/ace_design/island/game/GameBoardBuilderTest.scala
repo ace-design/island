@@ -26,6 +26,8 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     val f2 = island.convexHull(island.face(2)).toSet
     val f3 = island.convexHull(island.face(3)).toSet
 
+    val epsilon =  0.00001  // The coverage algorithm is "almost" exact (imprecision: 10^-5)
+
     "reject a chunk size incompatible with the size of the map" in {
       val erroneous = new GameBoardBuilder(chunk = 11)
       erroneous(m) must throwAn[IllegalArgumentException] // 200 % 11 <> 0
@@ -37,8 +39,8 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify in which tile is located a given point" in {
-      builder.locate(Point(0.0, 0.0)) must_==(0, 0)
-      builder.locate(Point(99.0, 188.0)) must_==(0, 1)
+      builder.locate(Point(0.0, 0.0))    must_==(0, 0)
+      builder.locate(Point(99.0, 188.0)) must_==(0, 1)      // TILE_UNIT = 100
     }
 
     "identify the bounding box of a given face" in {
@@ -59,18 +61,41 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
 
     "identify the tiles covered by a given face" in {
       val c0 = builder.coverage(f0)
-      (c0 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
+      (c0 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, epsilon)
       c0.keys must_== Set((0,0), (1,0), (2,0))
-      c0((0,0))._1 must beCloseTo(250.0/15, 0.0001)
-      c0((1,0))._1 must beCloseTo(750.0/15, 0.0001)
-      c0((2,0))._1 must beCloseTo(500.0/15, 0.0001)
+      c0((0,0))._1 must beCloseTo(25.0/150*100, epsilon); c0((0,0))._2 must beCloseTo(25.0, epsilon)
+      c0((1,0))._1 must beCloseTo(75.0/150*100, epsilon); c0((1,0))._2 must beCloseTo(75.0, epsilon)
+      c0((2,0))._1 must beCloseTo(50.0/150*100, epsilon); c0((2,0))._2 must beCloseTo(50.0, epsilon)
 
+      val c1 = builder.coverage(f1)
+      (c1 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c1.keys must_== Set((0,0), (1,0), (0,1), (1,1), (0,2))
+      c1((0,0))._1 must beCloseTo(75.0/300*100, epsilon); c1((0,0))._2 must beCloseTo(75.0, epsilon)
+      c1((1,0))._1 must beCloseTo(25.0/300*100, epsilon); c1((1,0))._2 must beCloseTo(25.0, epsilon)
+      c1((0,1))._1 must beCloseTo(100.0/300*100,epsilon); c1((0,1))._2 must beCloseTo(100.0,epsilon)
+      c1((1,1))._1 must beCloseTo(50.0/300*100, epsilon); c1((1,1))._2 must beCloseTo(50.0, epsilon)
+      c1((0,2))._1 must beCloseTo(50.0/300*100, epsilon); c1((0,2))._2 must beCloseTo(50.0, epsilon)
+
+      val c2 = builder.coverage(f2)
+      (c2 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c2.keys must_== Set((0,2), (1,2), (2,2), (1,1), (2,1))
+      c2((0,2))._1 must beCloseTo(50.0/300*100, epsilon); c2((0,2))._2 must beCloseTo(50.0, epsilon)
+      c2((1,2))._1 must beCloseTo(100.0/300*100,epsilon); c2((1,2))._2 must beCloseTo(100.0,epsilon)
+      c2((2,2))._1 must beCloseTo(75.0/300*100, epsilon); c2((2,2))._2 must beCloseTo(75.0, epsilon)
+      c2((1,1))._1 must beCloseTo(50.0/300*100, epsilon); c2((1,1))._2 must beCloseTo(50.0, epsilon)
+      c2((2,1))._1 must beCloseTo(25.0/300*100, epsilon); c2((2,1))._2 must beCloseTo(25.0, epsilon)
+
+      val c3 = builder.coverage(f3)
+      (c3 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c3.keys must_== Set((2,0), (2,1), (2,2))
+      c3((2,0))._1 must beCloseTo(50.0/150*100, epsilon); c3((2,0))._2 must beCloseTo(50.0, epsilon)
+      c3((2,1))._1 must beCloseTo(75.0/150*100, epsilon); c3((2,1))._2 must beCloseTo(75.0, epsilon)
+      c3((2,2))._1 must beCloseTo(25.0/150*100, epsilon); c3((2,2))._2 must beCloseTo(25.0, epsilon)
     }
 
     "build a game board of size 3 x 3 using the example island" in {
       board.tiles.keys.toSet must_== GameBoardBuilderDataSet.tiles
     }
-
 
     "Identify the resources associated to a given face" in {
       import Resources._
@@ -131,9 +156,17 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "assign relevant altitudes to each tile" in {
-      board.at(0,1).altitude must_== 300.0
-    }//.pendingUntilFixed("coverage function to be fixed before")
-
+      val (a0, a1, a2, a3) = (100.0, 300.0, 200.0, 400.0)
+      board.at(0,0).altitude must beCloseTo(0.75*a1 + 0.25*a0, epsilon)
+      board.at(0,1).altitude must beCloseTo(a1,                epsilon)
+      board.at(0,2).altitude must beCloseTo(0.50*a1 + 0.50*a2, epsilon)
+      board.at(1,0).altitude must beCloseTo(0.25*a1 + 0.75*a0, epsilon)
+      board.at(1,1).altitude must beCloseTo(0.50*a1 + 0.50*a2, epsilon)
+      board.at(1,2).altitude must beCloseTo(a2,                epsilon)
+      board.at(2,0).altitude must beCloseTo(0.50*a0 + 0.50*a3, epsilon)
+      board.at(2,1).altitude must beCloseTo(0.75*a3 + 0.25*a2, epsilon)
+      board.at(2,2).altitude must beCloseTo(0.75*a2 + 0.25*a3, epsilon)
+    }
   }
 }
 
