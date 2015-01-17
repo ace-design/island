@@ -37,20 +37,35 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     val pitches    = map.faceProps.restrictedTo(HasForPitch())
 
     // Computing the resources associated to tile, face by face
-    info("Binding resources produced by faces to game tiles")
-    val productions = map.faceRefs.toSeq map { i =>
+    info("Binding faces to game tiles")
+    val binding = map.faceRefs.toSeq map { i =>
       debug(s"  Working on face #$i")
       val resource = biomes(i)(rand)
-      production(map.convexHull(map.face(i)).toSet, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
+      val cover = coverage(map.convexHull(map.face(i)).toSet)
+      val coverByFace = cover map { case (k,(v,_)) => k -> v }
+      val prod = production(coverByFace, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
+      val faceAlt = map.vertexProps.getValueOrElse(map.face(i).center, HasForHeight(), 0.0)
+      val coverByTile = cover map { case (k,(_,v)) => k -> v }
+      val alt  = altitude(coverByTile, faceAlt)
+      (prod, alt)
     }
+
     // Aggregate each resource produced by tile location
-    val aggregated = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
+    info("Processing resources produced by the biomes")
+    val productions = binding map { _._1 }
+    val aggrProds = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
+
+    // Assign an altitude to each tile
+    info("Processing altitudes associated to tiles")
+    val altitudes = binding map { _._2 }
+    val aggrAlts = altitudes.flatten groupBy { _._1 } map { case (k, grouped) => k -> (grouped map { _._2}).sum }
 
     // Returning the grid
     info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
-    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile()).toMap
-    val tiles = (grid /: aggregated) { case (acc, (loc, stocks)) =>
+    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile(altitude = aggrAlts((x,y)))).toMap
+
+    val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
       acc + (loc -> (existing bulkAdd stocks.toSet))
     }
@@ -59,21 +74,26 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     GameBoard(map.size, map, tiles)
   }
 
+
+  def altitude(cover: Map[(Int, Int), Double], alt: Double): Seq[((Int, Int), Double)] = (cover map {
+    case (key, percent) => key -> (alt * (percent / 100))
+  }).toSeq
+
   /**
    * Identify the stock to be associated to the set of tiles covered by a given face, based on different parameters.
    *
    * @return the empty sequence if the resource is "None". A sequence of tile location associated to a Stock elsewhere.
    */
-  def production(hull: Set[Point], res: PrimaryResource,
+  def production(cover: Map[(Int, Int), Double], res: PrimaryResource,
                  soil: Option[Soil], cond: Option[Condition],
                  area: Double, pitch: Double): Seq[((Int, Int), Stock)] = res match {
       case NoResource => Seq()  // producing none means  to disappear
       case r => {
         val amount = res.amount(area, soil, rand)
         val extraction = res.extraction(pitch, cond, rand)
-        val dispatch = coverage(hull) map {
+        val dispatch = cover map {
           case ((x, y), percent) => {
-            ((x, y), Stock(res, (amount * (percent/100)).toInt, extraction))
+            ((x, y), Stock(res, (amount * (percent/100)).ceil.toInt, extraction))
           }
         }
         debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {case (k,s) => k -> s.amount}}")
@@ -102,11 +122,15 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
   }
 
   /**
-   * for a given face, identify the percentage of a tile covered by the face.
+   * For a given face, identify how the face cover each tile.
+   *
+   * Considering a convex hull ch, an entry like (x,y) -> (f%, t%) in the resulting map means that
+   *   - the tile (x,y) contains p % of the area of the polygon modeled by ch.
+   *   - the tile (x,y) is covered by the polygon modeled by ch up to t%.
    * @param hull the hull of the face (a set of point)
-   * @return a map binding each covered tile to the percentage of coverage for this face
+   * @return a map binding each covered tile to the percentage of coverage for this face.
    */
-  def coverage(hull: Set[Point]): Map[(Int,Int), Double] = {
+  def coverage(hull: Set[Point]): Map[(Int,Int), (Double, Double)] = {
     import com.vividsolutions.jts.geom.{Coordinate, GeometryFactory}
     // building the JTS artifact associated to this face
     val factory = new GeometryFactory()
@@ -116,17 +140,18 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     val tiles = boundingBox(hull)
 
     // Internal function used to compute the coverage of a tile by the face
-    def cover(x: Int, y: Int): ((Int, Int), Double) = {
+    def cover(x: Int, y: Int): ((Int, Int), (Double, Double)) = {
       val minX = (x * chunk).toDouble; val maxX = minX + chunk
       val minY = (y * chunk).toDouble; val maxY = minY + chunk
       val square = factory.createPolygon(Array(new Coordinate(minX, minY), new Coordinate(maxX, minY),
                                                new Coordinate(maxX, maxY), new Coordinate(minX, maxY),
                                                new Coordinate(minX, minY)))
       val intersect = square.intersection(convexHull)
-      (x, y) -> (intersect.getArea / refSurface * 100)
+      val area = intersect.getArea
+      (x, y) -> (area / refSurface * 100, area / square.getArea * 100)
     }
 
     // Apply the cover function to each tile, removing the uncovered tile and returning the associated map
-    (tiles map { case (x,y) => cover(x, y) } filter { case (_, value) => value > 0.0 }).toMap
+    (tiles map { case (x,y) => cover(x, y) } filter { case (_, (value, _)) => value > 0.0 }).toMap
   }
 }

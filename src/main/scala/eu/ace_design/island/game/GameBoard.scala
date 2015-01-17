@@ -83,7 +83,7 @@ object Directions extends Enumeration {
 /**
  * A tile represent the unit for moves on the board
  */
-case class Tile(stock: Set[Stock] = Set()) {
+case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0) {
 
   /**
    * Add a given stock to the tile. Require that no stock of the very same resource is already available
@@ -93,7 +93,10 @@ case class Tile(stock: Set[Stock] = Set()) {
    */
   def +(s: Stock): Tile = {
     require(! stock.exists {_.resource == s.resource }, "Cannot add an already existing stock")
-    this.copy(stock = stock + s)
+    s.amount match {
+      case 0 => this
+      case _ => this.copy(stock = stock + s)
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.map.{HasForPitch, IslandMap}
+import eu.ace_design.island.map.{HasForHeight, HasForPitch, IslandMap}
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
 import org.specs2.mutable._
@@ -18,14 +18,15 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
   "The GameBoardBuilder" should {
 
     val m = IslandMap(MeshBuilderTestDataSet.mesh) // m.size == 200
-    val builder = new GameBoardBuilder() // chunk = DEFAULT_TILE_UNIT = 10
-    val triangle = Set(Point(5.0, 6.0), Point(18.9, 28.3), Point(26.4, 15.5))
+    val builder = new GameBoardBuilder(100) // DEFAULT_TILE_UNIT = 10
 
     val board = builder(island)
     val f0 = island.convexHull(island.face(0)).toSet
     val f1 = island.convexHull(island.face(1)).toSet
     val f2 = island.convexHull(island.face(2)).toSet
     val f3 = island.convexHull(island.face(3)).toSet
+
+    val epsilon =  0.00001  // The coverage algorithm is "almost" exact (imprecision: 10^-5)
 
     "reject a chunk size incompatible with the size of the map" in {
       val erroneous = new GameBoardBuilder(chunk = 11)
@@ -38,13 +39,11 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify in which tile is located a given point" in {
-      builder.locate(Point(0.0, 0.0)) must_==(0, 0)
-      builder.locate(Point(99.0, 188.0)) must_==(9, 18)
+      builder.locate(Point(0.0, 0.0))    must_==(0, 0)
+      builder.locate(Point(99.0, 188.0)) must_==(0, 1)      // TILE_UNIT = 100
     }
 
     "identify the bounding box of a given face" in {
-      // triangle(0) \in (0,0), triangle(1) \in (1,2) and triangle(2) \in (2,1)
-      builder.boundingBox(triangle) must_== GameBoardBuilderDataSet.tiles
       builder.boundingBox(f0) must_== Set((0, 0), (1, 0), (2, 0), (3, 0),
                                           (0, 1), (1, 1), (2, 1), (3, 1))
       builder.boundingBox(f1) must_== Set((0, 0), (1, 0), (2, 0),
@@ -61,42 +60,65 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify the tiles covered by a given face" in {
-      val coverage = builder.coverage(triangle)
-      coverage.values.sum must beCloseTo(100.0, 0.0001) // The coverage algorithm is "almost" exact
-      // The triangle is not located on the upper right (0,2) and lower left (2,0) of its bounding box
-      coverage.keys.toSet must_== Set((0, 0), (0, 1), (1, 0), (1, 1), (1, 2), (2, 1), (2, 2))
+      val c0 = builder.coverage(f0)
+      (c0 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, epsilon)
+      c0.keys must_== Set((0,0), (1,0), (2,0))
+      c0((0,0))._1 must beCloseTo(25.0/150*100, epsilon); c0((0,0))._2 must beCloseTo(25.0, epsilon)
+      c0((1,0))._1 must beCloseTo(75.0/150*100, epsilon); c0((1,0))._2 must beCloseTo(75.0, epsilon)
+      c0((2,0))._1 must beCloseTo(50.0/150*100, epsilon); c0((2,0))._2 must beCloseTo(50.0, epsilon)
 
+      val c1 = builder.coverage(f1)
+      (c1 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c1.keys must_== Set((0,0), (1,0), (0,1), (1,1), (0,2))
+      c1((0,0))._1 must beCloseTo(75.0/300*100, epsilon); c1((0,0))._2 must beCloseTo(75.0, epsilon)
+      c1((1,0))._1 must beCloseTo(25.0/300*100, epsilon); c1((1,0))._2 must beCloseTo(25.0, epsilon)
+      c1((0,1))._1 must beCloseTo(100.0/300*100,epsilon); c1((0,1))._2 must beCloseTo(100.0,epsilon)
+      c1((1,1))._1 must beCloseTo(50.0/300*100, epsilon); c1((1,1))._2 must beCloseTo(50.0, epsilon)
+      c1((0,2))._1 must beCloseTo(50.0/300*100, epsilon); c1((0,2))._2 must beCloseTo(50.0, epsilon)
 
+      val c2 = builder.coverage(f2)
+      (c2 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c2.keys must_== Set((0,2), (1,2), (2,2), (1,1), (2,1))
+      c2((0,2))._1 must beCloseTo(50.0/300*100, epsilon); c2((0,2))._2 must beCloseTo(50.0, epsilon)
+      c2((1,2))._1 must beCloseTo(100.0/300*100,epsilon); c2((1,2))._2 must beCloseTo(100.0,epsilon)
+      c2((2,2))._1 must beCloseTo(75.0/300*100, epsilon); c2((2,2))._2 must beCloseTo(75.0, epsilon)
+      c2((1,1))._1 must beCloseTo(50.0/300*100, epsilon); c2((1,1))._2 must beCloseTo(50.0, epsilon)
+      c2((2,1))._1 must beCloseTo(25.0/300*100, epsilon); c2((2,1))._2 must beCloseTo(25.0, epsilon)
+
+      val c3 = builder.coverage(f3)
+      (c3 map { case (k,(v,_)) => k -> v }).values.sum must beCloseTo(100.0, 0.0001)
+      c3.keys must_== Set((2,0), (2,1), (2,2))
+      c3((2,0))._1 must beCloseTo(50.0/150*100, epsilon); c3((2,0))._2 must beCloseTo(50.0, epsilon)
+      c3((2,1))._1 must beCloseTo(75.0/150*100, epsilon); c3((2,1))._2 must beCloseTo(75.0, epsilon)
+      c3((2,2))._1 must beCloseTo(25.0/150*100, epsilon); c3((2,2))._2 must beCloseTo(25.0, epsilon)
     }
 
     "build a game board of size 3 x 3 using the example island" in {
       board.tiles.keys.toSet must_== GameBoardBuilderDataSet.tiles
     }
 
-
     "Identify the resources associated to a given face" in {
       import Resources._
       import eu.ace_design.island.map.resources.Soils._
       import eu.ace_design.island.map.resources.Conditions._
-      import GameBoardBuilderDataSet.island
 
-
-      val p0 = builder.production(f0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
+      val c0 = builder.coverage(f0) map { case (k,(v,_)) => k -> v }
+      val p0 = builder.production(c0, WOOD, Some(NORMAL), Some(FAIR), 150.0, 0.0).toMap
       p0.keys must_== Set((0, 0), (1, 0), (2, 0))
       (p0.values map { _.resource }).toSet must_== Set(WOOD)
 
-      val f1 = island.convexHull(island.face(1)).toSet
-      val p1 = builder.production(f1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
+      val c1 = builder.coverage(f1) map { case (k,(v,_)) => k -> v }
+      val p1 = builder.production(c1, ORE, Some(POOR), Some(FAIR), 300.0, 0.0).toMap
       p1.keys must_== Set((0, 0), (0, 1), (0, 2), (1, 0), (1, 1))
       (p1.values map { _.resource }).toSet must_== Set(ORE)
 
-      val f2 = island.convexHull(island.face(2)).toSet
-      val p2 = builder.production(f2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
+      val c2 = builder.coverage(f2) map { case (k,(v,_)) => k -> v }
+      val p2 = builder.production(c2, FLOWER, Some(FERTILE), Some(HARSH), 300.0, 0.0).toMap
       p2.keys must_== Set((0, 2), (1, 2), (2, 2), (1, 1), (2, 1))
       (p2.values map { _.resource }).toSet must_== Set(FLOWER)
 
-      val f3 = island.convexHull(island.face(3)).toSet
-      val p3 = builder.production(f3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
+      val c3 = builder.coverage(f3) map { case (k,(v,_)) => k -> v }
+      val p3 = builder.production(c3, NoResource, Some(POOR), Some(EASY), 300.0, 0.0).toMap
       p3.keys must_== Set()
       (p3.values map { _.resource }).toSet must_== Set()
 
@@ -132,6 +154,19 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       assess(2, 1)
       assess(2, 2)
     }
+
+    "assign relevant altitudes to each tile" in {
+      val (a0, a1, a2, a3) = (100.0, 300.0, 200.0, 400.0)
+      board.at(0,0).altitude must beCloseTo(0.75*a1 + 0.25*a0, epsilon)
+      board.at(0,1).altitude must beCloseTo(a1,                epsilon)
+      board.at(0,2).altitude must beCloseTo(0.50*a1 + 0.50*a2, epsilon)
+      board.at(1,0).altitude must beCloseTo(0.25*a1 + 0.75*a0, epsilon)
+      board.at(1,1).altitude must beCloseTo(0.50*a1 + 0.50*a2, epsilon)
+      board.at(1,2).altitude must beCloseTo(a2,                epsilon)
+      board.at(2,0).altitude must beCloseTo(0.50*a0 + 0.50*a3, epsilon)
+      board.at(2,1).altitude must beCloseTo(0.75*a3 + 0.25*a2, epsilon)
+      board.at(2,2).altitude must beCloseTo(0.75*a2 + 0.25*a3, epsilon)
+    }
   }
 }
 
@@ -162,39 +197,42 @@ object GameBoardBuilderDataSet {
    *   |  \ 2   / |        - MANGROVE                   produces WOOD (60%)  or FLOWER (40%)
    *   |      X   |        - GLACIER                    produces FLOWER (5%) or None   (95%)
    *   |    /  \  |
-   *   |  /     \ |      Areas:            Total = 90,000 px2
-   *   |/        \|        - area(f0) = area(f3) = 15,000 px2
-   *   X----------X        - area(f1) = area(f2) = 30,000 px2
+   *   |  /     \ |      Areas:            Total = 90,000 px2       Altitudes:
+   *   |/        \|        - area(f0) = area(f3) = 15,000 px2         f0: 100     f1: 300
+   *   X----------X        - area(f1) = area(f2) = 30,000 px2         f2: 200     f3: 400
    *   3          4
    **/
 
   private def centroid(pi: Int, pj: Int, pk: Int): Point = 
     Point((vertices(pi).x + vertices(pj).x + vertices(pk).x)/3, (vertices(pi).y + vertices(pj).y + vertices(pk).y)/3)
   
-  val vertices = Seq(Point(0.0, 0.0), Point(30.0, 0.0), Point(20.0, 10.0), Point(0.0, 30.0), Point(30.0, 30.0))
+  val vertices = Seq(Point(0.0, 0.0), Point(300.0, 0.0), Point(200.0, 100.0), Point(0.0, 300.0), Point(300.0, 300.0))
   
   val vReg = (VertexRegistry() /: vertices) { (acc, point) => acc + point } +
               centroid(0,1,2) + centroid(0,2,3) + centroid(3,2,4) + centroid(4,2,1)
   val eReg = EdgeRegistry() + Edge(0,1) + Edge(1,2) + Edge(2,0) + Edge(2,3) +
                               Edge(3,0) + Edge(3,4) + Edge(4,2) + Edge(4,1)
   // We do not exploit neighborhood relationship between faces to build the board => set to None (default value)
-  val fReg = FaceRegistry() + Face(5,Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
+  val fReg = FaceRegistry() + Face(5, Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
 
-  val properties = PropertySet() +
+  val vProps = PropertySet() + (5 -> HasForHeight(100.0)) + (6 -> HasForHeight(300.0)) + 
+                                         (7 -> HasForHeight(200.0)) + (8 -> HasForHeight(400.0))
+  
+  val fProps = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
                     (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(15000.0)) + (0 -> HasForPitch(0.0)) +
-                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR)) +
-                    // Face 1: TEMPERATE_DESERT, POOR, FAIR
+                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR))  + 
+                    // Face 1: TUNDRA, POOR, FAIR
                     (1 -> HasForBiome(TUNDRA))           + (1 -> HasForArea(30000.0)) + (1 -> HasForPitch(0.0)) +
-                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR)) +
+                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR))  + 
                     // Face 2: MANGROVE, FERTILE, HARSH
                     (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(30000.0)) + (2 -> HasForPitch(0.0)) +
-                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +
+                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) + 
                     // Face 3: GLACIER, POOR, EASY
                     (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(15000.0)) + (3 -> HasForPitch(0.0)) +
-                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))
+                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))  
 
-  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(30))).copy(faceProps = properties)
+  val island = IslandMap(Mesh(vReg, eReg, fReg, Some(300))).copy(vertexProps = vProps, faceProps = fProps)
 
   val tiles = Set( (0,0), (0,1), (0,2),  (1,0), (1,1), (1,2),  (2,0), (2,1), (2,2) )
 }

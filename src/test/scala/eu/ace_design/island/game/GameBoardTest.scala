@@ -47,6 +47,10 @@ class GameBoardTest extends SpecificationWithJUnit {
       (t + item).stock must_== Set(item)
       t.stock must beEmpty
     }
+    "ignore stock with empty contents" in {
+      (t + Stock(FISH, 0)) must_== t
+      (t + Stock(FISH, 1)) must_!= t
+    }
     "reject the add of an already existing stock" in {
       val item = Stock(FISH, 1)
       (t + item + item) must throwAn[IllegalArgumentException]
