@@ -4,6 +4,7 @@ import eu.ace_design.island.game.{GameBoard, GameBoardBuilder}
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.processes.AssignPitch
 import eu.ace_design.island.stdlib.Islands
+import eu.ace_design.island.stdlib.POIGenerators.WithPorts
 import eu.ace_design.island.util.{LogSilos, Logger}
 import eu.ace_design.island.dsl.DiSLand
 
@@ -15,10 +16,13 @@ object Main extends App with Logger with DiSLand {
 
   val silo = LogSilos.ROOT
 
+  // Building the island
   val island: IslandMap = Islands.tortuga
   export(island)
 
-  val board: GameBoard = (new GameBoardBuilder(rand = island.random))(island)
+  // Instantiating the game board
+  val pois = Seq(new WithPorts(10))
+  val board: GameBoard = (new GameBoardBuilder(rand = island.random, poiGenerators = pois))(island)
   boardStatistics(board)
 
 
@@ -44,6 +48,7 @@ object Main extends App with Logger with DiSLand {
   protected def boardStatistics(b: GameBoard) = {
     info(s"Available statistics for the Game board (${b.tiles.keySet.size} tiles)")
     b.contents foreach { case (res, amount) => info(f"  - ${res}%-10s => $amount") }
+    b.pois foreach { case (loc, pois) => info(s"  $loc: $pois") }
   }
 }
 
