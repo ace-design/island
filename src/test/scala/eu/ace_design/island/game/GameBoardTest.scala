@@ -36,6 +36,18 @@ class GameBoardTest extends SpecificationWithJUnit {
       local.produces(0,1) must_== Set(FISH)
       local.produces(0,0) must_== Set(FISH, ORE)
     }
+    "support the add of PointOfInterests" in {
+      import eu.ace_design.island.stdlib.PointOfInterests.Port
+      complete.getPOIs(0,0) must_== Set()
+      val p1 = new Port("aPort #1"); val p2 = new Port("aPort #2")
+      complete addPOI ((120,250) -> p1) must throwAn[IllegalArgumentException]
+      val up = complete addPOI ((0,0) -> p1) addPOI ((0,0) -> p2) addPOI ((0,1) -> p1)
+      complete.getPOIs(0,0) must_== Set()
+      complete.getPOIs(0,1) must_== Set()
+      up.getPOIs(0,0) must_== Set(p1,p2)
+      up.getPOIs(0,1) must_== Set(p1)
+    }
+
   }
 
   "A Tile" should {

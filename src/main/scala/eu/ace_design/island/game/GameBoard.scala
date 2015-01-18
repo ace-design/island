@@ -7,21 +7,32 @@ import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
 /**
  * The gameBoard is composed by a squared grid of Tiles (containing resources)
  * @param size the size of the grid (i.e., max for coordinates)
+ * @param m the IslandMap used to build the board
  * @param tiles the tiles composing the grid
+ * @param pois the different points of interests available on the game board
  */
-case class GameBoard(size: Int, m: IslandMap, tiles: Map[(Int,Int), Tile] = Map()) {
+case class GameBoard(size: Int, m: IslandMap,
+                     tiles: Map[(Int,Int), Tile] = Map(),
+                     pois:  Map[(Int,Int), Set[PointOfInterest]] = Map()) {
 
   /**
    * Add a location/tile couple to the current GameBoard (update if already existing)
    * @param data the couple to add
    * @return a new game board, in a functional way
    */
-  def +(data: ((Int, Int), Tile)): GameBoard = {
-    val updated = tiles.get(data._1) match {
-      case None    => tiles + data
-      case Some(_) => tiles - data._1 + data
+  def +(data: ((Int, Int), Tile)): GameBoard = this.copy(tiles = tiles + data)
+
+  /**
+   * Add a location/POI couple to the current game board
+   * @param data the couple to add (meaning: POI p is located in the (x,y) tile)
+   * @return a new game board, in a functional way
+   */
+  def addPOI(data: ((Int, Int), PointOfInterest)): GameBoard = {
+    require(tiles.get(data._1._1, data._1._2).nonEmpty, "Cannot add a POI to an non-existing location")
+    pois.get(data._1) match {
+      case None      => this.copy(pois = pois + (data._1 -> Set(data._2)))
+      case Some(set) => this.copy(pois = pois + (data._1 -> (set + data._2)))
     }
-    this.copy(tiles = updated)
   }
 
   /**
@@ -34,6 +45,14 @@ case class GameBoard(size: Int, m: IslandMap, tiles: Map[(Int,Int), Tile] = Map(
     require(tiles.keySet.contains((x,y)), s"No tile located at ($x,$y)")
     tiles((x,y))
   }
+
+  /**
+   * Return the point of interests for a given tile
+   * @param x the x coordinate
+   * @param y the x coordinate
+   * @return the set of POIs located here (empty set if none)
+   */
+  def getPOIs(x: Int, y: Int): Set[PointOfInterest] = this.pois.getOrElse((x,y), Set())
 
   /**
    * Compute the neighbors (existing tiles) for a given location.

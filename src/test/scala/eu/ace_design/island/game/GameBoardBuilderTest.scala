@@ -39,8 +39,9 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify in which tile is located a given point" in {
-      builder.locate(Point(0.0, 0.0))    must_==(0, 0)
-      builder.locate(Point(99.0, 188.0)) must_==(0, 1)      // TILE_UNIT = 100
+      val locator = new TileLocator(builder.chunk)
+      locator(Point(0.0, 0.0))    must_==(0, 0)
+      locator(Point(99.0, 188.0)) must_==(0, 1)      // TILE_UNIT = 100
     }
 
     "identify the bounding box of a given face" in {

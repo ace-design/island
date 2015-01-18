@@ -17,7 +17,7 @@ import scala.util.Random
  * @param chunk the size of each tile (map.size must be a factor of chunk when applied)
  * @param rand a random generator, to be forwarded to the Biome2Resource mapper
  */
-class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random()) extends Logger {
+class GameBoardBuilder(val chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random()) extends Logger {
 
   override val silo = LogSilos.BOARD_GEN
 
@@ -102,20 +102,14 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
   }
 
   /**
-   * locate a point in the board, i.e., find the coordinates of the associated tile in the board
-   * @param p the point to locate
-   * @return
-   */
-  def locate(p: Point): (Int, Int) = (p.x.toInt / chunk, p.y.toInt / chunk)
-
-  /**
    * Identify the tiles involved in the bounding box of a given face
    * @param hull the set of points to be analysed
    * @return a set of tile coordinate involved in a square that covers the hull
    */
   def boundingBox(hull: Set[Point]): Set[(Int, Int)] = {
     require(hull.nonEmpty, "The hull cannot be empty")
-    val locations = hull map { locate }
+    val locate = new TileLocator(chunk)
+    val locations = hull map { locate(_) }
     val minX = (locations map { _._1 }).min; val maxX = (locations map { _._1 }).max
     val minY = (locations map { _._2 }).min; val maxY = (locations map { _._2 }).max
     (for(x <- minX to maxX; y <- minY to maxY) yield (x,y)).toSet
@@ -154,4 +148,19 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random
     // Apply the cover function to each tile, removing the uncovered tile and returning the associated map
     (tiles map { case (x,y) => cover(x, y) } filter { case (_, (value, _)) => value > 0.0 }).toMap
   }
+}
+
+
+/**
+ * Class used to locate the tile that contains a given point, in a functional way
+ * @param chunk
+ */
+class TileLocator(chunk: Int) {
+  /**
+   * locate a point in the board, i.e., find the coordinates of the associated tile in the board
+   * @param p the point to locate
+   * @return
+   */
+  def apply(p: Point): (Int, Int) = (p.x.toInt / chunk, p.y.toInt / chunk)
+
 }
