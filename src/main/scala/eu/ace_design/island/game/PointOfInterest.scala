@@ -1,9 +1,7 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.IslandMap
-
 import scala.util.Random
-
+import eu.ace_design.island.geom.Point
 
 /**
  * A Point of Interest (POI) is an element available on the map
@@ -12,16 +10,16 @@ trait PointOfInterest extends eu.ace_design.island.util.NameAsClassName {
 
   val identifier: String
 
+  val location: Option[Point] = None
+
 }
 
 /**
- * A POIDispatcher is used to find the position of a
+ * A POIGenerator is used to add POIs to a given board (and can be sequenced)
  */
-trait POIDispatcher {
-  def findPosition(loc: TileLocator, rand: Random = new Random())(m: IslandMap, howMany: Int = 1): Set[(Int, Int)]
+trait POIGenerator {
+  def apply(rand: Random = new Random(), loc: TileLocator)(board: GameBoard): GameBoard
 }
-
-
 
 /**
  * this object is used to generate unique identifiers for POIs

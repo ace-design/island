@@ -1,9 +1,10 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.map.{HasForHeight, HasForPitch, IslandMap}
+import eu.ace_design.island.map.{IsCoast, HasForHeight, HasForPitch, IslandMap}
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
+import eu.ace_design.island.stdlib.POIGenerators.WithPorts
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -39,7 +40,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "identify in which tile is located a given point" in {
-      val locator = new TileLocator(builder.chunk)
+      val locator = builder.locator
       locator(Point(0.0, 0.0))    must_==(0, 0)
       locator(Point(99.0, 188.0)) must_==(0, 1)      // TILE_UNIT = 100
     }
@@ -94,7 +95,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       c3((2,2))._1 must beCloseTo(25.0/150*100, epsilon); c3((2,2))._2 must beCloseTo(25.0, epsilon)
     }
 
-    "build a game board of size 3 x 3 using the example island" in {
+    "build a game board with tiles consistent with the input island" in {
       board.tiles.keys.toSet must_== GameBoardBuilderDataSet.tiles
     }
 
@@ -168,6 +169,16 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       board.at(2,1).altitude must beCloseTo(0.75*a3 + 0.25*a2, epsilon)
       board.at(2,2).altitude must beCloseTo(0.75*a2 + 0.25*a3, epsilon)
     }
+
+    "by default do not add any POIs to the board" in {
+      board.pois must beEmpty
+    }
+
+    "execute a sequence of POIs generator when provided" in {
+      val boardPrime = (new GameBoardBuilder(100, Seq(new WithPorts(howMany = 10))))(island)
+      boardPrime.pois.values.flatten must haveSize(10)
+    }
+
   }
 }
 
@@ -217,7 +228,8 @@ object GameBoardBuilderDataSet {
   val fReg = FaceRegistry() + Face(5, Seq(0,1,2)) + Face(6, Seq(2,3,4)) + Face(7, Seq(3,5,6)) + Face(8, Seq(1,6,7))
 
   val vProps = PropertySet() + (5 -> HasForHeight(100.0)) + (6 -> HasForHeight(300.0)) + 
-                                         (7 -> HasForHeight(200.0)) + (8 -> HasForHeight(400.0))
+                                      (7 -> HasForHeight(200.0)) + (8 -> HasForHeight(400.0)) +
+                               (0 -> IsCoast()) + (2 -> IsCoast())
   
   val fProps = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR

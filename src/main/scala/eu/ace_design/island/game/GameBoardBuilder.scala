@@ -17,9 +17,13 @@ import scala.util.Random
  * @param chunk the size of each tile (map.size must be a factor of chunk when applied)
  * @param rand a random generator, to be forwarded to the Biome2Resource mapper
  */
-class GameBoardBuilder(val chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Random()) extends Logger {
+class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
+                       poiGenerators: Seq[POIGenerator] = Seq(),
+                       rand: Random = new Random()) extends Logger {
 
   override val silo = LogSilos.BOARD_GEN
+
+  val locator = new TileLocator(chunk)
 
   /**
    * Build a game board on top of a given map
@@ -70,8 +74,14 @@ class GameBoardBuilder(val chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Ra
       acc + (loc -> (existing bulkAdd stocks.toSet))
     }
 
+    info("Introducing Points of Interest")
+    val main = GameBoard(map.size, map, tiles)
+    // Specializing the sequence of POIGenerator for this very build
+    val gens = poiGenerators map { g => g(rand,locator) _ }
+    val withPOIs = (main /: gens) { (acc, gen) => gen(acc) }
+
     info("GameBoard building process ended")
-    GameBoard(map.size, map, tiles)
+    withPOIs
   }
 
 
@@ -108,8 +118,7 @@ class GameBoardBuilder(val chunk: Int = DEFAULT_TILE_UNIT, rand: Random = new Ra
    */
   def boundingBox(hull: Set[Point]): Set[(Int, Int)] = {
     require(hull.nonEmpty, "The hull cannot be empty")
-    val locate = new TileLocator(chunk)
-    val locations = hull map { locate(_) }
+    val locations = hull map { locator(_) }
     val minX = (locations map { _._1 }).min; val maxX = (locations map { _._1 }).max
     val minY = (locations map { _._2 }).min; val maxY = (locations map { _._2 }).max
     (for(x <- minX to maxX; y <- minY to maxY) yield (x,y)).toSet

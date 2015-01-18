@@ -28,7 +28,7 @@ case class GameBoard(size: Int, m: IslandMap,
    * @return a new game board, in a functional way
    */
   def addPOI(data: ((Int, Int), PointOfInterest)): GameBoard = {
-    require(tiles.get(data._1._1, data._1._2).nonEmpty, "Cannot add a POI to an non-existing location")
+    require(tiles.get(data._1._1, data._1._2).nonEmpty, s"Cannot add a POI to an non-existing location: ${data._1}")
     pois.get(data._1) match {
       case None      => this.copy(pois = pois + (data._1 -> Set(data._2)))
       case Some(set) => this.copy(pois = pois + (data._1 -> (set + data._2)))
