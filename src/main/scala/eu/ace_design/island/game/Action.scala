@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.Resource
+import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
+import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 
 /**
@@ -24,11 +25,12 @@ case class MoveTo(direction: Directions.Direction) extends Action
 case class Scout(direction: Directions.Direction) extends Action
 
 // { "action": "exploit", "parameters": { "resource": "..." } }
-case class Exploit(resource: Resource) extends Action
+case class Exploit(resource: PrimaryResource) extends Action
 
 
-
-
+/**
+ * Keywords to be used in JSON actions
+ */
 object Actions {
   final val LAND    = "land"
   final val EXPLORE = "explore"
@@ -59,7 +61,7 @@ object ActionParser {
       case Actions.STOP    => Stop()
     }
   } catch {
-    case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $data")
+    case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")
   }
 
 
@@ -72,6 +74,8 @@ object ActionParser {
     }
   }
 
+  def string2Resource(params: JSONObject): Resource = Resources.bindings(params.getString("resource"))
+
 
   /**********************************************
    * Private helpers to build 'complex' actions *
@@ -83,6 +87,6 @@ object ActionParser {
 
   private def scout(params: JSONObject) = Scout(direction = letter2Direction(params))
 
-  private def exploit(params: JSONObject) = Scout(direction = letter2Direction(params))
+  private def exploit(params: JSONObject) = Exploit(resource = string2Resource(params).asInstanceOf[PrimaryResource])
 
 }

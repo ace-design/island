@@ -1,5 +1,6 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import org.specs2.mutable._
 import org.junit.runner.RunWith
@@ -51,10 +52,12 @@ class ActionsTest extends SpecificationWithJUnit {
     }
 
     "build an Exploit action when asked to" in {
-      val action = ActionParser(""" { "action": "exploit", "parameters": { "resource": "S" } } """)
-      action must beAnInstanceOf[Scout]
-      val scout = action.asInstanceOf[Scout]
-      scout.direction must_== Directions.SOUTH
+      val action = ActionParser(""" { "action": "exploit", "parameters": { "resource": "WOOD" } } """)
+      action must beAnInstanceOf[Exploit]
+      val exploit = action.asInstanceOf[Exploit]
+      exploit.resource must_== Resources.WOOD
+      val illegal = """ { "action": "exploit", "parameters": { "resource": "FOO" } } """
+      ActionParser(illegal) must throwAn[IllegalArgumentException]
     }
 
     "translate one-letter codes to directions" in {
