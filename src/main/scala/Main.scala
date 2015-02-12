@@ -1,8 +1,5 @@
-import java.awt.Color
-
 import eu.ace_design.island.game.{GameBoard, GameBoardBuilder}
 import eu.ace_design.island.map._
-import eu.ace_design.island.map.processes.AssignPitch
 import eu.ace_design.island.stdlib.Islands
 import eu.ace_design.island.stdlib.POIGenerators.WithPorts
 import eu.ace_design.island.util.{LogSilos, Logger}
