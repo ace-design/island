@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.ace-design</groupId>
   <artifactId>island</artifactId>
-  <version>1.0</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Island</name>
   <description>
@@ -86,7 +86,6 @@
   <modules>
     <module>engine</module>
     <module>player</module>
-    <module>bot</module>
   </modules>    
 
 </project>
