@@ -53,6 +53,8 @@ object Resources  {
 
   val values: Set[Resource] = primaries ++ manufactured
 
+  val bindings: Map[String, Resource] = (values map { r => r.name -> r }).toMap
+
 }
 
 

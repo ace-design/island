@@ -1,257 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0         
+			     http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>eu.ace-design</groupId>
+  <artifactId>island</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>Island</name>
+  <description>
+    Island is a programing game used to support Software engineering teaching
+  </description>
+  <inceptionYear>2014</inceptionYear>
+  
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+  
+  <repositories>
+    <repository>
+      <id>oss.sonatype.org-releases</id>
+      <name>releases</name>
+      <url>http://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
+    
+    <repository>
+      <id>oss.sonatype.org-snapshots</id>
+      <name>snapshots</name>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+    
+    <repository>
+      <id>central</id>
+      <name>Maven repository</name>
+      <url>http://repo1.maven.org/maven2</url>
+    </repository>
+  </repositories>
+  
+  <distributionManagement>
+    <repository>
+      <id>nexus-releases</id>
+      <name>Nexus Release Repository</name>
+      <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
+  <scm>
+    <url>https://github.com/ace-design/island</url>
+    <connection>scm:git:git@github.com:ace-design/island.git</connection>
+    <developerConnection>scm:git:git@github.com:ace-design/island.git</developerConnection>
+  </scm>
+  
+  <developers>
+    <developer>
+      <id>mosser</id>
+      <name>Sebastien Mosser</name>
+      <email>mosser@i3s.unice,fr</email>
+      <url>http://www.i3s.unice.fr/~mosser</url>
+      <organization>I3S Lab, University of Nice - Sophia Antipolis (UMR CNRS 7271)</organization>
+      <organizationUrl>http://www.i3s.unice.fr</organizationUrl>
+      <timezone>+2</timezone>
+      <roles>
+        <role>Architect</role>
+        <role>Main Developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <licenses>
+    <license>
+      <name>LGPL 3.0</name>
+      <url>http://www.gnu.org/licenses/lgpl-3.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  
+  <organization>
+    <name>Université Nice-Sophia Antipolis :: Polytech Nice-Sophia </name>
+    <url>http://informatique.polytechnice.fr</url>
+  </organization>
+  
+  <modules>
+    <module>engine</module>
+    <module>player</module>
+  </modules>    
 
-    <groupId>eu.ace-design</groupId>
-    <artifactId>island</artifactId>
-    <version>0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-    <name>Island</name>
-    <description>Island is a programing game used to support Software engineering teaching</description>
-
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
-    </parent>
-
-
-    <repositories>
-        <repository>
-            <id>oss.sonatype.org-releases</id>
-            <name>releases</name>
-            <url>http://oss.sonatype.org/content/repositories/releases</url>
-        </repository>
-
-        <repository>
-            <id>oss.sonatype.org-snapshots</id>
-            <name>snapshots</name>
-            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-
-        <repository>
-            <id>central</id>
-            <name>Maven repository</name>
-            <url>http://repo1.maven.org/maven2</url>
-        </repository>
-    </repositories>
-
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <encoding>UTF-8</encoding>
-        <!-- Software dependencies version-->
-        <scala.version>2.11.0</scala.version>
-        <scala.version.short>2.11</scala.version.short>
-        <specs2.version>2.3.12</specs2.version>
-        <junit.version>4.11</junit.version>
-        <jts.version>1.13</jts.version>
-        <batik.version>1.7</batik.version>
-    </properties>
-
-    <dependencies>
-        <!-- Import the Scala language -->
-        <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}</version>
-        </dependency>
-        <!-- Import the Specs 2 framework for Behavior-driven development  -->
-        <dependency>
-            <groupId>org.specs2</groupId>
-            <artifactId>specs2_${scala.version.short}</artifactId>
-            <version>${specs2.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Apache Tika is only used for test purpose (checking mime type of produced files) -->
-        <dependency>
-            <groupId>org.apache.tika</groupId>
-            <artifactId>tika-core</artifactId>
-            <version>1.5</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- Import JTS for geometrical operations -->
-        <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts</artifactId>
-            <version>${jts.version}</version>
-        </dependency>
-        <!-- Apache Batik for SVG manipulation -->
-        <dependency>
-            <groupId>org.apache.xmlgraphics</groupId>
-            <artifactId>batik-svggen</artifactId>
-            <version>${batik.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xmlgraphics</groupId>
-            <artifactId>batik-dom</artifactId>
-            <version>${batik.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.xmlgraphics</groupId>
-            <artifactId>batik-svg-dom</artifactId>
-            <version>${batik.version}</version>
-        </dependency>
-        <!-- Apache Batik rasterizer is used for PDF generation -->
-        <dependency>
-            <groupId>org.apache.xmlgraphics</groupId>
-            <artifactId>batik-rasterizer</artifactId>
-            <version>1.7</version>
-        </dependency>
-        <!-- Apache Log4J to support logging -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <!-- JSON is used for serialization purpose and game interaction with the players -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20140107</version>
-        </dependency>
-    </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>nexus-releases</id>
-            <name>Nexus Release Repository</name>
-            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
-    <scm>
-        <url>https://github.com/ace-design/island</url>
-        <connection>scm:git:git@github.com:ace-design/island.git</connection>
-        <developerConnection>scm:git:git@github.com:ace-design/island.git</developerConnection>
-    </scm>
-
-    <developers>
-        <developer>
-            <id>mosser</id>
-            <name>Sebastien Mosser</name>
-            <email>mosser@i3s.unice,fr</email>
-            <url>http://www.i3s.unice.fr/~mosser</url>
-            <organization>I3S Lab, University of Nice - Sophia Antipolis (UMR CNRS 7271)</organization>
-            <organizationUrl>http://www.i3s.unice.fr</organizationUrl>
-            <timezone>+2</timezone>
-            <roles>
-                <role>Architect</role>
-                <role>Main Developer</role>
-            </roles>
-        </developer>
-    </developers>
-
-    <licenses>
-        <license>
-            <name>LGPL 3.0</name>
-            <url>http://www.gnu.org/licenses/lgpl-3.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <organization>
-        <name>Université Nice-Sophia Antipolis :: Polytech Nice-Sophia </name>
-        <url>http://informatique.polytechnice.fr</url>
-    </organization>
-
-    <build>
-        <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
-        <plugins>
-            <!-- Scala Compilation -->
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <jvmArgs>
-                                <jvmArg>-Xms64m</jvmArg>
-                                <jvmArg>-Xmx1024m</jvmArg>
-                            </jvmArgs>
-                            <args>
-                                <arg>-deprecation</arg>
-                                <arg>-feature</arg>
-                                <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
-                            </args>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Maven GPG signature plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Unit test -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.13</version>
-                <configuration>
-                    <useFile>false</useFile>
-                    <disableXmlReport>true</disableXmlReport>
-                    <includes>
-                        <include>**/*Test.*</include>
-                        <include>**/*Suite.*</include>
-                    </includes>
-                    <systemPropertyVariables>
-                        <java.awt.headless>true</java.awt.headless>
-                    </systemPropertyVariables>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!-- Single jar -->
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>
