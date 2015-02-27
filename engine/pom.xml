@@ -47,12 +47,6 @@
             <version>${specs2.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency> -->
         <!-- Apache Tika is only used for test purpose (checking mime type of produced files) -->
         <dependency>
             <groupId>org.apache.tika</groupId>
