@@ -7,25 +7,41 @@ import org.json.JSONObject
 /**
  * An action is used to model an action taken by a player's bot.
  */
-trait Action
+trait Action {
+  def apply(board: GameBoard, game: Game): (Game, Result)
+}
 
 // { "action": "stop" }
-case class Stop() extends Action
+case class Stop() extends Action {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = {
+    ???
+  }
+}
 
 // { "action": "explore" }
-case class Explore() extends Action
+case class Explore() extends Action {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+}
 
 // { "action": "land", "parameters": {"deck": "...", "people": n } }
-case class Land(deck: String, people: Int) extends Action
+case class Land(deck: String, people: Int) extends Action          {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+}
 
 // { "action": "move_to", "parameters": { "direction": "..." } }
-case class MoveTo(direction: Directions.Direction) extends Action
+case class MoveTo(direction: Directions.Direction) extends Action {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+}
 
 // { "action": "scout", "parameters": { "direction": "..." } }
-case class Scout(direction: Directions.Direction) extends Action
+case class Scout(direction: Directions.Direction) extends Action {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+}
 
 // { "action": "exploit", "parameters": { "resource": "..." } }
-case class Exploit(resource: PrimaryResource) extends Action
+case class Exploit(resource: PrimaryResource) extends Action {
+  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+}
 
 
 /**

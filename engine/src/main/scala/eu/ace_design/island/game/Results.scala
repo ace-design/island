@@ -49,7 +49,7 @@ case class ExceptionResult(e: Exception) extends Result {
     val result = new JSONObject()
     result.append("exception", e.getClass.getName)
     result.append("message", e.getMessage)
-    result.append("complete", e.toString)
+    result.append("stacktrace", e.toString)
     result
   }
 }
