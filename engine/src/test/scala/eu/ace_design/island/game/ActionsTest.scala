@@ -1,15 +1,40 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
+import org.specs2.mock.Mockito
 
 @RunWith(classOf[JUnitRunner])
-class ActionsTest extends SpecificationWithJUnit {
+class ActionsTest extends SpecificationWithJUnit with Mockito {
 
   "ActionsTest Specifications".title
+
+  val budget = Budget(800);  val crew = Crew(50); val objective = (Resources.WOOD, 600)
+  val game   = Game(budget, crew, Set(objective))
+
+  "The Stop action" should {
+    val map   = mock[IslandMap] ; map.size   returns 600
+    val board = mock[GameBoard] ; board.size returns 100 ; board.m returns map
+
+    "be available even if not landed" in {
+      val action = Stop()
+      val (after, result) = action(board, game)
+      result.cost must beGreaterThan(1)
+      result.cost must beLessThanOrEqualTo(action.maxOverhead + action.maxOverhead/2)
+      after.budget.remaining must_== game.budget.remaining - result.cost
+    }
+
+    "compute" in {
+      val action = Stop()
+      val (after, result) = action(board, game.moveBoat(loc = (10,10)))
+      result.cost must beGreaterThan(17) // minimum cost with these data
+      after.budget.remaining must_== game.budget.remaining - result.cost
+    }
+  }
 
   "The ActionParser" should {
 
@@ -30,10 +55,10 @@ class ActionsTest extends SpecificationWithJUnit {
     }
 
     "build a Land action when asked to" in {
-      val action = ActionParser(""" { "action": "land", "parameters": { "deck": "xx", "people": 42 } } """)
+      val action = ActionParser(""" { "action": "land", "parameters": { "creek": "xx", "people": 42 } } """)
       action must beAnInstanceOf[Land]
       val land = action.asInstanceOf[Land]
-      land.deck must_== "xx"
+      land.creek must_== "xx"
       land.people must_== 42
     }
 
@@ -70,6 +95,5 @@ class ActionsTest extends SpecificationWithJUnit {
 
 
   }
-
 
 }

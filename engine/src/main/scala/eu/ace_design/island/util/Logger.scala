@@ -54,7 +54,7 @@ trait Logger extends NameAsClassName {
  */
 object LogSilos extends Enumeration {
   type Kind = Value
-  val ROOT, MESH_GEN, MAP_GEN, VIEWER, TEST, BOARD_GEN = Value
+  val ROOT, MESH_GEN, MAP_GEN, VIEWER, TEST, BOARD_GEN, GAME_ENGINE = Value
 }
 
 /**
@@ -73,12 +73,13 @@ object Loggers {
   private val _root = LogManager.getLogger(PREFIX)
 
   private val _others: Map[Kind,Log4JLogger] = Map(
-    ROOT      -> _root,
-    MESH_GEN  -> LogManager.getLogger(s"$PREFIX/Mesh"),
-    MAP_GEN   -> LogManager.getLogger(s"$PREFIX/Map"),
-    VIEWER    -> LogManager.getLogger(s"$PREFIX/Viewer"),
-    TEST      -> LogManager.getLogger(s"$PREFIX/Test"),
-    BOARD_GEN -> LogManager.getLogger(s"$PREFIX/Board")
+    ROOT        -> _root,
+    MESH_GEN    -> LogManager.getLogger(s"$PREFIX/Mesh"),
+    MAP_GEN     -> LogManager.getLogger(s"$PREFIX/Map"),
+    VIEWER      -> LogManager.getLogger(s"$PREFIX/Viewer"),
+    TEST        -> LogManager.getLogger(s"$PREFIX/Test"),
+    BOARD_GEN   -> LogManager.getLogger(s"$PREFIX/Board"),
+    GAME_ENGINE -> LogManager.getLogger(s"$PREFIX/Game")
   )
 }
 

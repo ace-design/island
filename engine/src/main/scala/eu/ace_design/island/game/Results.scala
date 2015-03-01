@@ -11,7 +11,10 @@ trait Result {
   // Did the action performed well?
   val ok: Boolean
   //What was the cost of this action
-  val cost: Integer
+  val cost: Int
+  // should the game be stopped
+  val shouldStop: Boolean
+
 
   // return the extra information associated to this result.
   protected def extras(): JSONObject
@@ -20,12 +23,11 @@ trait Result {
    * Perform the object to json string transformation
    * @return
    */
-  def toJson: String = {
+  def toJson: JSONObject = {
     val result = new JSONObject()
-    result.append("extras", extras())
-    result.append("cost", cost)
-    result.append("status", if (ok) "OK" else "KO")
-    result.toString
+    result.put("extras", extras())
+    result.put("cost", cost)
+    result.put("status", if (ok) "OK" else "KO")
   }
 }
 
@@ -33,23 +35,28 @@ trait Result {
  * Result returned with no extra information
  * @param cost
  */
-case class EmptyResult(override val cost: Integer) extends Result {
+case class EmptyResult(override val cost: Int, override val shouldStop: Boolean = false) extends Result {
   override val ok: Boolean = true
   override protected def extras(): JSONObject = new JSONObject()
 }
 
-/**
- * Result returned when an exception occurs in the game system
- * @param e
- */
+case class MovedBoatResult(override val cost: Int, loc: (Int,Int)) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = new JSONObject()
+}
+
+
 case class ExceptionResult(e: Exception) extends Result {
   override val ok: Boolean = false
-  override val cost: Integer = 0
+  override val cost: Int = 0
+  override val shouldStop: Boolean = true
+
   override protected def extras(): JSONObject = {
     val result = new JSONObject()
     result.append("exception", e.getClass.getName)
     result.append("message", e.getMessage)
-    result.append("complete", e.toString)
+    result.append("stacktrace", e.toString)
     result
   }
 }

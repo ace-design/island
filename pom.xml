@@ -21,23 +21,29 @@
   </parent>
   
   <repositories>
-    <repository>
-      <id>oss.sonatype.org-releases</id>
-      <name>releases</name>
-      <url>http://oss.sonatype.org/content/repositories/releases</url>
-    </repository>
-    
-    <repository>
-      <id>oss.sonatype.org-snapshots</id>
-      <name>snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
-    
-    <repository>
-      <id>central</id>
-      <name>Maven repository</name>
-      <url>http://repo1.maven.org/maven2</url>
-    </repository>
+      <repository>
+          <id>oss.sonatype.org-releases</id>
+          <name>releases</name>
+          <url>http://oss.sonatype.org/content/repositories/releases</url>
+      </repository>
+
+      <repository>
+          <id>oss.sonatype.org-snapshots</id>
+          <name>snapshots</name>
+          <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      </repository>
+
+      <repository>
+          <id>central</id>
+          <name>Maven repository</name>
+          <url>http://repo1.maven.org/maven2</url>
+      </repository>
+
+      <repository>
+          <id>scalaz-bintray</id>
+          <name>releases</name>
+          <url>http://dl.bintray.com/scalaz/releases</url>
+      </repository>
   </repositories>
   
   <distributionManagement>

@@ -37,16 +37,24 @@ class GameBoardTest extends SpecificationWithJUnit {
       local.produces(0,0) must_== Set(FISH, ORE)
     }
     "support the add of PointOfInterests" in {
-      import eu.ace_design.island.stdlib.PointOfInterests.Port
+      import eu.ace_design.island.stdlib.PointOfInterests.Creek
       complete.getPOIs(0, 0) must_== Set()
-      val p1 = new Port("aPort #1", None);
-      val p2 = new Port("aPort #2", None)
+      val p1 = new Creek("aPort #1", None);
+      val p2 = new Creek("aPort #2", None)
       complete addPOI ((120, 250) -> p1) must throwAn[IllegalArgumentException]
       val up = complete addPOI ((0, 0) -> p1) addPOI ((0, 0) -> p2) addPOI ((0, 1) -> p1)
       complete.getPOIs(0, 0) must_== Set()
       complete.getPOIs(0, 1) must_== Set()
       up.getPOIs(0, 0) must_== Set(p1, p2)
       up.getPOIs(0, 1) must_== Set(p1)
+    }
+    "find point of interests by kind" in {
+      import eu.ace_design.island.stdlib.PointOfInterests._
+      val c1 = Creek("c1", None); val c2 = Creek("c2", None)
+      val h = Hideout("h", None)
+      val up = complete addPOI ((0, 0) -> c1) addPOI ((0, 0) -> h) addPOI ((0, 1) -> c2)
+      up.findPOIsByType(Creek(null,null)) must_== Set((0,0) -> c1, (0,1) -> c2)
+      up.findPOIsByType(Hideout(null,null)) must_== Set((0,0) -> h)
     }
   }
 

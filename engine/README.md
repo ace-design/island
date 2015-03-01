@@ -20,7 +20,8 @@ Simply `clone` the git repository, and use `mvn package` to build the JAR file. 
 
 #### Contributors
 
-* Antoine Pultier, SINTEF (Web GUI design and implementation)
+* Sébastien Mosser (Architecture, main implementation)
+* Philippe Collet  (Variability)
 
 #### References, sources
 

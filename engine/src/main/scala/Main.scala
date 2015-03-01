@@ -1,7 +1,7 @@
 import eu.ace_design.island.game.{GameBoard, GameBoardBuilder}
 import eu.ace_design.island.map._
 import eu.ace_design.island.stdlib.Islands
-import eu.ace_design.island.stdlib.POIGenerators.WithPorts
+import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
 import eu.ace_design.island.util.{LogSilos, Logger}
 import eu.ace_design.island.dsl.DiSLand
 
@@ -18,7 +18,7 @@ object Main extends App with Logger with DiSLand {
   export(island)
 
   // Instantiating the game board
-  val pois = Seq(new WithPorts(10))
+  val pois = Seq(new WithCreeks(10))
   val board: GameBoard = (new GameBoardBuilder(rand = island.random, poiGenerators = pois))(island)
   boardStatistics(board)
 
