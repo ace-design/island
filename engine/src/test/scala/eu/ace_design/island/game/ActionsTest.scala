@@ -23,7 +23,7 @@ class ActionsTest extends SpecificationWithJUnit with Mockito {
     "be available even if not landed" in {
       val action = Stop()
       val (after, result) = action(board, game)
-      result.cost must beGreaterThan(0)
+      result.cost must beGreaterThan(1)
       result.cost must beLessThanOrEqualTo(action.maxOverhead + action.maxOverhead/2)
       after.budget.remaining must_== game.budget.remaining - result.cost
     }
