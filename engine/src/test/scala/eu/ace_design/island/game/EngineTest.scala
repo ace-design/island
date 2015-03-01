@@ -12,40 +12,49 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   "EngineTest Specifications".title
 
 
-  "The engine" should {
+  "for the sake of error handling, the engine" should {
+    val emptyBoard = mock[GameBoard]; val emptyGame = mock[Game]
+
     "detect exception thrown while initializing" in {
-      // mockings the environment
+      // mocking the environment
       val explorer = mock[IExplorerRaid]
       explorer.initialize(anyString) throws new RuntimeException("error in explorer init")
-      val board = mock[GameBoard]; val game = mock[Game]
       // starting the engine
-      val engine = new Engine(board, game)
+      val engine = new Engine(emptyBoard, emptyGame)
       val events = engine.run(explorer)
-      println(events)
-      events.size must_== 2
+      events.size must_== 2 // initialization context + exception event
+      there was one(explorer).initialize(anyString)
+      there was no(explorer).takeDecision
+      there was no(explorer).acknowledgeResults(anyString)
     }
+    "detect actions that are not legal json"  in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": geek """
+      val engine = new Engine(emptyBoard, emptyGame)
+      val events = engine.run(explorer)
+      events.size must_== 2 // initialization context + exception event
+      there was one(explorer).initialize(anyString)
+      there was one(explorer).takeDecision
+      there was no(explorer).acknowledgeResults(anyString)
+    }
+    "detect unknown actions" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "not_a_real_action" }"""
+      val engine = new Engine(emptyBoard, emptyGame)
+      val events = engine.run(explorer)
+      events.size must_== 3 // initialization context + received action + exception event
+      there was one(explorer).initialize(anyString)
+      there was one(explorer).takeDecision
+      there was no(explorer).acknowledgeResults(anyString)
+    }
+    "stop when no more budget is available" in {
+     true must beTrue
+    }
+
   }
 
-
-
-  "the stoppingExplorer mock" should {
-    import MockedExplorers.stoppingExplorer
-    "support initialization" in {
-      stoppingExplorer.initialize("") must not(throwAn[Exception])
-    }
-    "always stop when asked to take a decision" in {
-      stoppingExplorer.takeDecision() must_== """{ "action": "stop" }"""
-      stoppingExplorer.takeDecision() must_== """{ "action": "stop" }"""
-    }
-    "support result acknowledgment" in {
-      stoppingExplorer.acknowledgeResults("") must not(throwAn[Exception])
-    }
-  }
-
-
-  object MockedExplorers {
-    val stoppingExplorer =  mock[IExplorerRaid]
-    stoppingExplorer.takeDecision() returns """{ "action": "stop" }"""
+  "under normal conditions, the engine" should {
+    "stop"
   }
 
 

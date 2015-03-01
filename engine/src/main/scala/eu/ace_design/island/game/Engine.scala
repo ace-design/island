@@ -1,7 +1,8 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.bot.IExplorerRaid
-import eu.ace_design.island.util.Timeout
+import eu.ace_design.island.util.LogSilos.Kind
+import eu.ace_design.island.util.{LogSilos, Logger, Timeout}
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import org.json.JSONObject
@@ -9,29 +10,40 @@ import org.json.JSONObject
 /**
  * The engine is used to play a party
  **/
-class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) extends Timeout {
+class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) extends Logger with Timeout {
+
+  override protected val silo: Kind = LogSilos.GAME_ENGINE
 
   final val DEFAULT_TIMEOUT_VALUE = 2
 
   // run a game using a given explorer. Use mutable state for the events (=> UGLY)
   def run(explorer: IExplorerRaid): Seq[ExplorationEvent] = {
-
+    info(s"Starting game for ${explorer.getClass.getCanonicalName}")
     val events = ListBuffer.empty[ExplorationEvent]
 
     // Setting up context
-    try {  propagateContext(explorer, events) } catch {
+    try {
+      val context = buildInitializationContext()
+      events += ExplorationEvent(Actors.Engine, context, method = "initialize")
+      info("Initializing context [explorer.initializeContext(...)]")
+      timeout(DEFAULT_TIMEOUT_VALUE) { explorer.initialize(context.toString) }
+    } catch {
       case e: Exception => return events += ExplorationEvent(Actors.Explorer, e, "initialize")
     }
 
     play(explorer, events, game)
 
+    info("Game is over")
     // returning the events
     events
   }
 
+  // play an action took by explorer, using events to store the log of the exploration
+  // the method is recursive
   def play(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game) {
     // ask player for decision:
     val action = try {
+      info("Asking for user's decision [explorer.takeDecision()]")
       val str = timeout(DEFAULT_TIMEOUT_VALUE) { explorer.takeDecision() }
       events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
       ActionParser(str)
@@ -41,11 +53,18 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
 
     // Handling the action from the engine point of view
     try {
+      info("Applying user's decision to the board")
       val (after, result) = action(board, g)
       events += ExplorationEvent(Actors.Engine, result.toJson)
-      result.ok match {
-        case false =>
-        case true  => play(explorer, events, after)
+      try {
+        info("Acknowledging results [explorer.acknowledgeResults(...)]")
+        timeout(DEFAULT_TIMEOUT_VALUE) { explorer.acknowledgeResults(result.toJson.toString) }
+      } catch {
+        case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "acknowledgeResults"); return
+      }
+      result.shouldStop match {
+        case false => play(explorer, events, after) // recursive call for game continuation
+        case true  =>                               // end of the game
       }
     } catch {
       case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision")
@@ -53,9 +72,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
   }
 
   def propagateContext(e: IExplorerRaid, events: ListBuffer[ExplorationEvent]) = {
-    val context = buildInitializationContext()
-    events += ExplorationEvent(Actors.Engine, context, method = "initialize")
-    timeout(DEFAULT_TIMEOUT_VALUE) { e.initialize(context.toString) }
+
   }
 
   def buildInitializationContext(): JSONObject = {
