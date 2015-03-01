@@ -12,6 +12,21 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   "EngineTest Specifications".title
 
 
+  "The engine" should {
+    "detect exception thrown while initializing" in {
+      // mockings the environment
+      val explorer = mock[IExplorerRaid]
+      explorer.initialize(anyString) throws new RuntimeException("error in explorer init")
+      val board = mock[GameBoard]; val game = mock[Game]
+      // starting the engine
+      val engine = new Engine(board, game)
+      val events = engine.run(explorer)
+      println(events)
+      events.size must_== 2
+    }
+  }
+
+
 
   "the stoppingExplorer mock" should {
     import MockedExplorers.stoppingExplorer
