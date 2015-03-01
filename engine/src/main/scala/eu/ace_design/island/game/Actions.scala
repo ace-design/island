@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import scala.util.Random
@@ -13,8 +14,8 @@ trait Action {
   // Maximal value for the action overhead
   val maxOverhead: Int = 10
 
-  // The variation factor used by the action
-  final protected val variation: Double = 1 + (Random.nextDouble() - 0.5)
+  // The variation factor used by the action (\in [0.75, 1.25])
+  final protected val variation: Double = 1 + (Random.nextDouble() / 2 - 0.25)
 
   // Apply the action to a given game, using the  game board representing the island
   final def apply(board: GameBoard, game: Game): (Game, Result) = {
@@ -46,15 +47,33 @@ case class Stop() extends Action {
 
 }
 
+// { "action": "land", "parameters": {"creek": "...", "people": n } }
+case class Land(creek: String, people: Int) extends Action          {
+
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(people >= game.crew.complete)
+      throw new IllegalArgumentException("At least one men must stay on board")
+    val creeks = board.findPOIsByType(Creek(null, null))
+    val cost = creeks find  { case (loc,c) => c.identifier == creek } match {
+      case None => throw new IllegalArgumentException(s"Unknown creek identifier [$creek]")
+      case Some((loc,poi)) => {
+        val origin = game.boat.getOrElse((board.size / 2, board.size / 2))
+        val distance = Math.sqrt(Math.pow(loc._1- origin._1,2) + Math.pow(loc._2- origin._2,2))
+        val ratio = board.m.size.toFloat / board.size / 10
+        (overhead + distance * ratio) * variation
+      }
+    }
+    EmptyResult(2 + cost.ceil.toInt)
+  }
+
+}
+
 // { "action": "explore" }
 case class Explore() extends Action {
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
-// { "action": "land", "parameters": {"deck": "...", "people": n } }
-case class Land(deck: String, people: Int) extends Action          {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
-}
+
 
 // { "action": "move_to", "parameters": { "direction": "..." } }
 case class MoveTo(direction: Directions.Direction) extends Action {
@@ -125,7 +144,7 @@ object ActionParser {
    * Private helpers to build 'complex' actions *
    **********************************************/
 
-  private def land(params: JSONObject) = Land(deck = params.getString("deck"), people = params.getInt("people"))
+  private def land(params: JSONObject) = Land(creek = params.getString("creek"), people = params.getInt("people"))
 
   private def moveTo(params: JSONObject) = MoveTo(direction = letter2Direction(params))
 

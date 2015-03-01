@@ -108,6 +108,7 @@ object ExplorationEvent {
     val error = new JSONObject()
     error.append("exception", e.getClass.getSimpleName)
     error.append("message", e.getMessage)
+    error.append("stacktrace", e.getStackTrace)
     new ExplorationEvent(System.currentTimeMillis(), actor, error, method)
   }
 

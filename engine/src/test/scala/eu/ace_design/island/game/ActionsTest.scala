@@ -55,10 +55,10 @@ class ActionsTest extends SpecificationWithJUnit with Mockito {
     }
 
     "build a Land action when asked to" in {
-      val action = ActionParser(""" { "action": "land", "parameters": { "deck": "xx", "people": 42 } } """)
+      val action = ActionParser(""" { "action": "land", "parameters": { "creek": "xx", "people": 42 } } """)
       action must beAnInstanceOf[Land]
       val land = action.asInstanceOf[Land]
-      land.deck must_== "xx"
+      land.creek must_== "xx"
       land.people must_== 42
     }
 

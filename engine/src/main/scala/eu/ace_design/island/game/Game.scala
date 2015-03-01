@@ -26,7 +26,8 @@ class Game private(val budget: Budget,
     case false => (this, res)
     case true => {
       val remaining = budget - res.cost
-      (new Game(remaining, crew, objectives, visited, boat, isOK), res)
+      val boatLoc = res match { case m: MovedBoatResult => Some(m.loc); case _ => this.boat }
+      (new Game(remaining, crew, objectives, visited, boatLoc, isOK), res)
     }
   }
 
