@@ -37,7 +37,7 @@ class Game private(val budget: Budget,
 }
 object Game {
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
-    new Game(budget,crew, objectives, visited = Set(), boat = None)
+    new Game(budget,crew, objectives, visited = Set(), boat = None, true)
 }
 
 

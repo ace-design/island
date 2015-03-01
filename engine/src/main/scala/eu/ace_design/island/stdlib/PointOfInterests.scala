@@ -3,7 +3,7 @@ package eu.ace_design.island.stdlib
 import eu.ace_design.island.game._
 import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map.{IsCoast, IslandMap}
-import eu.ace_design.island.stdlib.PointOfInterests.Port
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 
 import scala.util.Random
 
@@ -16,8 +16,11 @@ object PointOfInterests {
    * A port is used to support the landing operation
    * @param identifier the identifier of this port
    */
-  case class Port(override val identifier: String,
-                  override val location: Option[Point]) extends PointOfInterest {}
+  case class Creek(override val identifier: String,
+                   override val location: Option[Point]) extends PointOfInterest {}
+
+  case class Hideout(override val identifier: String,
+                     override val location: Option[Point]) extends PointOfInterest {}
 
 }
 
@@ -31,7 +34,7 @@ object POIGenerators {
    * This class introduce ports in the board
    * @param howMany number of ports to add
    */
-  class WithPorts(howMany: Int) extends POIGenerator {
+  class WithCreeks(howMany: Int) extends POIGenerator {
 
     override def apply(rand: Random = new Random(), loc: TileLocator)(board: GameBoard): GameBoard = {
       // find locations:
@@ -39,7 +42,7 @@ object POIGenerators {
       // instantiate ports
       val ports = (0 until howMany) map { i =>
         val idx = rand.nextInt(coasts.size-1)
-        loc(coasts(idx)) -> Port(UUIDGenerator(), Some(coasts(idx)))
+        loc(coasts(idx)) -> Creek(UUIDGenerator(), Some(coasts(idx)))
       }
       // enrich the board
       (board /: ports) { (acc, poi) => acc addPOI poi }

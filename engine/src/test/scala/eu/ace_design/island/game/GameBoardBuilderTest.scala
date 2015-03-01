@@ -4,7 +4,7 @@ import eu.ace_design.island.geom._
 import eu.ace_design.island.map.{IsCoast, HasForHeight, HasForPitch, IslandMap}
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
-import eu.ace_design.island.stdlib.POIGenerators.WithPorts
+import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -175,7 +175,7 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
     }
 
     "execute a sequence of POIs generator when provided" in {
-      val boardPrime = (new GameBoardBuilder(100, Seq(new WithPorts(howMany = 10))))(island)
+      val boardPrime = (new GameBoardBuilder(100, Seq(new WithCreeks(howMany = 10))))(island)
       boardPrime.pois.values.flatten must haveSize(10)
     }
 

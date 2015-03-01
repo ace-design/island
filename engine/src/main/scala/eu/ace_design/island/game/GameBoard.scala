@@ -54,6 +54,10 @@ case class GameBoard(size: Int, m: IslandMap,
    */
   def getPOIs(x: Int, y: Int): Set[PointOfInterest] = this.pois.getOrElse((x,y), Set())
 
+  def findPOIsByType(prototype: PointOfInterest): Set[((Int, Int), PointOfInterest)] = {
+    val all = this.pois map { case (k,v) => v map { e => k -> e } }
+    (all.flatten.filter { case (k,v) => v.getClass == prototype.getClass }).toSet
+  }
   /**
    * Compute the neighbors (existing tiles) for a given location.
    * @param x the x coordinate

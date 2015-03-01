@@ -1,11 +1,12 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.bot.IExplorerRaid
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.util.LogSilos.Kind
 import eu.ace_design.island.util.{LogSilos, Logger, Timeout}
 import scala.collection.mutable.ListBuffer
 import scala.util.Random
-import org.json.JSONObject
+import org.json.{JSONArray, JSONObject}
 
 /**
  * The engine is used to play a party
@@ -78,11 +79,14 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
   }
 
   def buildInitializationContext(): JSONObject = {
-    // TODO identify the right creek identifier and build a right JSON object
-    val data =
-      """{ "creek": "creek_id", "budget": 600, "men": 50,
-        |  "objective": [ { "resource": "WOOD", "amount": 600 } ] } """.stripMargin
-    new JSONObject(data)
+    val creeks = board.findPOIsByType(Creek(null, null)) map { case (k,v) => v }
+    val creek = creeks.toSeq(rand.nextInt(creeks.size)).identifier
+    val ctx = new JSONObject()
+    ctx.put("creek", creek); ctx.put("budget", 600); ctx.put("men", 50)
+    val objs = new JSONArray()
+    objs.put(new JSONObject("""{ "resource": "WOOD", "amount": 600 }"""))
+    ctx.put("objective",objs)
+    ctx
   }
 
 

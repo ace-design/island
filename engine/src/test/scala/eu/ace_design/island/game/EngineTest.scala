@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.bot.IExplorerRaid
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import org.specs2.mutable._
 import org.specs2.mock.Mockito
 import org.junit.runner.RunWith
@@ -11,7 +12,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
 
   "EngineTest Specifications".title
 
-  val emptyBoard = mock[GameBoard]
+  val emptyBoard = mock[GameBoard];  emptyBoard.findPOIsByType(any) returns Set((10,10) -> Creek("c1", None))
   val emptyGame = Game(Budget(600), Crew(50), Set())
 
   "for the sake of error handling, the engine" should {
