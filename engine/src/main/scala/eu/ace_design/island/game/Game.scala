@@ -16,6 +16,22 @@ class Game private(val budget: Budget,
                    val visited: Set[(Int, Int)],
                    val boat: Option[(Int, Int)]) {
 
+  /**
+   * Update the current game based on the contents of the result of an action
+   * @param res
+   * @return a game
+   */
+  def updatedBy(res: Result): (Game, Result) = res.ok match {
+    case false => (this, res)
+    case true => {
+      val remaining = budget - res.cost
+      (new Game(remaining, crew, objectives, visited, boat), res)
+    }
+  }
+
+  def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc))
+
+
 }
 object Game {
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
@@ -27,9 +43,26 @@ object Game {
  * A budget represent the complete amount of action points available, and the remaining ones.
  */
 class Budget private(val initial: Int, val remaining: Int) {
-
+  require(initial > 0, "Initial budget cannot be negative")
+  // spending action points
+  def -(cost: Int): Budget = {
+    val r = this.remaining - cost
+    if (r < 0)
+      NotEnoughBudgetException(remaining, cost) // error case
+    new Budget(initial, r)
+  }
 }
-object Budget { def apply(value: Int) = new Budget(value, value) }
+object Budget {
+  def apply(value: Int) = new Budget(value, value)
+}
+
+class NotEnoughBudgetException(message: String) extends Exception(message)
+object NotEnoughBudgetException {
+  def apply(avail: Int, needed: Int) = {
+    val m = s"Not enough budget to perform the requested action: needed $needed, available $avail"
+    throw new NotEnoughBudgetException(m)
+  }
+}
 
 /**
  * A crew represents the number of men available on the boat, the number of men used for the exploration and the

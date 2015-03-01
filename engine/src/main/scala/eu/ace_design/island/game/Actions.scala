@@ -3,44 +3,72 @@ package eu.ace_design.island.game
 import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
+import scala.util.Random
 
 /**
  * An action is used to model an action taken by a player's bot.
  */
 trait Action {
-  def apply(board: GameBoard, game: Game): (Game, Result)
+
+  // Maximal value for the action overhead
+  val maxOverhead: Int = 10
+
+  // The variation factor used by the action
+  final protected val variation: Double = 1 + (Random.nextDouble() - 0.5)
+
+  // Apply the action to a given game, using the  game board representing the island
+  final def apply(board: GameBoard, game: Game): (Game, Result) = {
+    val overhead = Random.nextInt(maxOverhead) + 1
+    val result: Result = build(board, game, overhead)
+    try { game updatedBy result } catch { case e: Exception => (game, ExceptionResult(e)) }
+  }
+
+  // Method to be implemented by each action to build the associated result
+  protected def build(board: GameBoard, game: Game, overhead: Int): Result
+
 }
 
 // { "action": "stop" }
 case class Stop() extends Action {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = {
-    ???
+
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    val cost = game.boat match {
+      case None => overhead * variation
+      case Some((x,y)) => {
+        val center = board.size / 2
+        val distance = Math.sqrt(Math.pow(x-center,2) + Math.pow(y-center,2))
+        val ratio = board.m.size.toFloat / board.size / 10
+        (overhead + distance * ratio) * variation
+      }
+    }
+    EmptyResult(cost.ceil.toInt)
   }
+
 }
 
 // { "action": "explore" }
 case class Explore() extends Action {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 // { "action": "land", "parameters": {"deck": "...", "people": n } }
 case class Land(deck: String, people: Int) extends Action          {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 // { "action": "move_to", "parameters": { "direction": "..." } }
 case class MoveTo(direction: Directions.Direction) extends Action {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 // { "action": "scout", "parameters": { "direction": "..." } }
 case class Scout(direction: Directions.Direction) extends Action {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 // { "action": "exploit", "parameters": { "resource": "..." } }
 case class Exploit(resource: PrimaryResource) extends Action {
-  override def apply(board: GameBoard, game: Game): (Game, Result) = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 
