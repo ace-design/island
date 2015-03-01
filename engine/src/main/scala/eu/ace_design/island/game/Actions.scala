@@ -9,7 +9,7 @@ import scala.util.Random
 /**
  * An action is used to model an action taken by a player's bot.
  */
-trait Action {
+sealed trait Action {
 
   // Maximal value for the action overhead
   val maxOverhead: Int = 10
