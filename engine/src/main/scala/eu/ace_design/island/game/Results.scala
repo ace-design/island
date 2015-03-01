@@ -12,6 +12,8 @@ trait Result {
   val ok: Boolean
   //What was the cost of this action
   val cost: Int
+  // should the game be stopped
+  val shouldStop: Boolean
 
   // return the extra information associated to this result.
   protected def extras(): JSONObject
@@ -32,7 +34,7 @@ trait Result {
  * Result returned with no extra information
  * @param cost
  */
-case class EmptyResult(override val cost: Int) extends Result {
+case class EmptyResult(override val cost: Int, override val shouldStop: Boolean = false) extends Result {
   override val ok: Boolean = true
   override protected def extras(): JSONObject = new JSONObject()
 }
@@ -44,6 +46,8 @@ case class EmptyResult(override val cost: Int) extends Result {
 case class ExceptionResult(e: Exception) extends Result {
   override val ok: Boolean = false
   override val cost: Int = 0
+  override val shouldStop: Boolean = true
+
   override protected def extras(): JSONObject = {
     val result = new JSONObject()
     result.append("exception", e.getClass.getName)
