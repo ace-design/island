@@ -20,12 +20,11 @@ trait Result {
    * Perform the object to json string transformation
    * @return
    */
-  def toJson: String = {
+  def toJson: JSONObject = {
     val result = new JSONObject()
-    result.append("extras", extras())
-    result.append("cost", cost)
-    result.append("status", if (ok) "OK" else "KO")
-    result.toString
+    result.put("extras", extras())
+    result.put("cost", cost)
+    result.put("status", if (ok) "OK" else "KO")
   }
 }
 

@@ -13,18 +13,43 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
 
   final val DEFAULT_TIMEOUT_VALUE = 2
 
-  // run a game using a given explorer. Use mutable state (=> UGLY)
+  // run a game using a given explorer. Use mutable state for the events (=> UGLY)
   def run(explorer: IExplorerRaid): Seq[ExplorationEvent] = {
 
     val events = ListBuffer.empty[ExplorationEvent]
+
     // Setting up context
     try {  propagateContext(explorer, events) } catch {
       case e: Exception => return events += ExplorationEvent(Actors.Explorer, e, "initialize")
     }
 
+    play(explorer, events, game)
 
-
+    // returning the events
     events
+  }
+
+  def play(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game) {
+    // ask player for decision:
+    val action = try {
+      val str = timeout(DEFAULT_TIMEOUT_VALUE) { explorer.takeDecision() }
+      events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
+      ActionParser(str)
+    } catch {
+      case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "takeDecision"); return
+    }
+
+    // Handling the action from the engine point of view
+    try {
+      val (after, result) = action(board, g)
+      events += ExplorationEvent(Actors.Engine, result.toJson)
+      result.ok match {
+        case false =>
+        case true  => play(explorer, events, after)
+      }
+    } catch {
+      case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision")
+    }
   }
 
   def propagateContext(e: IExplorerRaid, events: ListBuffer[ExplorationEvent]) = {
