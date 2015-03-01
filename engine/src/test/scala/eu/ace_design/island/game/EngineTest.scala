@@ -71,7 +71,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
 
   "under normal conditions, the engine" should {
 
-    "stop when asked to" in {
+    "stop when asked for" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "stop" }"""
       val engine = new Engine(emptyBoard, emptyGame)
@@ -104,17 +104,6 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       there was one(explorer).takeDecision
       there was no(explorer).acknowledgeResults(anyString)
     }
-    "reject landing with unknown creek" in {
-      val explorer = mock[IExplorerRaid]
-      explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "cXX", "people": 3 } } }"""
-      val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
-      g.isOK must beFalse
-      events.size must_== 3 // initialization context + received action + end of game event
-      there was one(explorer).initialize(anyString)
-      there was one(explorer).takeDecision
-      there was no(explorer).acknowledgeResults(anyString)
-    }
     "support the sequencing of operation, e.g., land then stop" in {
       val land = """{ "action": "land", "parameters": { "creek": "c1", "people": 3 } } }"""
       val stop = """{ "action": "stop" }"""
@@ -122,7 +111,6 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns land thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
-      println(events)
       g.isOK must beTrue
       there was one(explorer).initialize(anyString)
       there was two(explorer).takeDecision
