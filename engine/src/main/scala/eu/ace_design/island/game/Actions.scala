@@ -41,7 +41,7 @@ case class Stop() extends Action {
         (overhead + distance * ratio) * variation
       }
     }
-    EmptyResult(cost.ceil.toInt)
+    EmptyResult(2 + cost.ceil.toInt, shouldStop = true)
   }
 
 }

@@ -96,5 +96,4 @@ class ActionsTest extends SpecificationWithJUnit with Mockito {
 
   }
 
-
 }

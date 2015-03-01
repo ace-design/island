@@ -17,7 +17,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
   final val DEFAULT_TIMEOUT_VALUE = 2
 
   // run a game using a given explorer. Use mutable state for the events (=> UGLY)
-  def run(explorer: IExplorerRaid): Seq[ExplorationEvent] = {
+  def run(explorer: IExplorerRaid): (Seq[ExplorationEvent], Game) = {
     info(s"Starting game for ${explorer.getClass.getCanonicalName}")
     val events = ListBuffer.empty[ExplorationEvent]
 
@@ -28,19 +28,19 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
       info("Initializing context [explorer.initializeContext(...)]")
       timeout(DEFAULT_TIMEOUT_VALUE) { explorer.initialize(context.toString) }
     } catch {
-      case e: Exception => return events += ExplorationEvent(Actors.Explorer, e, "initialize")
+      case e: Exception => return (events += ExplorationEvent(Actors.Explorer, e, "initialize"), game.flaggedAsKO)
     }
 
-    play(explorer, events, game)
+    val gameAfter = play(explorer, events, game)
 
     info("Game is over")
     // returning the events
-    events
+    (events, gameAfter)
   }
 
   // play an action took by explorer, using events to store the log of the exploration
   // the method is recursive
-  def play(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game) {
+  def play(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game): Game = {
     // ask player for decision:
     val action = try {
       info("Asking for user's decision [explorer.takeDecision()]")
@@ -48,7 +48,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
       events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
       ActionParser(str)
     } catch {
-      case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "takeDecision"); return
+      case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "takeDecision"); return g.flaggedAsKO
     }
 
     // Handling the action from the engine point of view
@@ -60,19 +60,21 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
         info("Acknowledging results [explorer.acknowledgeResults(...)]")
         timeout(DEFAULT_TIMEOUT_VALUE) { explorer.acknowledgeResults(result.toJson.toString) }
       } catch {
-        case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "acknowledgeResults"); return
+        case e: Exception => {
+          events += ExplorationEvent(Actors.Explorer, e, "acknowledgeResults")
+          return after.flaggedAsKO
+        }
       }
       result.shouldStop match {
         case false => play(explorer, events, after) // recursive call for game continuation
-        case true  =>                               // end of the game
+        case true  => result match {  // end of the game
+          case excResult: ExceptionResult => after.flaggedAsKO // as an error
+          case _ => after // as a normal stop
+        }
       }
     } catch {
-      case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision")
+      case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision"); g.flaggedAsKO
     }
-  }
-
-  def propagateContext(e: IExplorerRaid, events: ListBuffer[ExplorationEvent]) = {
-
   }
 
   def buildInitializationContext(): JSONObject = {

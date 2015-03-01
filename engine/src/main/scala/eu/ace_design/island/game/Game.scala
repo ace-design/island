@@ -14,7 +14,8 @@ class Game private(val budget: Budget,
                    val crew: Crew,
                    val objectives: Set[(Resource, Int)],
                    val visited: Set[(Int, Int)],
-                   val boat: Option[(Int, Int)]) {
+                   val boat: Option[(Int, Int)],
+                   val isOK: Boolean = true) {
 
   /**
    * Update the current game based on the contents of the result of an action
@@ -25,12 +26,13 @@ class Game private(val budget: Budget,
     case false => (this, res)
     case true => {
       val remaining = budget - res.cost
-      (new Game(remaining, crew, objectives, visited, boat), res)
+      (new Game(remaining, crew, objectives, visited, boat, isOK), res)
     }
   }
 
-  def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc))
+  def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc), isOK)
 
+  def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
 
 }
 object Game {
