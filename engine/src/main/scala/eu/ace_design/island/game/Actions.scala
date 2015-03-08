@@ -54,19 +54,31 @@ case class Land(creek: String, people: Int) extends Action          {
     if(people >= game.crew.complete)
       throw new IllegalArgumentException("At least one men must stay on board")
     val creeks = board.findPOIsByType(Creek(null, null))
-    val cost = creeks find  { case (loc,c) => c.identifier == creek } match {
+    val (cost, loc) = creeks find  { case (loc,c) => c.identifier == creek } match {
       case None => throw new IllegalArgumentException(s"Unknown creek identifier [$creek]")
       case Some((loc,poi)) => {
         val origin = game.boat.getOrElse((board.size / 2, board.size / 2))
         val distance = Math.sqrt(Math.pow(loc._1- origin._1,2) + Math.pow(loc._2- origin._2,2))
         val ratio = board.m.size.toFloat / board.size / 10
-        (overhead + distance * ratio) * variation
+        ((overhead + distance * ratio) * variation, loc)
       }
     }
-    EmptyResult(2 + cost.ceil.toInt)
+    MovedBoatResult(2 + cost.ceil.toInt, loc, people)
   }
 
 }
+
+// { "action": "move_to", "parameters": { "direction": "..." } }
+case class MoveTo(direction: Directions.Direction) extends Action {
+
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(game.boat.isEmpty)
+      throw new IllegalArgumentException("Cannot move without having landed before")
+
+    ???
+  }
+}
+
 
 // { "action": "explore" }
 case class Explore() extends Action {
@@ -75,10 +87,7 @@ case class Explore() extends Action {
 
 
 
-// { "action": "move_to", "parameters": { "direction": "..." } }
-case class MoveTo(direction: Directions.Direction) extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
-}
+
 
 // { "action": "scout", "parameters": { "direction": "..." } }
 case class Scout(direction: Directions.Direction) extends Action {

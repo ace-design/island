@@ -26,14 +26,24 @@ class Game private(val budget: Budget,
     case false => (this, res)
     case true => {
       val remaining = budget - res.cost
-      val boatLoc = res match { case m: MovedBoatResult => Some(m.loc); case _ => this.boat }
-      (new Game(remaining, crew, objectives, visited, boatLoc, isOK), res)
+      val g = res match {
+        case e: EmptyResult => this.copy(budget = remaining)
+        case m: MovedBoatResult => {
+          this.copy(budget = remaining, crew = crew using m.men, boat = Some(m.loc), visited = visited + m.loc)
+        }
+      }
+      (g, res)
     }
   }
 
   def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc), isOK)
 
   def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
+
+  def copy(budget: Budget = this.budget, crew: Crew = this.crew, objectives: Set[(Resource, Int)] = this.objectives,
+           visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat, isOK: Boolean = this.isOK) =
+    new Game(budget, crew, objectives, visited, boat, isOK)
+
 
 }
 object Game {
@@ -72,6 +82,6 @@ object NotEnoughBudgetException {
  * number of men currently on the island
  */
 class Crew private(val complete: Int, val used: Int, val landed: Int) {
-
+  def using(m: Int) = new Crew(complete, used + m, m)
 }
 object Crew { def apply(men: Int) = new Crew(men, 0, 0) }
