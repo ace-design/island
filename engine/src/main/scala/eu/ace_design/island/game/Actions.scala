@@ -81,6 +81,7 @@ case class MoveTo(direction: Directions.Direction) extends Action {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
 
+
     ???
   }
 }

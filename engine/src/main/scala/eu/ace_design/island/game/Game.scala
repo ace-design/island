@@ -84,9 +84,12 @@ object NotEnoughBudgetException {
  * A crew represents the number of men available on the boat, the number of men used for the exploration and the
  * number of men currently on the island
  */
-class Crew private(val complete: Int, val used: Int, val landed: Int) {
+class Crew private(val complete: Int, val used: Int, val landed: Int, val location: Option[(Int, Int)]) {
   require(complete > 1, "Not enough men in the crew")
 
-  def using(m: Int) = new Crew(complete, used + m, m)
+  def using(m: Int) = new Crew(complete, used + m, m, location)
+
+  def moveTo(loc: (Int, Int)) = new Crew(complete, used, landed, Some(loc))
+
 }
-object Crew { def apply(men: Int) = new Crew(men, 0, 0) }
+object Crew { def apply(men: Int) = new Crew(men, 0, 0, None) }

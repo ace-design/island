@@ -63,6 +63,13 @@ class GameTest extends SpecificationWithJUnit {
       Crew(0)  must throwAn[IllegalArgumentException]
       Crew(1)  must throwAn[IllegalArgumentException]
     }
+    "be initialized with default values" in {
+      val crew = Crew(50)
+      crew.complete must_== 50
+      crew.landed must_== 0
+      crew.used must_== 0
+      crew.location must_== None
+    }
     "log how men are used in the crew" in {
       val crew = Crew(50)
       crew must beAnInstanceOf[Crew]
@@ -72,6 +79,13 @@ class GameTest extends SpecificationWithJUnit {
       val c2 = c1 using 5
       c2.complete must_== crew.complete; c2.landed must_== 5; c2.used must_== 20
     }
+    "know where the men who landed on the island are" in {
+      val crew = Crew(50)
+      val c1 = crew moveTo (14,17)
+      c1.location must_== Some((14,17))
+    }
+
+
 
   }
 
