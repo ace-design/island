@@ -87,9 +87,13 @@ object NotEnoughBudgetException {
 class Crew private(val complete: Int, val used: Int, val landed: Int, val location: Option[(Int, Int)]) {
   require(complete > 1, "Not enough men in the crew")
 
-  def using(m: Int) = new Crew(complete, used + m, m, location)
+  def using(m: Int) = this.copy(used = used + m, landed = m)
 
-  def moveTo(loc: (Int, Int)) = new Crew(complete, used, landed, Some(loc))
+  def moveTo(loc: (Int, Int)) = this.copy(location = Some(loc))
+
+  private def copy(complete: Int = this.complete,  used: Int = this.used,  landed: Int = this.landed,
+                   location: Option[(Int, Int)] = this.location) = new Crew(complete, used, landed, location)
+
 
 }
 object Crew { def apply(men: Int) = new Crew(men, 0, 0, None) }
