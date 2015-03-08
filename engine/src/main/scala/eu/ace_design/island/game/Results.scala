@@ -70,6 +70,16 @@ case class ScoutResult(override val cost: Int,
   }
 }
 
+case class ExploitResult(override val cost: Int, amount: Int, r: Resource) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("amount", amount)
+    result
+  }
+}
+
 /**********************************
  * Exploit result  data structure *
  **********************************/

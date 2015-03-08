@@ -15,7 +15,8 @@ class Game private(val budget: Budget,
                    val objectives: Set[(Resource, Int)],
                    val visited: Set[(Int, Int)],
                    val boat: Option[(Int, Int)],
-                   val isOK: Boolean = true) {
+                   val isOK: Boolean = true,
+                   val extracted: Map[Resource,Map[(Int,Int),Int]] = Map()) {
 
   /**
    * Update the current game based on the contents of the result of an action
@@ -37,11 +38,28 @@ class Game private(val budget: Budget,
           val updatedCrew = crew movedTo m.loc
           this.copy(crew = updatedCrew)
         }
+        case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
         case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
       }
       val remaining = budget - ( Game.MINIMAL_COST_FOR_ACTION + res.cost )
       (g.copy(budget = remaining), res)
     }
+  }
+
+  def harvested(r: Resource, loc: (Int, Int)): Int = {
+    val forResource = extracted.getOrElse(r,Map())
+    forResource.getOrElse(loc,0)
+  }
+
+  def harvest(r: Resource, loc: (Int, Int), amount: Int): Game = {
+    val updated = extracted.get(r) match {
+      case None => extracted + (r -> Map(loc -> amount))
+      case Some(data) => data.get(loc) match {
+        case None => extracted + (r -> (data + (loc -> amount)))
+        case Some(old) => extracted + (r -> (data + (loc -> (old + amount))))
+      }
+    }
+    this.copy(extracted = updated)
   }
 
   /**
@@ -51,9 +69,11 @@ class Game private(val budget: Budget,
   def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
 
   // copy a game into another one (simulating case class behavior)
-  private def copy(budget: Budget = this.budget, crew: Crew = this.crew, objectives: Set[(Resource, Int)] = this.objectives,
-           visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat, isOK: Boolean = this.isOK) =
-    new Game(budget, crew, objectives, visited, boat, isOK)
+  private def copy(budget: Budget = this.budget, crew: Crew = this.crew,
+                   objectives: Set[(Resource, Int)] = this.objectives,
+                   visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat,
+                   isOK: Boolean = this.isOK, extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted) =
+    new Game(budget, crew, objectives, visited, boat, isOK, extracted)
 
 }
 

@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.stdlib.Resources.WOOD
+import eu.ace_design.island.stdlib.Resources.{FUR, WOOD}
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -37,6 +37,15 @@ class GameTest extends SpecificationWithJUnit {
       updated.boat must_== Some((10,14))
       updated.crew.landed must_== 20
       updated.crew.location must_== updated.boat
+    }
+    "support harvest update" in {
+      g.harvested(WOOD, (0,0)) must_== 0
+      val g1 = g.harvest(WOOD, (0,0), 100)
+      g1.harvested(WOOD, (0,0)) must_== 100
+      val g2 = g.harvest(WOOD, (0,0), 25)
+      g2.harvested(WOOD, (0,0)) must_== 25
+      val g3 = g.harvest(FUR, (0,0), 25)
+      g3.harvested(FUR, (0,0)) must_== 25
     }
   }
 

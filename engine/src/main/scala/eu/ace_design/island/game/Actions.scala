@@ -160,7 +160,9 @@ case class Explore() extends Action {
     val tile = board.at(loc._1, loc._2)
     val resources = tile.stock map { stock =>
       val max = stock.resource.perHectare.toDouble / (board.tileUnit * board.tileUnit * 100)
-      val amount = stock.amount match {
+      val alreadyExtracted = game.harvested(stock.resource,loc)
+      val avail = stock.amount - alreadyExtracted
+      val amount = avail match {
         case a if a <= max / 3      => ResourceLevels.LOW
         case a if a >= 2 * max / 3  => ResourceLevels.HIGH
         case _ => ResourceLevels.MEDIUM
@@ -183,7 +185,27 @@ case class Explore() extends Action {
 
 // { "action": "exploit", "parameters": { "resource": "..." } }
 case class Exploit(resource: PrimaryResource) extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(game.boat.isEmpty)
+      throw new IllegalArgumentException("Cannot move without having landed before")
+    val loc = game.crew.location.get  // cannot be None as game.boat is not empty
+    val tile = board.at(loc._1, loc._2)
+    val extracted = tile.stock.find(s => s.resource == resource) match {
+      case None => throw new IllegalArgumentException(s"No resource [$resource] available on the current tile")
+      case Some(stock) => {
+        val alreadyExtracted = game.harvested(resource,loc)
+        val avail = stock.amount - alreadyExtracted
+        // do the extraction
+        val theoretical = (game.crew.landed * 0.5 * stock.extraction * avail * variation).ceil.toInt
+        val amount = Math.min(avail, theoretical)
+        amount
+      }
+    }
+    val boat = game.boat.get
+    val distance = Math.sqrt(Math.pow(loc._1 -boat._1,2)+Math.pow(loc._2 -boat._2,2))
+    val cost = overhead + ( 2 * distance * game.crew.landed * extracted / 10.0)
+    ExploitResult(cost = cost.ceil.toInt, amount = extracted, r = resource)
+  }
 }
 
 

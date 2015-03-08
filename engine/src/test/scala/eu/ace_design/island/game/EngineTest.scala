@@ -83,6 +83,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     val move  = """{ "action": "move_to", "parameters": { "direction": "N" } }"""
     val scout = """{ "action": "scout",   "parameters": { "direction": "N" } }"""
     val explore = """{ "action": "explore" }"""
+    val exploit = """{"action": "exploit", "parameters": { "resource": "WOOD" } }"""
 
 
     "stop when asked for" in {
@@ -184,7 +185,25 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.budget.remaining must beLessThan(g.budget.initial)
 
     }
-
+    "reject exploiting unavailable resource on a tile" in {
+      val explorer = mock[IExplorerRaid]
+      val exploit = """{"action": "exploit", "parameters": { "resource": "ORE" } }"""
+      explorer.takeDecision() returns land thenReturn exploit thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beFalse
+      there was one(explorer).initialize(anyString)
+      there was two(explorer).takeDecision
+      there was one(explorer).acknowledgeResults(anyString)
+    }
+    "reject exploiting unavailable resource on a tile" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn exploit thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
   }
 
 }
