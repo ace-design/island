@@ -39,12 +39,14 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val conditions = map.faceProps.restrictedTo(HasForCondition())
     val areas      = map.faceProps.restrictedTo(HasForArea())
     val pitches    = map.faceProps.restrictedTo(HasForPitch())
+    val moistures  = map.faceProps.restrictedTo(HasForMoisture())
 
     // Computing the resources associated to tile, face by face
     info("Binding faces to game tiles")
     val binding = map.faceRefs.toSeq map { i =>
       debug(s"  Working on face #$i")
       val biome = biomes(i)
+      val moisture = moistures(i)
       val resource = biome(rand)
       val cover = coverage(map.convexHull(map.face(i)).toSet)
       val coverByFace = cover map { case (k,(v,_)) => k -> v }
@@ -53,7 +55,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
       val coverByTile = cover map { case (k,(_,v)) => k -> v }
       val alt  = altitude(coverByTile, faceAlt)
       val biomesCoverages = biomeCover(coverByTile, biome)
-      (prod, alt, biomesCoverages)
+      val moistCovergaes  = moistureCover(coverByTile, moisture)
+      (prod, alt, biomesCoverages, moistCovergaes)
     }
 
     // Aggregate each resource produced by tile location
@@ -71,11 +74,18 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val altitudes = binding map { _._2 }
     val aggrAlts = altitudes.flatten groupBy { _._1 } map { case (k, grouped) => k -> (grouped map { _._2}).sum }
 
+    // Processing moistures for each tile
+    info("Processing altitudes associated to tiles")
+    val moisturesCoverages = binding map { _._4 }
+    val aggrMoists = moisturesCoverages.flatten groupBy { _._1 } map { case (k, grouped) =>
+      k -> (grouped map { _._2}).sum }
+
     // Returning the grid
     info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
-    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx)
-                  yield (x,y) -> Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)))).toMap
+    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> {
+                  Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)), moisture = aggrMoists((x,y)))
+      }).toMap
 
     val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
@@ -101,6 +111,10 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     case (key, percent) => key -> (biome -> percent)
   }).toSeq
 
+  def moistureCover(cover: Map[(Int, Int), Double], moisture: Double): Seq[((Int, Int), Double)] = (cover map {
+    case (key, percent) => key -> (moisture * (percent / 100))
+  }).toSeq
+
   /**
    * Identify the stock to be associated to the set of tiles covered by a given face, based on different parameters.
    *
@@ -118,7 +132,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
             ((x, y), Stock(res, (amount * (percent/100)).ceil.toInt, extraction))
           }
         }
-        debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {case (k,s) => k -> s.amount}}")
+        debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {
+          case (k,s) => k -> s.amount}}")
         dispatch.toSeq
       }
   }

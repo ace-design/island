@@ -106,7 +106,8 @@ object Directions extends Enumeration {
 /**
  * A tile represent the unit for moves on the board
  */
-case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0, biomes: Set[(Biome, Double)]= Set()) {
+case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0,
+                biomes: Set[(Biome, Double)]= Set(), moisture: Double = 0.0) {
 
   /**
    * Add a given stock to the tile. Require that no stock of the very same resource is already available
