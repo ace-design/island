@@ -16,7 +16,7 @@ trait Resource extends eu.ace_design.island.util.NameAsClassName {
 trait PrimaryResource extends Resource  {
 
   // The amount of resources (in arbitrary unit) produced by one hectare (10,000 m2) of this biome
-  protected val perHectare: Int
+  val perHectare: Int
 
   // The extraction difficulty multiplicative factor
   protected val difficulty: Double
@@ -99,7 +99,7 @@ trait PrimaryResource extends Resource  {
  * This object represents the lack of resources
  */
 object NoResource extends PrimaryResource {
-  override protected val perHectare = 0; override protected val difficulty = 0.0
+  override val perHectare = 0; override protected val difficulty = 0.0
 }
 
 trait ManufacturedResource extends Resource

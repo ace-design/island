@@ -15,7 +15,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
 
   override protected val silo: Kind = LogSilos.GAME_ENGINE
 
-  final val DEFAULT_TIMEOUT_VALUE = 2
+  final val DEFAULT_TIMEOUT_VALUE = 1000 // The player can take up to 1s to answer to queries
 
   // run a game using a given explorer. Use mutable state for the events (=> UGLY)
   def run(explorer: IExplorerRaid): (Seq[ExplorationEvent], Game) = {

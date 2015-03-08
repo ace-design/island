@@ -26,8 +26,9 @@ class Game private(val budget: Budget,
     case false => (this, res)
     case true => {
       val g = res match {
-        case e: EmptyResult => this // no side effect (except on budget)
-        case s: ScoutResult => this // no side effect (except on budget)
+        case e: EmptyResult   => this // no side effect (except on budget)
+        case s: ScoutResult   => this // no side effect (except on budget)
+        case e: ExploreResult => this // no side effect (except on budget)
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
           this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)

@@ -1,7 +1,8 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.Resource
-import org.json.JSONObject
+import eu.ace_design.island.map.resources.Conditions
+import org.json.{JSONArray, JSONObject}
 
 /**
  * Results of actions
@@ -67,6 +68,45 @@ case class ScoutResult(override val cost: Int,
     result.put("resources", (resources map { _.name }).toArray)
     result
   }
+}
+
+/**********************************
+ * Exploit result  data structure *
+ **********************************/
+object ResourceLevels extends Enumeration {
+  type ResourceLevel = Value ; val HIGH, MEDIUM, LOW = Value
+}
+
+case class ResourceExploration(resource: Resource, amount: ResourceLevels.ResourceLevel,
+                               condition: Conditions.Condition) {
+  def toJson: JSONObject = {
+    val result = new JSONObject()
+    result.put("resource", resource.name)
+    result.put("amount", amount)
+    result.put("cond", condition)
+    result
+  }
+}
+
+case class ExploreResult(override val cost: Int,
+                         resources: Set[ResourceExploration], pois: Set[PointOfInterest])  extends  Result{
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("resources", (resources map { _.toJson }).toArray)
+    val jsonPOIS = new JSONArray()
+    pois foreach { p =>
+      val obj = new JSONObject()
+      obj.put("kind", p.name)
+      obj.put("id", p.identifier)
+      jsonPOIS.put(obj)
+    }
+    result.put("pois", jsonPOIS)
+    result
+  }
+
 }
 
 case class ExceptionResult(e: Exception) extends Result {

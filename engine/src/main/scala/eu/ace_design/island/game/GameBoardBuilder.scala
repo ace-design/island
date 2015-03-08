@@ -4,7 +4,7 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
-import eu.ace_design.island.map.resources.{Biome, PrimaryResource, NoResource}
+import eu.ace_design.island.map.resources.{NoResource, Biome, PrimaryResource}
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 

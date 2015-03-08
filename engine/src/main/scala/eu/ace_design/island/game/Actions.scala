@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{Conditions, Soils, PrimaryResource, Resource}
 import eu.ace_design.island.util.{Logger, LogSilos}
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
@@ -153,7 +153,31 @@ case class Scout(direction: Directions.Direction) extends Action {
 
 // { "action": "explore" }
 case class Explore() extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(game.boat.isEmpty)
+      throw new IllegalArgumentException("Cannot move without having landed before")
+    val loc = game.crew.location.get  // cannot be None as game.boat is not empty
+    val tile = board.at(loc._1, loc._2)
+    val resources = tile.stock map { stock =>
+      val max = stock.resource.perHectare.toDouble / (board.tileUnit * board.tileUnit * 100)
+      val amount = stock.amount match {
+        case a if a <= max / 3      => ResourceLevels.LOW
+        case a if a >= 2 * max / 3  => ResourceLevels.HIGH
+        case _ => ResourceLevels.MEDIUM
+      }
+      val condition = stock.extraction match {
+        case e if e <= 0.6 => Conditions.HARSH
+        case e if e >= 1.3 => Conditions.EASY
+        case _ => Conditions.FAIR
+      }
+      ResourceExploration(resource = stock.resource, amount = amount, condition = condition)
+    }
+    val pois = board.pois.getOrElse((loc._1, loc._2), Seq()).toSet
+    val factor = (0.0 /: tile.biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)} / 100
+    val men = game.crew.landed
+    val cost =  (overhead + (3 * men * factor)) * variation
+    ExploreResult(cost = cost.ceil.toInt, resources = resources, pois = pois)
+  }
 }
 
 

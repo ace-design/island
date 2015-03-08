@@ -4,6 +4,7 @@ import eu.ace_design.island.bot.IExplorerRaid
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Biomes._
+import eu.ace_design.island.stdlib.Resources.WOOD
 import org.specs2.mutable._
 import org.specs2.mock.Mockito
 import org.junit.runner.RunWith
@@ -17,9 +18,11 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   val emptyBoard = mock[GameBoard]
   emptyBoard.findPOIsByType(any) returns Set((10,10) -> Creek("c1", None), (0,0) -> Creek("border", None))
   emptyBoard.size returns 10
-  val t0 = Tile(altitude = 3, biomes = Set((TUNDRA, 100.0))); val t1 = Tile(altitude = 12, biomes = Set((MANGROVE, 100.0)))
+  val t0 = Tile(altitude = 3, biomes = Set((TUNDRA, 100.0)), stock = Set(Stock(WOOD, 30, 1.1)))
+  val t1 = Tile(altitude = 12, biomes = Set((MANGROVE, 100.0)))
   emptyBoard.tiles returns Map((9,10) -> t1, (10,10) -> t0)
   emptyBoard.at(9,10)  returns t1 ; emptyBoard.at(10,10) returns t0
+  emptyBoard.pois returns Map((10,10) -> Set(Creek("c1", None).asInstanceOf[PointOfInterest]), (0,0) -> Set(Creek("border", None)))
   emptyBoard.m returns mock[IslandMap]; emptyBoard.m.size returns 800
   val emptyGame = Game(Budget(600), Crew(50), Set())
 
@@ -79,6 +82,8 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     val stop  = """{ "action": "stop" }"""
     val move  = """{ "action": "move_to", "parameters": { "direction": "N" } }"""
     val scout = """{ "action": "scout",   "parameters": { "direction": "N" } }"""
+    val explore = """{ "action": "explore" }"""
+
 
     "stop when asked for" in {
       val explorer = mock[IExplorerRaid]
@@ -169,6 +174,15 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
+    }
+    "support exploring a tile" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn explore thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+
     }
 
   }
