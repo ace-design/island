@@ -123,22 +123,48 @@ case class MoveTo(direction: Directions.Direction) extends Action {
 }
 
 
+/**
+ * the scout action returns information about neighbours tiles
+ * @param direction
+ */
+case class Scout(direction: Directions.Direction) extends Action {
+
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(game.boat.isEmpty)
+      throw new IllegalArgumentException("Cannot move without having landed before")
+    val loc = game.crew.location.get  // cannot be None as game.boat is not empty
+    val oldTile = board.at(loc._1, loc._2)
+    val updatedLoc = Directions.move(loc._1, loc._2, direction)
+    if(! board.tiles.keySet.contains(updatedLoc))
+      return ScoutResult(cost = overhead, resources = Set(), altitude = 0, unreachable = true)
+    val newTile = board.at(updatedLoc._1, updatedLoc._2)
+
+    val res = newTile.stock map { _.resource.asInstanceOf[Resource] }
+    val delta = oldTile.altitude - newTile.altitude
+    val cost = {
+      val men = game.crew.landed
+      val factor = (0.0 /: newTile.biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)} / 100
+      (overhead + (men * factor)) * variation
+    }
+    ScoutResult(cost = cost.ceil.toInt, resources = res, altitude = delta.ceil.toInt)
+  }
+}
+
+
 // { "action": "explore" }
 case class Explore() extends Action {
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
 
-
-
-
-// { "action": "scout", "parameters": { "direction": "..." } }
-case class Scout(direction: Directions.Direction) extends Action {
+// { "action": "exploit", "parameters": { "resource": "..." } }
+case class Exploit(resource: PrimaryResource) extends Action {
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 
-// { "action": "exploit", "parameters": { "resource": "..." } }
-case class Exploit(resource: PrimaryResource) extends Action {
+
+// { "action": "glimpse" }
+case class Glimpse() extends Action {
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
 }
 

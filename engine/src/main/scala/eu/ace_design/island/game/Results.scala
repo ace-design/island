@@ -1,5 +1,6 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.map.resources.Resource
 import org.json.JSONObject
 
 /**
@@ -53,6 +54,21 @@ case class MovedCrewResult(override val cost: Int, loc: (Int,Int)) extends Resul
 }
 
 
+case class ScoutResult(override val cost: Int,
+                       resources: Set[Resource], altitude: Int, unreachable: Boolean = false) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    if (unreachable)
+      result.put("unreachable", unreachable)
+
+    result.put("altitude", altitude)
+    result.put("resources", (resources map { _.name }).toArray)
+    result
+  }
+}
+
 case class ExceptionResult(e: Exception) extends Result {
   override val ok: Boolean = false
   override val cost: Int = 0
@@ -60,9 +76,9 @@ case class ExceptionResult(e: Exception) extends Result {
 
   override protected def extras(): JSONObject = {
     val result = new JSONObject()
-    result.append("exception", e.getClass.getName)
-    result.append("message", e.getMessage)
-    result.append("stacktrace", e.toString)
+    result.put("exception", e.getClass.getName)
+    result.put("message", e.getMessage)
+    result.put("stacktrace", e.toString)
     result
   }
 }

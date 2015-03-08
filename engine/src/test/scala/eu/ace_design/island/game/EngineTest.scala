@@ -75,9 +75,10 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
 
   "under normal conditions, the engine" should {
 
-    val land = """{ "action": "land", "parameters": { "creek": "c1", "people": 3 } } }"""
-    val stop = """{ "action": "stop" }"""
-    val move = """{ "action": "move_to", "parameters": { "direction": "N" } }"""
+    val land  = """{ "action": "land", "parameters": { "creek": "c1", "people": 3 } } }"""
+    val stop  = """{ "action": "stop" }"""
+    val move  = """{ "action": "move_to", "parameters": { "direction": "N" } }"""
+    val scout = """{ "action": "scout",   "parameters": { "direction": "N" } }"""
 
     "stop when asked for" in {
       val explorer = mock[IExplorerRaid]
@@ -147,6 +148,23 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "support moving from one tile to another one" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn move thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+    "support the detection of unreachable tiles" in {
+      val explorer = mock[IExplorerRaid]
+      val borderLand = """{ "action": "land", "parameters": { "creek": "border", "people": 3 } } }"""
+      explorer.takeDecision() returns borderLand thenReturn scout thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+    "support scouting a tile" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn scout thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
