@@ -29,7 +29,8 @@ class Game private(val budget: Budget,
       val g = res match {
         case e: EmptyResult => this.copy(budget = remaining)
         case m: MovedBoatResult => {
-          this.copy(budget = remaining, crew = crew using m.men, boat = Some(m.loc), visited = visited + m.loc)
+          val updatedCrew = crew movedTo m.loc using m.men
+          this.copy(budget = remaining, crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
         }
       }
       (g, res)
@@ -89,7 +90,7 @@ class Crew private(val complete: Int, val used: Int, val landed: Int, val locati
 
   def using(m: Int) = this.copy(used = used + m, landed = m)
 
-  def moveTo(loc: (Int, Int)) = this.copy(location = Some(loc))
+  def movedTo(loc: (Int, Int)) = this.copy(location = Some(loc))
 
   private def copy(complete: Int = this.complete,  used: Int = this.used,  landed: Int = this.landed,
                    location: Option[(Int, Int)] = this.location) = new Crew(complete, used, landed, location)

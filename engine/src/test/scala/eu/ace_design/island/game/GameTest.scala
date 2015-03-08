@@ -36,6 +36,7 @@ class GameTest extends SpecificationWithJUnit {
       updated.budget.remaining must_== 70
       updated.boat must_== Some((10,14))
       updated.crew.landed must_== 20
+      updated.crew.location must_== updated.boat
     }
   }
 
@@ -81,7 +82,7 @@ class GameTest extends SpecificationWithJUnit {
     }
     "know where the men who landed on the island are" in {
       val crew = Crew(50)
-      val c1 = crew moveTo (14,17)
+      val c1 = crew movedTo (14,17)
       c1.location must_== Some((14,17))
     }
 

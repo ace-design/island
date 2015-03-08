@@ -80,7 +80,7 @@ case class MoveTo(direction: Directions.Direction) extends Action {
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
-
+    val loc = game.crew.location
 
     ???
   }
