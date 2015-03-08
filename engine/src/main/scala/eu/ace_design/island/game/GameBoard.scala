@@ -13,7 +13,8 @@ import eu.ace_design.island.map.resources.{Biome, PrimaryResource, Resource}
  */
 case class GameBoard(size: Int, m: IslandMap,
                      tiles: Map[(Int,Int), Tile] = Map(),
-                     pois:  Map[(Int,Int), Set[PointOfInterest]] = Map()) {
+                     pois:  Map[(Int,Int), Set[PointOfInterest]] = Map(),
+                     tileUnit: Int = DEFAULT_TILE_UNIT) {
 
   /**
    * Add a location/tile couple to the current GameBoard (update if already existing)

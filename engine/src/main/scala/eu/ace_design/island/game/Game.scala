@@ -25,15 +25,20 @@ class Game private(val budget: Budget,
   def updatedBy(res: Result): (Game, Result) = res.ok match {
     case false => (this, res)
     case true => {
-      val remaining = budget - res.cost
+      val remaining = budget - ( Game.MINIMAL_COST_FOR_ACTION + res.cost )
       val g = res match {
-        case e: EmptyResult => this.copy(budget = remaining)
+        case e: EmptyResult => this
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
-          this.copy(budget = remaining, crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
+          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
         }
+        case  m: MovedCrewResult => {
+          val updatedCrew = crew movedTo m.loc
+          this.copy(crew = updatedCrew)
+        }
+        case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
       }
-      (g, res)
+      (g.copy(budget = remaining), res)
     }
   }
 
@@ -51,6 +56,8 @@ class Game private(val budget: Budget,
 }
 
 object Game {
+  final val MINIMAL_COST_FOR_ACTION = 2   // TODO: refactor [An action costs at min 2 action points]
+
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
     new Game(budget,crew, objectives, visited = Set(), boat = None, true)
 }

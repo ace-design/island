@@ -44,7 +44,7 @@ case class Stop() extends Action {
         (overhead + distance * ratio) * variation
       }
     }
-    EmptyResult(2 + cost.ceil.toInt, shouldStop = true)
+    EmptyResult(cost.ceil.toInt, shouldStop = true)
   }
 
 }
@@ -69,25 +69,40 @@ case class Land(creek: String, people: Int) extends Action          {
         ((overhead + distance * ratio) * variation, loc)
       }
     }
-    MovedBoatResult(2 + cost.ceil.toInt, loc, people)
+    MovedBoatResult(cost.ceil.toInt, loc, people)
   }
 
 }
 
-// { "action": "move_to", "parameters": { "direction": "..." } }
+/**
+ * The move to action make the crew move to another tile on the map
+ * @param direction
+ */
 case class MoveTo(direction: Directions.Direction) extends Action {
-
+  import eu.ace_design.island.map.resources.PIXEL_FACTOR
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
     val loc = game.crew.location.get  // cannot be None as game.boat is not empty
+    val oldTile = board.at(loc._1, loc._2)
     val updatedLoc = Directions.move(loc._1, loc._2, direction)
-
     if(! board.tiles.keySet.contains(updatedLoc))
-      throw new IllegalArgumentException("You just fall out of the world limit.")
+      throw new IllegalArgumentException("Congrats, you just fall out of the world limit.")
 
-
-    ???
+    val newTile = board.at(updatedLoc._1, updatedLoc._2)
+    // Now we can move. Move is a function of men, altitude difference and biomes to cross.
+    val cost = {
+      val men = game.crew.landed
+      val rise = Math.abs(oldTile.altitude - newTile.altitude) // altitude already stored as meters
+      val run = board.tileUnit.toDouble * PIXEL_FACTOR // run to be transformed from pixel to meters
+      val pitch = 100 * (rise / run) // http://en.wikipedia.org/wiki/Grade_(slope)
+      val pitchFactor = Math.min(0.1, Math.abs(100 - pitch))
+      val biomes = newTile.biomes
+      val crossFactor = (0.0 /: biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)}
+      val factor = (pitchFactor + crossFactor) / 2
+      (overhead + (men * factor)) * variation
+    }
+    MovedCrewResult(cost = cost.ceil.toInt, loc = updatedLoc)
   }
 }
 

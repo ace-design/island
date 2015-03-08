@@ -28,12 +28,12 @@ class GameTest extends SpecificationWithJUnit {
     "support update with an EmptyResult" in {
       val r = EmptyResult(cost = 20)
       val (updated, _) = g updatedBy r
-      updated.budget.remaining must_== 80
+      updated.budget.remaining must_== 80 - Game.MINIMAL_COST_FOR_ACTION
     }
     "support update with a MoveBoatResult" in {
       val r = MovedBoatResult(cost = 30, loc = (10,14), men = 20)
       val (updated, _) = g updatedBy r
-      updated.budget.remaining must_== 70
+      updated.budget.remaining must_== 70 - Game.MINIMAL_COST_FOR_ACTION
       updated.boat must_== Some((10,14))
       updated.crew.landed must_== 20
       updated.crew.location must_== updated.boat

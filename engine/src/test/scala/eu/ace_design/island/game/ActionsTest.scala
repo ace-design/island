@@ -25,7 +25,7 @@ class ActionsTest extends SpecificationWithJUnit with Mockito {
       val (after, result) = action(board, game)
       result.cost must beGreaterThan(1)
       result.cost must beLessThanOrEqualTo(action.maxOverhead + action.maxOverhead/2)
-      after.budget.remaining must_== game.budget.remaining - result.cost
+      after.budget.remaining must_== game.budget.remaining - result.cost - Game.MINIMAL_COST_FOR_ACTION
     }
 
   }

@@ -46,7 +46,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val binding = map.faceRefs.toSeq map { i =>
       debug(s"  Working on face #$i")
       val biome = biomes(i)
-      val moisture = moistures(i)
+      val moisture = moistures.getOrElse(i,0.0) // OCEAN moisture == 0 (as moisture represents drinkable water)
       val resource = biome(rand)
       val cover = coverage(map.convexHull(map.face(i)).toSet)
       val coverByFace = cover map { case (k,(v,_)) => k -> v }
@@ -55,8 +55,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
       val coverByTile = cover map { case (k,(_,v)) => k -> v }
       val alt  = altitude(coverByTile, faceAlt)
       val biomesCoverages = biomeCover(coverByTile, biome)
-      val moistCovergaes  = moistureCover(coverByTile, moisture)
-      (prod, alt, biomesCoverages, moistCovergaes)
+      val moistCoverages  = moistureCover(coverByTile, moisture)
+      (prod, alt, biomesCoverages, moistCoverages)
     }
 
     // Aggregate each resource produced by tile location
@@ -93,7 +93,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     }
 
     info("Introducing Points of Interest")
-    val main = GameBoard(map.size, map, tiles)
+    val main = GameBoard(map.size, map, tiles, tileUnit = chunk)
     // Specializing the sequence of POIGenerator for this very build
     val gens = poiGenerators map { g => g(rand,locator) _ }
     val withPOIs = (main /: gens) { (acc, gen) => gen(acc) }

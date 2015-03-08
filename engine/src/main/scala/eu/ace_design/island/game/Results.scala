@@ -46,6 +46,12 @@ case class MovedBoatResult(override val cost: Int, loc: (Int,Int), val men: Int)
   override protected def extras(): JSONObject = new JSONObject()
 }
 
+case class MovedCrewResult(override val cost: Int, loc: (Int,Int)) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = new JSONObject()
+}
+
 
 case class ExceptionResult(e: Exception) extends Result {
   override val ok: Boolean = false
