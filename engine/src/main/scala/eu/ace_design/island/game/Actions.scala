@@ -1,15 +1,19 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
+import eu.ace_design.island.util.{Logger, LogSilos}
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import scala.util.Random
 
+
 /**
  * An action is used to model an action taken by a player's bot.
  */
-sealed trait Action {
+sealed trait Action extends Logger {
+
+  override val silo = LogSilos.GAME_ENGINE
 
   // Maximal value for the action overhead
   val maxOverhead: Int = 10
@@ -35,15 +39,18 @@ sealed trait Action {
 case class Stop() extends Action {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    debug("  Stop:")
     val cost = game.boat match {
       case None => overhead * variation
       case Some((x,y)) => {
         val center = board.size / 2
         val distance = Math.sqrt(Math.pow(x-center,2) + Math.pow(y-center,2))
         val ratio = board.m.size.toFloat / board.size / 10
+        debug(s"    distance: $distance / ratio: $ratio ")
         (overhead + distance * ratio) * variation
       }
     }
+    info(s"  Stop: cost = $cost")
     EmptyResult(cost.ceil.toInt, shouldStop = true)
   }
 
@@ -57,6 +64,7 @@ case class Stop() extends Action {
 case class Land(creek: String, people: Int) extends Action          {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    debug("  Land:")
     if(people >= game.crew.complete)
       throw new IllegalArgumentException("At least one men must stay on board")
     val creeks = board.findPOIsByType(Creek(null, null))
@@ -66,9 +74,11 @@ case class Land(creek: String, people: Int) extends Action          {
         val origin = game.boat.getOrElse((board.size / 2, board.size / 2))
         val distance = Math.sqrt(Math.pow(loc._1- origin._1,2) + Math.pow(loc._2- origin._2,2))
         val ratio = board.m.size.toFloat / board.size / 10
+        debug(s"    distance: $distance / ratio: $ratio ")
         ((overhead + distance * ratio) * variation, loc)
       }
     }
+    info(s"  Land: cost = $cost")
     MovedBoatResult(cost.ceil.toInt, loc, people)
   }
 
@@ -79,8 +89,11 @@ case class Land(creek: String, people: Int) extends Action          {
  * @param direction
  */
 case class MoveTo(direction: Directions.Direction) extends Action {
+
   import eu.ace_design.island.map.resources.PIXEL_FACTOR
+
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    debug("  MoveTo:")
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
     val loc = game.crew.location.get  // cannot be None as game.boat is not empty
@@ -96,12 +109,15 @@ case class MoveTo(direction: Directions.Direction) extends Action {
       val rise = Math.abs(oldTile.altitude - newTile.altitude) // altitude already stored as meters
       val run = board.tileUnit.toDouble * PIXEL_FACTOR // run to be transformed from pixel to meters
       val pitch = 100 * (rise / run) // http://en.wikipedia.org/wiki/Grade_(slope)
-      val pitchFactor = Math.min(0.1, Math.abs(100 - pitch))
+      val pitchFactor = Math.min(0.5, Math.abs(100 - pitch))
       val biomes = newTile.biomes
-      val crossFactor = (0.0 /: biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)}
-      val factor = (pitchFactor + crossFactor) / 2
-      (overhead + (men * factor)) * variation
+      val crossFactor = (0.0 /: biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)} / 100
+      val factor = (pitchFactor + 2 * crossFactor) / 3
+      debug(s"    men: $men / pitch: $pitchFactor / cross: $crossFactor")
+      debug(s"     ==>> factor: $factor")
+      (overhead + (2.0 * men * factor)) * variation
     }
+    info(s"  MoveTo: cost = $cost")
     MovedCrewResult(cost = cost.ceil.toInt, loc = updatedLoc)
   }
 }

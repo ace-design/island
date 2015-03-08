@@ -53,7 +53,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
     }
 
     // Handling the action from the engine point of view
-    try {
+    val result = try {
       info("Applying user's decision to the board")
       val (after, result) = action(board, g)
       events += ExplorationEvent(Actors.Engine, result.toJson)
@@ -76,6 +76,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
     } catch {
       case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision"); g.flaggedAsKO
     }
+    result
   }
 
   def buildInitializationContext(): JSONObject = {
