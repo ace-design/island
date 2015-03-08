@@ -6,6 +6,7 @@ import eu.ace_design.island.stdlib.Islands
 import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
 import eu.ace_design.island.util.{LogSilos, Logger}
 import eu.ace_design.island.dsl.DiSLand
+import eu.ace_design.island.viewer.svg.{FogOfWarViewer, BiomeViewer, FogOfWar}
 
 
 /**
@@ -16,7 +17,7 @@ object Main extends App with Logger with DiSLand {
   val silo = LogSilos.ROOT
 
   // Building the island
-  val island: IslandMap = Islands.tortuga
+  val island: IslandMap = Islands.donuts
   export(island)
 
   // Instantiating the game board
@@ -35,6 +36,14 @@ object Main extends App with Logger with DiSLand {
     m -> (s"$name-pitch" as heatMap(HasForPitch(), Color.DARK_GRAY))
     islandStatistics(m)
   }
+
+  /*private def withFog(m: IslandMap, name: String = "./fog") = {
+    val fog = new FogOfWar(factor = 10, visited = Set((0,0), (10,15),(10,16),(11,15)), pois = Set((103.0, 154.0)), size = m.size)
+    val viewer = FogOfWarViewer(fog)
+    viewer(m).renameTo(new java.io.File(name+".svg"))
+  } */ // TODO move this code to the arena
+
+
 
   protected def islandStatistics(m: IslandMap) = {
     info("Available statistics for the Island")

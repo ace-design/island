@@ -11,7 +11,7 @@ import Colors._
  * the BiomeViewer display a map by painting faces according to their biomes, and also rivers (in addition to
  * oceans).
  */
-object BiomeViewer extends SVGViewer {
+trait BiomeViewer extends SVGViewer {
 
   protected def draw(m: IslandMap, g: Graphics2D) {
     m.faceRefs foreach { drawABiome(_, m, g) }
@@ -47,4 +47,9 @@ object BiomeViewer extends SVGViewer {
     } catch { case e: IllegalArgumentException => } // do nothing if not a river
   }
 
+}
+object BiomeViewer extends BiomeViewer
+
+case class FogOfWarViewer(fog: FogOfWar) extends BiomeViewer {
+  override val enhancers = Seq(fog)
 }

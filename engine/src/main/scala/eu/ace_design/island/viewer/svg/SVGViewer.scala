@@ -1,10 +1,18 @@
 package eu.ace_design.island.viewer.svg
 
+import java.awt.Graphics2D
 import java.awt.geom.Path2D
 import java.io.File
 
 import eu.ace_design.island.map._
+import eu.ace_design.island.util.LogSilos
 import eu.ace_design.island.viewer.Viewer
+
+
+trait SVGEnhancer {
+  val silo = LogSilos.VIEWER
+  def apply(g: Graphics2D)
+}
 
 /**
  * The SVG viewer relies on the Apache Batik library (SVG) and the JTS library (to compute the convex hull of a face)
@@ -18,6 +26,8 @@ trait SVGViewer extends Viewer  {
 
   override val extension = "svg"
   override val mimeType = "image/svg+xml"
+
+  protected val enhancers: Seq[SVGEnhancer] = Seq()
 
   /**
    * The function that actually draw the map, to be implemented by a concrete SVG viewer
@@ -35,6 +45,7 @@ trait SVGViewer extends Viewer  {
     info("Building an SVG document")
     val paintbrush = initGraphics(m)
     draw(m, paintbrush)
+    enhancers foreach { _.apply(paintbrush) }
     val f = flush(paintbrush)
     debug(s"Storing the document in [${f.toString}]")
     f
