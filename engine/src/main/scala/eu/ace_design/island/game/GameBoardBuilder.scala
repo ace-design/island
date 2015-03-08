@@ -4,7 +4,7 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
-import eu.ace_design.island.map.resources.{PrimaryResource, NoResource}
+import eu.ace_design.island.map.resources.{Biome, PrimaryResource, NoResource}
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
@@ -39,22 +39,32 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val conditions = map.faceProps.restrictedTo(HasForCondition())
     val areas      = map.faceProps.restrictedTo(HasForArea())
     val pitches    = map.faceProps.restrictedTo(HasForPitch())
+    val moistures  = map.faceProps.restrictedTo(HasForMoisture())
 
     // Computing the resources associated to tile, face by face
     info("Binding faces to game tiles")
     val binding = map.faceRefs.toSeq map { i =>
       debug(s"  Working on face #$i")
-      val resource = biomes(i)(rand)
+      val biome = biomes(i)
+      val moisture = moistures.getOrElse(i,0.0) // OCEAN moisture == 0 (as moisture represents drinkable water)
+      val resource = biome(rand)
       val cover = coverage(map.convexHull(map.face(i)).toSet)
       val coverByFace = cover map { case (k,(v,_)) => k -> v }
       val prod = production(coverByFace, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
       val faceAlt = map.vertexProps.getValueOrElse(map.face(i).center, HasForHeight(), 0.0)
       val coverByTile = cover map { case (k,(_,v)) => k -> v }
       val alt  = altitude(coverByTile, faceAlt)
-      (prod, alt)
+      val biomesCoverages = biomeCover(coverByTile, biome)
+      val moistCoverages  = moistureCover(coverByTile, moisture)
+      (prod, alt, biomesCoverages, moistCoverages)
     }
 
     // Aggregate each resource produced by tile location
+    info("Processing biomes associated to each tiles")
+    val biomesCoverage = binding map { _._3 }
+    val aggrBiomes = biomesCoverage.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 }).toSet }
+
+
     info("Processing resources produced by the biomes")
     val productions = binding map { _._1 }
     val aggrProds = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
@@ -64,10 +74,18 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val altitudes = binding map { _._2 }
     val aggrAlts = altitudes.flatten groupBy { _._1 } map { case (k, grouped) => k -> (grouped map { _._2}).sum }
 
+    // Processing moistures for each tile
+    info("Processing altitudes associated to tiles")
+    val moisturesCoverages = binding map { _._4 }
+    val aggrMoists = moisturesCoverages.flatten groupBy { _._1 } map { case (k, grouped) =>
+      k -> (grouped map { _._2}).sum }
+
     // Returning the grid
     info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
-    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile(altitude = aggrAlts((x,y)))).toMap
+    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> {
+                  Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)), moisture = aggrMoists((x,y)))
+      }).toMap
 
     val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
@@ -75,7 +93,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     }
 
     info("Introducing Points of Interest")
-    val main = GameBoard(map.size, map, tiles)
+    val main = GameBoard(map.size, map, tiles, tileUnit = chunk)
     // Specializing the sequence of POIGenerator for this very build
     val gens = poiGenerators map { g => g(rand,locator) _ }
     val withPOIs = (main /: gens) { (acc, gen) => gen(acc) }
@@ -87,6 +105,14 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
 
   def altitude(cover: Map[(Int, Int), Double], alt: Double): Seq[((Int, Int), Double)] = (cover map {
     case (key, percent) => key -> (alt * (percent / 100))
+  }).toSeq
+
+  def biomeCover(cover: Map[(Int, Int), Double], biome: Biome): Seq[((Int, Int), (Biome, Double))] = (cover map {
+    case (key, percent) => key -> (biome -> percent)
+  }).toSeq
+
+  def moistureCover(cover: Map[(Int, Int), Double], moisture: Double): Seq[((Int, Int), Double)] = (cover map {
+    case (key, percent) => key -> (moisture * (percent / 100))
   }).toSeq
 
   /**
@@ -106,7 +132,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
             ((x, y), Stock(res, (amount * (percent/100)).ceil.toInt, extraction))
           }
         }
-        debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {case (k,s) => k -> s.amount}}")
+        debug(s"  $res: amount: $amount, Extraction factor: $extraction\n  Dispatch ${dispatch map {
+          case (k,s) => k -> s.amount}}")
         dispatch.toSeq
       }
   }

@@ -14,8 +14,11 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   "EngineTest Specifications".title
 
   val emptyBoard = mock[GameBoard]
-  emptyBoard.findPOIsByType(any) returns Set((10,10) -> Creek("c1", None))
+  emptyBoard.findPOIsByType(any) returns Set((10,10) -> Creek("c1", None), (0,0) -> Creek("border", None))
   emptyBoard.size returns 10
+  val t0 = Tile(altitude = 3); val t1 = Tile(altitude = 12)
+  emptyBoard.tiles returns Map((9,10) -> t1, (10,10) -> t0)
+  emptyBoard.at(9,10)  returns t1 ; emptyBoard.at(10,10) returns t0
   emptyBoard.m returns mock[IslandMap]; emptyBoard.m.size returns 800
   val emptyGame = Game(Budget(600), Crew(50), Set())
 
@@ -71,7 +74,11 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
 
   "under normal conditions, the engine" should {
 
-    "stop when asked to" in {
+    val land = """{ "action": "land", "parameters": { "creek": "c1", "people": 3 } } }"""
+    val stop = """{ "action": "stop" }"""
+    val move = """{ "action": "move_to", "parameters": { "direction": "N" } }"""
+
+    "stop when asked for" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "stop" }"""
       val engine = new Engine(emptyBoard, emptyGame)
@@ -104,29 +111,46 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       there was one(explorer).takeDecision
       there was no(explorer).acknowledgeResults(anyString)
     }
-    "reject landing with unknown creek" in {
-      val explorer = mock[IExplorerRaid]
-      explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "cXX", "people": 3 } } }"""
-      val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
-      g.isOK must beFalse
-      events.size must_== 3 // initialization context + received action + end of game event
-      there was one(explorer).initialize(anyString)
-      there was one(explorer).takeDecision
-      there was no(explorer).acknowledgeResults(anyString)
-    }
     "support the sequencing of operation, e.g., land then stop" in {
-      val land = """{ "action": "land", "parameters": { "creek": "c1", "people": 3 } } }"""
-      val stop = """{ "action": "stop" }"""
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
-      println(events)
       g.isOK must beTrue
       there was one(explorer).initialize(anyString)
       there was two(explorer).takeDecision
       there was two(explorer).acknowledgeResults(anyString)
+    }
+    "reject moving without previous landing" in {
+      val move = """{"action": "move_to", "parameters": { "direction": "E" } }"""
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns move
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beFalse
+      there was one(explorer).initialize(anyString)
+      there was one(explorer).takeDecision
+      there was no(explorer).acknowledgeResults(anyString)
+    }
+    "reject moving out of the map" in {
+      val borderLand = """{ "action": "land", "parameters": { "creek": "border", "people": 3 } } }"""
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns borderLand thenReturn  move
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beFalse
+      there was one(explorer).initialize(anyString)
+      there was two(explorer).takeDecision
+      there was one(explorer).acknowledgeResults(anyString)
+    }
+    "support moving from one tile to another one" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn move thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      println(events)
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
     }
 
   }

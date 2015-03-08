@@ -1,7 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.geom._
-import eu.ace_design.island.map.{IsCoast, HasForHeight, HasForPitch, IslandMap}
+import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.{Resource, NoResource}
 import eu.ace_design.island.stdlib.{Biomes, Resources}
 import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
@@ -157,6 +157,19 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       assess(2, 2)
     }
 
+    "Assign relevant biomes to each tile" in {
+      import Biomes._
+      val (b0, b1, b2, b3) = (TEMPERATE_DECIDUOUS_FOREST, TUNDRA, MANGROVE, GLACIER)
+      board.at(0,0).biomes map { _._1 } must_== Set(b0,b1)
+      board.at(0,0).biomes foreach { case (b,v) =>
+        if (b == b0) (v must beCloseTo(25, epsilon)) else (v must beCloseTo(75, epsilon)) }
+      board.at(0,1).biomes map { _._1 } must_== Set(b1)
+      board.at(0,1).biomes.size must_== 1
+      board.at(0,1).biomes.head._2 must beCloseTo (100, epsilon)
+      // TODO: continue tile coverage, but should be OK as Altitude is already ok and use similar mechanisms
+    }
+
+
     "assign relevant altitudes to each tile" in {
       val (a0, a1, a2, a3) = (100.0, 300.0, 200.0, 400.0)
       board.at(0,0).altitude must beCloseTo(0.75*a1 + 0.25*a0, epsilon)
@@ -168,6 +181,19 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       board.at(2,0).altitude must beCloseTo(0.50*a0 + 0.50*a3, epsilon)
       board.at(2,1).altitude must beCloseTo(0.75*a3 + 0.25*a2, epsilon)
       board.at(2,2).altitude must beCloseTo(0.75*a2 + 0.25*a3, epsilon)
+    }
+
+    "assign relevant moistures to each tile" in {
+      val (m0, m1, m2, m3) = (100.0, 300.0, 200.0, 400.0)
+      board.at(0,0).moisture must beCloseTo(0.75*m1 + 0.25*m0, epsilon)
+      board.at(0,1).moisture must beCloseTo(m1,                epsilon)
+      board.at(0,2).moisture must beCloseTo(0.50*m1 + 0.50*m2, epsilon)
+      board.at(1,0).moisture must beCloseTo(0.25*m1 + 0.75*m0, epsilon)
+      board.at(1,1).moisture must beCloseTo(0.50*m1 + 0.50*m2, epsilon)
+      board.at(1,2).moisture must beCloseTo(m2,                epsilon)
+      board.at(2,0).moisture must beCloseTo(0.50*m0 + 0.50*m3, epsilon)
+      board.at(2,1).moisture must beCloseTo(0.75*m3 + 0.25*m2, epsilon)
+      board.at(2,2).moisture must beCloseTo(0.75*m2 + 0.25*m3, epsilon)
     }
 
     "by default do not add any POIs to the board" in {
@@ -234,16 +260,16 @@ object GameBoardBuilderDataSet {
   val fProps = PropertySet() +
                     // Face 0: TEMPERATE_DECIDUOUS_FOREST, NORMAL, FAIR
                     (0 -> HasForBiome(TEMPERATE_DECIDUOUS_FOREST)) + (0 -> HasForArea(15000.0)) + (0 -> HasForPitch(0.0)) +
-                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR))  + 
+                        (0 -> HasForSoil(NORMAL))  + (0 -> HasForCondition(FAIR))  + (0 -> HasForMoisture(100.0)) +
                     // Face 1: TUNDRA, POOR, FAIR
                     (1 -> HasForBiome(TUNDRA))           + (1 -> HasForArea(30000.0)) + (1 -> HasForPitch(0.0)) +
-                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR))  + 
+                        (1 -> HasForSoil(POOR))    + (1 -> HasForCondition(FAIR))  +  (1 -> HasForMoisture(300.0)) +
                     // Face 2: MANGROVE, FERTILE, HARSH
                     (2 -> HasForBiome(MANGROVE))         + (2 -> HasForArea(30000.0)) + (2 -> HasForPitch(0.0)) +
-                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) + 
+                        (2 -> HasForSoil(FERTILE)) + (2 -> HasForCondition(HARSH)) +  (2 -> HasForMoisture(200.0))  +
                     // Face 3: GLACIER, POOR, EASY
                     (3 -> HasForBiome(GLACIER))          + (3 -> HasForArea(15000.0)) + (3 -> HasForPitch(0.0)) +
-                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY))  
+                        (3 -> HasForSoil(POOR))    + (3 -> HasForCondition(EASY)) + (3 -> HasForMoisture(400.0))
 
   val island = IslandMap(Mesh(vReg, eReg, fReg, Some(300))).copy(vertexProps = vProps, faceProps = fProps)
 

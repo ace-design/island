@@ -25,18 +25,39 @@ class Game private(val budget: Budget,
   def updatedBy(res: Result): (Game, Result) = res.ok match {
     case false => (this, res)
     case true => {
-      val remaining = budget - res.cost
-      val boatLoc = res match { case m: MovedBoatResult => Some(m.loc); case _ => this.boat }
-      (new Game(remaining, crew, objectives, visited, boatLoc, isOK), res)
+      val remaining = budget - ( Game.MINIMAL_COST_FOR_ACTION + res.cost )
+      val g = res match {
+        case e: EmptyResult => this
+        case m: MovedBoatResult => {
+          val updatedCrew = crew movedTo m.loc using m.men
+          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
+        }
+        case  m: MovedCrewResult => {
+          val updatedCrew = crew movedTo m.loc
+          this.copy(crew = updatedCrew)
+        }
+        case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
+      }
+      (g.copy(budget = remaining), res)
     }
   }
 
-  def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc), isOK)
-
+  /**
+   * Quickly tag a game as KO by changing its status
+   * @return
+   */
   def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
 
+  // copy a game into another one (simulating case class behavior)
+  private def copy(budget: Budget = this.budget, crew: Crew = this.crew, objectives: Set[(Resource, Int)] = this.objectives,
+           visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat, isOK: Boolean = this.isOK) =
+    new Game(budget, crew, objectives, visited, boat, isOK)
+
 }
+
 object Game {
+  final val MINIMAL_COST_FOR_ACTION = 2   // TODO: refactor [An action costs at min 2 action points]
+
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
     new Game(budget,crew, objectives, visited = Set(), boat = None, true)
 }
@@ -71,7 +92,16 @@ object NotEnoughBudgetException {
  * A crew represents the number of men available on the boat, the number of men used for the exploration and the
  * number of men currently on the island
  */
-class Crew private(val complete: Int, val used: Int, val landed: Int) {
+class Crew private(val complete: Int, val used: Int, val landed: Int, val location: Option[(Int, Int)]) {
+  require(complete > 1, "Not enough men in the crew")
+
+  def using(m: Int) = this.copy(used = used + m, landed = m)
+
+  def movedTo(loc: (Int, Int)) = this.copy(location = Some(loc))
+
+  private def copy(complete: Int = this.complete,  used: Int = this.used,  landed: Int = this.landed,
+                   location: Option[(Int, Int)] = this.location) = new Crew(complete, used, landed, location)
+
 
 }
-object Crew { def apply(men: Int) = new Crew(men, 0, 0) }
+object Crew { def apply(men: Int) = new Crew(men, 0, 0, None) }

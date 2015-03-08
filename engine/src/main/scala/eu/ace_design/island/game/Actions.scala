@@ -29,7 +29,9 @@ sealed trait Action {
 
 }
 
-// { "action": "stop" }
+/**
+ * The Stop action is used to exit the Island and stop the game. It produces an EmptyResult
+ */
 case class Stop() extends Action {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
@@ -42,31 +44,68 @@ case class Stop() extends Action {
         (overhead + distance * ratio) * variation
       }
     }
-    EmptyResult(2 + cost.ceil.toInt, shouldStop = true)
+    EmptyResult(cost.ceil.toInt, shouldStop = true)
   }
 
 }
 
-// { "action": "land", "parameters": {"creek": "...", "people": n } }
+/**
+ * The Land action
+ * @param creek
+ * @param people
+ */
 case class Land(creek: String, people: Int) extends Action          {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(people >= game.crew.complete)
       throw new IllegalArgumentException("At least one men must stay on board")
     val creeks = board.findPOIsByType(Creek(null, null))
-    val cost = creeks find  { case (loc,c) => c.identifier == creek } match {
+    val (cost, loc) = creeks find  { case (loc,c) => c.identifier == creek } match {
       case None => throw new IllegalArgumentException(s"Unknown creek identifier [$creek]")
       case Some((loc,poi)) => {
         val origin = game.boat.getOrElse((board.size / 2, board.size / 2))
         val distance = Math.sqrt(Math.pow(loc._1- origin._1,2) + Math.pow(loc._2- origin._2,2))
         val ratio = board.m.size.toFloat / board.size / 10
-        (overhead + distance * ratio) * variation
+        ((overhead + distance * ratio) * variation, loc)
       }
     }
-    EmptyResult(2 + cost.ceil.toInt)
+    MovedBoatResult(cost.ceil.toInt, loc, people)
   }
 
 }
+
+/**
+ * The move to action make the crew move to another tile on the map
+ * @param direction
+ */
+case class MoveTo(direction: Directions.Direction) extends Action {
+  import eu.ace_design.island.map.resources.PIXEL_FACTOR
+  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+    if(game.boat.isEmpty)
+      throw new IllegalArgumentException("Cannot move without having landed before")
+    val loc = game.crew.location.get  // cannot be None as game.boat is not empty
+    val oldTile = board.at(loc._1, loc._2)
+    val updatedLoc = Directions.move(loc._1, loc._2, direction)
+    if(! board.tiles.keySet.contains(updatedLoc))
+      throw new IllegalArgumentException("Congrats, you just fall out of the world limit.")
+
+    val newTile = board.at(updatedLoc._1, updatedLoc._2)
+    // Now we can move. Move is a function of men, altitude difference and biomes to cross.
+    val cost = {
+      val men = game.crew.landed
+      val rise = Math.abs(oldTile.altitude - newTile.altitude) // altitude already stored as meters
+      val run = board.tileUnit.toDouble * PIXEL_FACTOR // run to be transformed from pixel to meters
+      val pitch = 100 * (rise / run) // http://en.wikipedia.org/wiki/Grade_(slope)
+      val pitchFactor = Math.min(0.1, Math.abs(100 - pitch))
+      val biomes = newTile.biomes
+      val crossFactor = (0.0 /: biomes) { (acc, value) => acc + (value._1.crossFactor * value._2)}
+      val factor = (pitchFactor + crossFactor) / 2
+      (overhead + (men * factor)) * variation
+    }
+    MovedCrewResult(cost = cost.ceil.toInt, loc = updatedLoc)
+  }
+}
+
 
 // { "action": "explore" }
 case class Explore() extends Action {
@@ -75,10 +114,7 @@ case class Explore() extends Action {
 
 
 
-// { "action": "move_to", "parameters": { "direction": "..." } }
-case class MoveTo(direction: Directions.Direction) extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
-}
+
 
 // { "action": "scout", "parameters": { "direction": "..." } }
 case class Scout(direction: Directions.Direction) extends Action {

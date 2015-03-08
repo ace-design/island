@@ -23,6 +23,10 @@ trait Biome extends eu.ace_design.island.util.NameAsClassName {
   // the color to be used to represent this Biome on the map
   val color: java.awt.Color
 
+  // The difficulty factor (multiplicative) to cross this kind of biome
+  val crossFactor: Double
+
+
   /**
    * Return the resource to be associated to a given biome, using a given random generator
    * @param rand the random generator to be used
