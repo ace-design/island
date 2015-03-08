@@ -36,16 +36,19 @@ class Game private(val budget: Budget,
     }
   }
 
-  def moveBoat(loc: (Int,Int)): Game = new Game(budget, crew, objectives, visited, Some(loc), isOK)
-
+  /**
+   * Quickly tag a game as KO by changing its status
+   * @return
+   */
   def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
 
-  def copy(budget: Budget = this.budget, crew: Crew = this.crew, objectives: Set[(Resource, Int)] = this.objectives,
+  // copy a game into another one (simulating case class behavior)
+  private def copy(budget: Budget = this.budget, crew: Crew = this.crew, objectives: Set[(Resource, Int)] = this.objectives,
            visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat, isOK: Boolean = this.isOK) =
     new Game(budget, crew, objectives, visited, boat, isOK)
 
-
 }
+
 object Game {
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
     new Game(budget,crew, objectives, visited = Set(), boat = None, true)
@@ -82,6 +85,8 @@ object NotEnoughBudgetException {
  * number of men currently on the island
  */
 class Crew private(val complete: Int, val used: Int, val landed: Int) {
+  require(complete > 1, "Not enough men in the crew")
+
   def using(m: Int) = new Crew(complete, used + m, m)
 }
 object Crew { def apply(men: Int) = new Crew(men, 0, 0) }

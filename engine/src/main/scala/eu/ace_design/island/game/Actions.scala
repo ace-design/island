@@ -29,7 +29,9 @@ sealed trait Action {
 
 }
 
-// { "action": "stop" }
+/**
+ * The Stop action is used to exit the Island and stop the game. It produces an EmptyResult
+ */
 case class Stop() extends Action {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
@@ -47,7 +49,11 @@ case class Stop() extends Action {
 
 }
 
-// { "action": "land", "parameters": {"creek": "...", "people": n } }
+/**
+ * The Land action
+ * @param creek
+ * @param people
+ */
 case class Land(creek: String, people: Int) extends Action          {
 
   override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
