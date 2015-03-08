@@ -1,7 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.IslandMap
-import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{Biome, PrimaryResource, Resource}
 
 
 /**
@@ -106,7 +106,7 @@ object Directions extends Enumeration {
 /**
  * A tile represent the unit for moves on the board
  */
-case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0) {
+case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0, biomes: Set[(Biome, Double)]= Set()) {
 
   /**
    * Add a given stock to the tile. Require that no stock of the very same resource is already available

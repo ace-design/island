@@ -4,7 +4,7 @@ import eu.ace_design.island.geom.Point
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.Soils.Soil
 import eu.ace_design.island.map.resources.Conditions.Condition
-import eu.ace_design.island.map.resources.{PrimaryResource, NoResource}
+import eu.ace_design.island.map.resources.{Biome, PrimaryResource, NoResource}
 import eu.ace_design.island.util.{LogSilos, Logger}
 import scala.util.Random
 
@@ -44,17 +44,24 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     info("Binding faces to game tiles")
     val binding = map.faceRefs.toSeq map { i =>
       debug(s"  Working on face #$i")
-      val resource = biomes(i)(rand)
+      val biome = biomes(i)
+      val resource = biome(rand)
       val cover = coverage(map.convexHull(map.face(i)).toSet)
       val coverByFace = cover map { case (k,(v,_)) => k -> v }
       val prod = production(coverByFace, resource, soils.get(i), conditions.get(i), areas(i), pitches(i))
       val faceAlt = map.vertexProps.getValueOrElse(map.face(i).center, HasForHeight(), 0.0)
       val coverByTile = cover map { case (k,(_,v)) => k -> v }
       val alt  = altitude(coverByTile, faceAlt)
-      (prod, alt)
+      val biomesCoverages = biomeCover(coverByTile, biome)
+      (prod, alt, biomesCoverages)
     }
 
     // Aggregate each resource produced by tile location
+    info("Processing biomes associated to each tiles")
+    val biomesCoverage = binding map { _._3 }
+    val aggrBiomes = biomesCoverage.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 }).toSet }
+
+
     info("Processing resources produced by the biomes")
     val productions = binding map { _._1 }
     val aggrProds = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
@@ -67,7 +74,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     // Returning the grid
     info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
-    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> Tile(altitude = aggrAlts((x,y)))).toMap
+    val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx)
+                  yield (x,y) -> Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)))).toMap
 
     val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>
       val existing = acc(loc)
@@ -87,6 +95,10 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
 
   def altitude(cover: Map[(Int, Int), Double], alt: Double): Seq[((Int, Int), Double)] = (cover map {
     case (key, percent) => key -> (alt * (percent / 100))
+  }).toSeq
+
+  def biomeCover(cover: Map[(Int, Int), Double], biome: Biome): Seq[((Int, Int), (Biome, Double))] = (cover map {
+    case (key, percent) => key -> (biome -> percent)
   }).toSeq
 
   /**

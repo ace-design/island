@@ -157,6 +157,19 @@ class GameBoardBuilderTest extends SpecificationWithJUnit {
       assess(2, 2)
     }
 
+    "Assign relevant biomes to each tile" in {
+      import Biomes._
+      val (b0, b1, b2, b3) = (TEMPERATE_DECIDUOUS_FOREST, TUNDRA, MANGROVE, GLACIER)
+      board.at(0,0).biomes map { _._1 } must_== Set(b0,b1)
+      board.at(0,0).biomes foreach { case (b,v) =>
+        if (b == b0) (v must beCloseTo(25, epsilon)) else (v must beCloseTo(75, epsilon)) }
+      board.at(0,1).biomes map { _._1 } must_== Set(b1)
+      board.at(0,1).biomes.size must_== 1
+      board.at(0,1).biomes.head._2 must beCloseTo (100, epsilon)
+      // TODO: continue tile coverage, but should be OK as Altitude is already ok and use similar mechanisms
+    }
+
+
     "assign relevant altitudes to each tile" in {
       val (a0, a1, a2, a3) = (100.0, 300.0, 200.0, 400.0)
       board.at(0,0).altitude must beCloseTo(0.75*a1 + 0.25*a0, epsilon)
