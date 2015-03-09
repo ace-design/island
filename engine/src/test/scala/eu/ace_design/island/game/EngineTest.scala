@@ -157,6 +157,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
+      g.visited must_== Set((10,10), (9,10))
       g.budget.remaining must beLessThan(g.budget.initial)
     }
     "support the detection of unreachable tiles" in {

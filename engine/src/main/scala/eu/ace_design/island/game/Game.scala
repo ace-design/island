@@ -36,7 +36,7 @@ class Game private(val budget: Budget,
         }
         case  m: MovedCrewResult => {
           val updatedCrew = crew movedTo m.loc
-          this.copy(crew = updatedCrew)
+          this.copy(crew = updatedCrew, visited = visited + m.loc)
         }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
         case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
