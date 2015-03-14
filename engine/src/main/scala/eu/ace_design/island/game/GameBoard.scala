@@ -1,7 +1,8 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.IslandMap
-import eu.ace_design.island.map.resources.{Biome, PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{Conditions, Biome, PrimaryResource, Resource}
+import org.json.JSONObject
 
 
 /**
@@ -153,10 +154,35 @@ case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0,
    * @return
    */
   def resources: Set[Resource] = stock map { _.resource }
+
+  def diffAltitude(that: Tile): Int = (this.altitude - that.altitude).ceil.toInt
   
 }
 
 case class Stock(resource: PrimaryResource, amount: Int, extraction: Double = 1.0) {
   require(amount >= 0, "Cannot hold negative value in a Stock")
   require(extraction > 0, "the extraction factor must be positive")
+
+  def explore(board: GameBoard, harvested: Int): (ResourceLevels.ResourceLevel, Conditions.Condition) = {
+    import eu.ace_design.island.map.resources.PIXEL_FACTOR
+    val maxPerHa = resource.perHectare.toDouble
+    val tileSize = board.tileUnit *  PIXEL_FACTOR * board.tileUnit * PIXEL_FACTOR
+    val maxPerTile = maxPerHa * tileSize / 10000  // 1ha = 10,000 squared meters
+    val level = amount - harvested match {
+      case a if a <= maxPerTile / 3      => ResourceLevels.LOW
+      case a if a >= 2 * maxPerTile / 3  => ResourceLevels.HIGH
+      case _                             => ResourceLevels.MEDIUM
+    }
+    val condition = extraction match {
+      case e if e <= 0.6 => Conditions.HARSH
+      case e if e >= 1.3 => Conditions.EASY
+      case _ => Conditions.FAIR
+    }
+    (level, condition)
+  }
+
+}
+
+object ResourceLevels extends Enumeration {
+  type ResourceLevel = Value ; val HIGH, MEDIUM, LOW = Value
 }

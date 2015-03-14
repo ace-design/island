@@ -63,6 +63,34 @@ class Game private(val budget: Budget,
   }
 
   /**
+   * Compute the distance from the boat location and the port of origin
+   * @return Some(x) where x is the distance, and None if the boat did not move before the beginning of the game
+   */
+  def distanceToPort: Option[Double] = this.boat match {
+    case None => None
+    case Some(boatLoc) => Some(distance((0,0), boatLoc))
+  }
+
+  /**
+   * Compute the distance between the team and the boat
+   * //TODO: explore the visited tiles to find the shortest path
+   * @return
+   */
+  def distanceToBoat: Double = this.crew.location match {
+    case None => 0.0
+    case Some(teamLoc) => distance(boat.get,teamLoc) // Assumption: crew.location ≠ None => boat location ≠ None
+  }
+
+  def menRatio: Double = this.crew.landed / 5.0
+
+  // compute the distance between two points
+  private def distance(a: (Int, Int), b: (Int, Int)): Double =
+    Math.sqrt(Math.pow(a._1 - b._1,2) + Math.pow(a._2 - b._2,2))
+
+
+
+
+  /**
    * Quickly tag a game as KO by changing its status
    * @return
    */

@@ -15,21 +15,46 @@ sealed trait Action extends Logger {
 
   override val silo = LogSilos.GAME_ENGINE
 
-  // Maximal value for the action overhead
-  val maxOverhead: Int = 10
-
-  // The variation factor used by the action (\in [0.75, 1.25])
-  final protected val variation: Double = 1 + (Random.nextDouble() / 2 - 0.25)
-
-  // Apply the action to a given game, using the  game board representing the island
+  /**
+   * Apply the action to a game, using the information stored in the board.
+   * @param board the game board
+   * @param game the game used to store the contents of the exploration
+   * @return an updated version of the game that include the result of the action, and the result
+   */
   final def apply(board: GameBoard, game: Game): (Game, Result) = {
-    val overhead = Random.nextInt(maxOverhead) + 1
-    val result: Result = build(board, game, overhead)
+    val result: Result = build(board, game)
     try { game updatedBy result } catch { case e: Exception => (game, ExceptionResult(e)) }
   }
 
-  // Method to be implemented by each action to build the associated result
-  protected def build(board: GameBoard, game: Game, overhead: Int): Result
+  /**
+   * Build the result associated to a given action
+   * @param board the game board
+   * @param game the game used to store the contents of the exploration
+   * @return an instance of Result, with the eight cost
+   */
+   private def build(board: GameBoard, game: Game): Result = {
+    val overhead  = Random.nextInt(4) + 1            // overhead \in [1,5]
+    val variation = (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
+    val cost   = computeCost(board, game)
+    val result = buildResult(board, game)
+    result withCost (1 + (overhead + cost) * variation).ceil.toInt
+  }
+
+  /**
+   * This method computes the cost of execution for the action
+   * @param board the game board
+   * @param game the game used to store the contents of the exploration
+   * @return an integer value
+   */
+  def computeCost(board: GameBoard, game: Game): Double
+
+  /**
+   * This method computes the result of the execution for this action
+   * @param board the game board
+   * @param game the game used to store the contents of the exploration
+   * @return an dedicated result for this specific action
+   */
+  def buildResult(board: GameBoard, game: Game): Result
 
 }
 
@@ -38,22 +63,12 @@ sealed trait Action extends Logger {
  */
 case class Stop() extends Action {
 
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
-    debug("  Stop:")
-    val cost = game.boat match {
-      case None => overhead * variation
-      case Some((x,y)) => {
-        val center = board.size / 2
-        val distance = Math.sqrt(Math.pow(x-center,2) + Math.pow(y-center,2))
-        val ratio = board.m.size.toFloat / board.size / 10
-        debug(s"    distance: $distance / ratio: $ratio ")
-        (overhead + distance * ratio) * variation
-      }
-    }
-    info(s"  Stop: cost = $cost")
-    EmptyResult(cost.ceil.toInt, shouldStop = true)
+  override def computeCost(board: GameBoard, game: Game): Double = game.distanceToPort match {
+    case None => 0
+    case Some(toPort) => Math.sqrt((game.menRatio * game.distanceToBoat) + toPort)
   }
 
+  override def buildResult(board: GameBoard, game: Game): Result = EmptyResult(shouldStop = true)
 }
 
 /**
@@ -63,7 +78,7 @@ case class Stop() extends Action {
  */
 case class Land(creek: String, people: Int) extends Action          {
 
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+  /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     debug("  Land:")
     if(people >= game.crew.complete)
       throw new IllegalArgumentException("At least one men must stay on board")
@@ -80,6 +95,19 @@ case class Land(creek: String, people: Int) extends Action          {
     }
     info(s"  Land: cost = $cost")
     MovedBoatResult(cost.ceil.toInt, loc, people)
+  } */
+
+  override def computeCost(board: GameBoard, game: Game): Double = {
+   ???
+  }
+
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(people < game.crew.complete, "At least one men must stay on board")
+    val creekData = board.findPOIsByType(Creek(null, null)) find { case (loc,c) => c.identifier == creek }
+    require(creekData.isDefined, s"Unknown creek identifier [$creek]")
+    val location = creekData.get._1
+    MovedBoatResult(loc = location, men = people)
   }
 
 }
@@ -92,7 +120,7 @@ case class MoveTo(direction: Directions.Direction) extends Action {
 
   import eu.ace_design.island.map.resources.PIXEL_FACTOR
 
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+  /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     debug("  MoveTo:")
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
@@ -119,9 +147,18 @@ case class MoveTo(direction: Directions.Direction) extends Action {
     }
     info(s"  MoveTo: cost = $cost")
     MovedCrewResult(cost = cost.ceil.toInt, loc = updatedLoc)
-  }
-}
+  } */
 
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.boat.isDefined, "Cannot move without having landed before")
+    val nextLoc = Directions.move(game.boat.get._1, game.boat.get._2, direction)
+    require(board.tiles.keySet.contains(nextLoc), "Congrats, you just fall out of the world limit")
+    MovedCrewResult(loc = nextLoc)
+  }
+
+}
 
 /**
  * the scout action returns information about neighbours tiles
@@ -129,7 +166,7 @@ case class MoveTo(direction: Directions.Direction) extends Action {
  */
 case class Scout(direction: Directions.Direction) extends Action {
 
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+  /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
     val loc = game.crew.location.get  // cannot be None as game.boat is not empty
@@ -147,13 +184,31 @@ case class Scout(direction: Directions.Direction) extends Action {
       (overhead + (men * factor)) * variation
     }
     ScoutResult(cost = cost.ceil.toInt, resources = res, altitude = delta.ceil.toInt)
+  } */
+
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.boat.isDefined, "Cannot scout without having landed before")
+    val nextLoc = Directions.move(game.boat.get._1, game.boat.get._2, direction)
+    board.tiles.get(nextLoc) match {
+      case None => ScoutResult(resources = Set(), altitude = 0, unreachable = true)
+      case Some(nextTile) => {
+        val  crewLoc = game.crew.location.get
+        val current = board.at(crewLoc._1, crewLoc._2)
+        ScoutResult(resources = nextTile.resources, altitude = current.diffAltitude(nextTile))
+      }
+    }
   }
+
 }
 
 
 // { "action": "explore" }
 case class Explore() extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+
+  /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
     val loc = game.crew.location.get  // cannot be None as game.boat is not empty
@@ -179,13 +234,28 @@ case class Explore() extends Action {
     val men = game.crew.landed
     val cost =  (overhead + (3 * men * factor)) * variation
     ExploreResult(cost = cost.ceil.toInt, resources = resources, pois = pois)
+  }*/
+
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.boat.isDefined, "Cannot explore without having landed before")
+    val current = game.crew.location.get  // cannot be None as game.boat is not empty
+    val tile = board.at(current._1, current._2)
+    val pois = board.pois.getOrElse((current._1, current._2), Seq()).toSet
+    val resources = tile.stock map { stock =>
+      val (lvl, cond) = stock.explore(board, game.harvested(stock.resource, game.crew.location.get))
+      ResourceExploration(stock.resource, lvl, cond)
+    }
+    ExploreResult(resources = resources, pois = pois)
   }
 }
 
-
 // { "action": "exploit", "parameters": { "resource": "..." } }
 case class Exploit(resource: PrimaryResource) extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
+
+  /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
       throw new IllegalArgumentException("Cannot move without having landed before")
     val loc = game.crew.location.get  // cannot be None as game.boat is not empty
@@ -205,13 +275,34 @@ case class Exploit(resource: PrimaryResource) extends Action {
     val distance = Math.sqrt(Math.pow(loc._1 -boat._1,2)+Math.pow(loc._2 -boat._2,2))
     val cost = overhead + ( 2 * distance * game.crew.landed * extracted / 10.0)
     ExploitResult(cost = cost.ceil.toInt, amount = extracted, r = resource)
+  } */
+
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.boat.isDefined, "Cannot explore without having landed before")
+    val current = game.crew.location.get  // cannot be None as game.boat is not empty
+    val tile = board.at(current._1, current._2)
+    require(tile.stock.exists(s => s.resource == resource), "No resource [$resource] available on the current tile")
+    val stock = tile.stock.find(s => s.resource == resource).get
+    val alreadyExtracted = game.harvested(resource,current)
+    val avail = stock.amount - alreadyExtracted
+    val theoretical = (game.crew.landed * 0.5 * stock.extraction * avail).ceil.toInt
+    val amount = Math.min(avail, theoretical)
+    ExploitResult(amount = amount, r = resource)
   }
+
 }
 
 
 // { "action": "glimpse" }
 case class Glimpse() extends Action {
-  override protected def build(board: GameBoard, game: Game, overhead: Int): Result = ???
+
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+  override def buildResult(board: GameBoard, game: Game): Result = ???
+
 }
 
 

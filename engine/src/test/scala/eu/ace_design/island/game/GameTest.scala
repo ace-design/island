@@ -10,9 +10,9 @@ class GameTest extends SpecificationWithJUnit {
 
   "GameTest Specifications".title
 
-
   "A game" should {
     val g = Game(budget = Budget(100), crew = Crew(50), objectives = Set((WOOD, 600)))
+
     "be instantiated like a case class" in {
       g must beAnInstanceOf[Game]
       g.visited must_== Set()
@@ -95,10 +95,6 @@ class GameTest extends SpecificationWithJUnit {
       c1.location must_== Some((14,17))
     }
 
-
-
   }
-
-
 
 }
