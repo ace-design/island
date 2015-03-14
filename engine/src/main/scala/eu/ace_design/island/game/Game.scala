@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.Resource
+import eu.ace_design.island.util.Polynomial
 
 /**
  * A game is used to store the information about a given game
@@ -41,7 +42,7 @@ class Game private(val budget: Budget,
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
         case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
       }
-      val remaining = budget - ( Game.MINIMAL_COST_FOR_ACTION + res.cost )
+      val remaining = budget - res.cost
       (g.copy(budget = remaining), res)
     }
   }
@@ -63,6 +64,47 @@ class Game private(val budget: Budget,
   }
 
   /**
+   * Compute the distance from the boat location and the port of origin
+   * @return Some(x) where x is the distance, and None if the boat did not move before the beginning of the game
+   */
+  def distanceToPort: Option[Double] = this.boat match {
+    case None => None
+    case Some(boatLoc) => Some(distance((0,0), boatLoc))
+  }
+
+  /**
+   * Compute the distance between the team and the boat
+   * //TODO: explore the visited tiles to find the shortest path
+   * @return
+   */
+  def distanceToBoat: Double = this.crew.location match {
+    case None => 0.0
+    case Some(teamLoc) => distance(boat.get,teamLoc) // Assumption: crew.location ≠ None => boat location ≠ None
+  }
+
+  /**
+   * returns the men ratio used in the cost model
+   * @return
+   */
+  def menRatio: Double = this.crew.landed * Game.MEN_RATIO
+
+  def normalizeMen: Double = Math.min(1.0, crew.landed / 50.0)
+
+  /**
+   * compute the distance between a destination and the current location of the boat
+   * @param destination
+   * @return
+   */
+  def distanceByBoat(destination: (Int, Int)): Double = distance(boat.getOrElse((0,0)), destination)
+
+  // compute the distance between two points
+  private def distance(a: (Int, Int), b: (Int, Int)): Double =
+    Math.sqrt(Math.pow(a._1 - b._1,2) + Math.pow(a._2 - b._2,2))
+
+
+
+
+  /**
    * Quickly tag a game as KO by changing its status
    * @return
    */
@@ -78,10 +120,16 @@ class Game private(val budget: Budget,
 }
 
 object Game {
-  final val MINIMAL_COST_FOR_ACTION = 2   // TODO: refactor [An action costs at min 2 action points]
+
+  final val MEN_RATIO: Double = 1.0 / 5.0
 
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
     new Game(budget,crew, objectives, visited = Set(), boat = None, true)
+
+  val exploitationCostModel     = Polynomial(Seq(1, -1.0857, 0,6857))
+  val exploitationResourceModel = Polynomial(Seq(0, 2,8571, -2.0751))
+  val movingCostModel           = Polynomial(Seq(0, 3.2476, -6.5143, 4.2667))
+
 }
 
 

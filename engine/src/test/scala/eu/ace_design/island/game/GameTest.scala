@@ -10,9 +10,9 @@ class GameTest extends SpecificationWithJUnit {
 
   "GameTest Specifications".title
 
-
   "A game" should {
     val g = Game(budget = Budget(100), crew = Crew(50), objectives = Set((WOOD, 600)))
+
     "be instantiated like a case class" in {
       g must beAnInstanceOf[Game]
       g.visited must_== Set()
@@ -28,15 +28,14 @@ class GameTest extends SpecificationWithJUnit {
     "support update with an EmptyResult" in {
       val r = EmptyResult(cost = 20)
       val (updated, _) = g updatedBy r
-      updated.budget.remaining must_== 80 - Game.MINIMAL_COST_FOR_ACTION
+      updated.budget.remaining must_== 80
     }
     "support update with a MoveBoatResult" in {
       val r = MovedBoatResult(cost = 30, loc = (10,14), men = 20)
       val (updated, _) = g updatedBy r
-      updated.budget.remaining must_== 70 - Game.MINIMAL_COST_FOR_ACTION
+      updated.budget.remaining must beLessThan(g.budget.remaining)
       updated.boat must_== Some((10,14))
       updated.crew.landed must_== 20
-      updated.crew.location must_== updated.boat
     }
     "support harvest update" in {
       g.harvested(WOOD, (0,0)) must_== 0
@@ -95,10 +94,6 @@ class GameTest extends SpecificationWithJUnit {
       c1.location must_== Some((14,17))
     }
 
-
-
   }
-
-
 
 }

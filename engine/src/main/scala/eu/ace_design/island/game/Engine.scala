@@ -55,20 +55,20 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
     // Handling the action from the engine point of view
     val result = try {
       info("Applying user's decision to the board")
-      val (after, result) = action(board, g)
-      events += ExplorationEvent(Actors.Engine, result.toJson)
+      val (after, r) = action(board, g)
+      events += ExplorationEvent(Actors.Engine, r.toJson)
       try {
         info("Acknowledging results [explorer.acknowledgeResults(...)]")
-        timeout(DEFAULT_TIMEOUT_VALUE) { explorer.acknowledgeResults(result.toJson.toString) }
+        timeout(DEFAULT_TIMEOUT_VALUE) { explorer.acknowledgeResults(r.toJson.toString) }
       } catch {
         case e: Exception => {
           events += ExplorationEvent(Actors.Explorer, e, "acknowledgeResults")
           return after.flaggedAsKO
         }
       }
-      result.shouldStop match {
+      r.shouldStop match {
         case false => play(explorer, events, after) // recursive call for game continuation
-        case true  => result match {  // end of the game
+        case true  => r match {  // end of the game
           case excResult: ExceptionResult => after.flaggedAsKO // as an error
           case _ => after // as a normal stop
         }
