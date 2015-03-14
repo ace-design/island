@@ -20,8 +20,8 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   emptyBoard.size returns 10
   val t0 = Tile(altitude = 3, biomes = Set((TUNDRA, 100.0)), stock = Set(Stock(WOOD, 30, 1.1)))
   val t1 = Tile(altitude = 12, biomes = Set((MANGROVE, 100.0)))
-  emptyBoard.tiles returns Map((9,10) -> t1, (10,10) -> t0)
-  emptyBoard.at(9,10)  returns t1 ; emptyBoard.at(10,10) returns t0
+  emptyBoard.tiles returns Map((10,9) -> t1, (10,10) -> t0)
+  emptyBoard.at(10,9)  returns t1 ; emptyBoard.at(10,10) returns t0
   emptyBoard.pois returns Map((10,10) -> Set(Creek("c1", None).asInstanceOf[PointOfInterest]), (0,0) -> Set(Creek("border", None)))
   emptyBoard.m returns mock[IslandMap]; emptyBoard.m.size returns 800
   val emptyGame = Game(Budget(600), Crew(50), Set())
@@ -157,7 +157,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
-      g.visited must_== Set((10,10), (9,10))
+      g.visited must_== Set((10,10), (10,9))
       g.budget.remaining must beLessThan(g.budget.initial)
     }
     "support the detection of unreachable tiles" in {

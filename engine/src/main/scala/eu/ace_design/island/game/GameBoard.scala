@@ -111,10 +111,10 @@ object Directions extends Enumeration {
   val NORTH, EAST, WEST, SOUTH = Value
 
   def move(x: Int, y: Int, d: Direction): (Int,Int) = d match {
-    case NORTH => (x-1, y)
-    case SOUTH => (x+1, y)
-    case WEST  => (x,   y-1)
-    case EAST  => (x,   y+1)
+    case NORTH => (x, y-1)
+    case SOUTH => (x, y+1)
+    case WEST  => (x-1, y)
+    case EAST  => (x+1, y)
   }
 }
 
