@@ -2,6 +2,7 @@ package eu.ace_design.island.map.processes
 
 import eu.ace_design.island.geom.{Face, EdgeRegistry}
 import eu.ace_design.island.map._
+import eu.ace_design.island.util.Polynomial
 
 
 /**
@@ -152,9 +153,9 @@ object ElevationFunctions {
 
   type Function = Map[Int,Double] => Map[Int,Double]
 
-  def linear(highest: Double): Function = applyPolynomial(Polynomials.yEqualsToX)(highest)
+  def linear(highest: Double): Function = applyPolynomial(ElevationPolynomials.yEqualsToX)(highest)
 
-  def plateau(highest: Double): Function = applyPolynomial(Polynomials.plateau)(highest)
+  def plateau(highest: Double): Function = applyPolynomial(ElevationPolynomials.plateau)(highest)
 
   /**
    * Apply a polynomial function to a value, mapping valued obtained from a mapper to an elevation
@@ -196,8 +197,8 @@ object ElevationDistributions {
    */
   type Distribution = Seq[Int] => Map[Int, Double]
 
-  def linear(highest: Double): Distribution = applyPolynomial(Polynomials.yEqualsToX)(highest)
-  def flat(highest: Double): Distribution = applyPolynomial(Polynomials.plateau)(highest)
+  def linear(highest: Double): Distribution = applyPolynomial(ElevationPolynomials.yEqualsToX)(highest)
+  def flat(highest: Double): Distribution = applyPolynomial(ElevationPolynomials.plateau)(highest)
 
   /**
    * This function applies a given polynomial to an ordered sequence of vertices, following a distribution process. For
@@ -225,22 +226,10 @@ object ElevationDistributions {
  * We consider here normalized polynomial function. We are only interested in values in [0,1], for both x and y
  * coordinates
  */
-object Polynomials {
+object ElevationPolynomials {
 
-  def yEqualsToX = polynomial(Seq(0,1))   // y = x
+  def yEqualsToX = Polynomial(Seq(0,1))   // y = x
 
-  def plateau = polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124))
-
-  /**
-   * Create a function supporting the evaluation of a given polynomial (a sequence of coefficient, from x**0 to x**n)
-   * @param coefficients the ascending sequence of coefficients to apply
-   * @return the value of this polynomial function for x, in [0,1] (threshold by construction)
-   */
-  private def polynomial(coefficients: Seq[Double]): Double => Double = { x =>
-    require(x >= 0.0 && x <= 1.0, "x must be in [0,1]")
-    val r = (0.0 /: (0 until coefficients.size)) { (acc, i) => acc + math.pow(x,i) * coefficients(i) }
-    math.max(0.0, math.min(1.0, r))
-  }
-
+  def plateau = Polynomial(Seq(-0.0016, 0.7074, 9.1905, -68.2842, 174.3621, -187.6885, 72.7124))
 }
 

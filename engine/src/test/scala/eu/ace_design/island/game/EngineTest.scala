@@ -65,7 +65,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     }
     "exit with an error when no more budget is available" in {
       val explorer = mock[IExplorerRaid]
-      explorer.takeDecision() returns """{ "action": "stop" }"""
+      explorer.takeDecision() returns """{ "action": "land",  "parameters": { "creek": "c1", "people": 30 } } }"""
       val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()))
       val (events, g) = engine.run(explorer)
       g.isOK must beFalse

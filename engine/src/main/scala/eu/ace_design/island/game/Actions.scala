@@ -35,9 +35,11 @@ sealed trait Action extends Logger {
    private def build(board: GameBoard, game: Game): Result = {
     val overhead  = Random.nextInt(4) + 1            // overhead \in [1,5]
     val variation = (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
-    val cost   = computeCost(board, game)
-    val result = buildResult(board, game)
-    result withCost (1 + (overhead + cost) * variation).ceil.toInt
+    val result = buildResult(board, game)  // will throw an exception if the action cannot be performed
+    val rawCost   = computeCost(board, game)
+    val cost = 1.0 + ( (overhead + rawCost) * variation)
+    val realCost =  Math.max(2.0,cost).ceil.toInt
+    result withCost realCost
   }
 
   /**
@@ -56,6 +58,13 @@ sealed trait Action extends Logger {
    */
   def buildResult(board: GameBoard, game: Game): Result
 
+}
+
+
+trait ActionWithDirection extends Action {
+  val direction: Directions.Direction
+
+  protected def nextLoc(g: Game): (Int, Int) = Directions.move(g.crew.location.get._1, g.crew.location.get._2, direction)
 }
 
 /**
@@ -98,7 +107,9 @@ case class Land(creek: String, people: Int) extends Action          {
   } */
 
   override def computeCost(board: GameBoard, game: Game): Double = {
-   ???
+    val alreadyLanded = game.crew.landed
+    val creekLocation = board.findPOIsByType(Creek(null, null)).find { case (loc,c) => c.identifier == creek }.get._1
+    game.distanceByBoat(creekLocation)  + (alreadyLanded * Game.MEN_RATIO) + (people * Game.MEN_RATIO)
   }
 
 
@@ -116,7 +127,7 @@ case class Land(creek: String, people: Int) extends Action          {
  * The move to action make the crew move to another tile on the map
  * @param direction
  */
-case class MoveTo(direction: Directions.Direction) extends Action {
+case class MoveTo(override val direction: Directions.Direction) extends ActionWithDirection {
 
   import eu.ace_design.island.map.resources.PIXEL_FACTOR
 
@@ -149,22 +160,28 @@ case class MoveTo(direction: Directions.Direction) extends Action {
     MovedCrewResult(cost = cost.ceil.toInt, loc = updatedLoc)
   } */
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
-
-  override def buildResult(board: GameBoard, game: Game): Result = {
-    require(game.boat.isDefined, "Cannot move without having landed before")
-    val nextLoc = Directions.move(game.boat.get._1, game.boat.get._2, direction)
-    require(board.tiles.keySet.contains(nextLoc), "Congrats, you just fall out of the world limit")
-    MovedCrewResult(loc = nextLoc)
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val movingRawFactor = 1 + Game.movingCostModel(game.normalizeMen) // [0,1] => [0,1]
+    val current = game.crew.location.get; val next = nextLoc(game)
+    val pitchFactor = board.pitchFactor(current, next)
+    val biomeFactor = (board.biomeFactor(current) + board.biomeFactor(next)) / 2
+    val factor = (2*movingRawFactor + pitchFactor + 2*biomeFactor) / 5
+    game.menRatio * factor
   }
 
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.crew.location.isDefined, "Cannot move without having landed before")
+    val next = nextLoc(game)
+    require(board.tiles.keySet.contains(next), "Congrats, you just fall out of the world limit")
+    MovedCrewResult(loc = next)
+  }
 }
 
 /**
  * the scout action returns information about neighbours tiles
  * @param direction
  */
-case class Scout(direction: Directions.Direction) extends Action {
+case class Scout(direction: Directions.Direction) extends ActionWithDirection {
 
   /*override protected def build(board: GameBoard, game: Game, overhead: Int): Result = {
     if(game.boat.isEmpty)
@@ -186,16 +203,23 @@ case class Scout(direction: Directions.Direction) extends Action {
     ScoutResult(cost = cost.ceil.toInt, resources = res, altitude = delta.ceil.toInt)
   } */
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val next = nextLoc(game)
+    val factor = board.tiles.get(next) match {
+      case None => 0.0
+      case Some(_) => (board.biomeFactor(game.crew.location.get) + board.biomeFactor(next)) / 2
+    }
+    (1 + Random.nextInt(3)) * factor
+  }
 
 
   override def buildResult(board: GameBoard, game: Game): Result = {
-    require(game.boat.isDefined, "Cannot scout without having landed before")
-    val nextLoc = Directions.move(game.boat.get._1, game.boat.get._2, direction)
-    board.tiles.get(nextLoc) match {
+    require(game.crew.location.isDefined, "Cannot scout without having landed before")
+    val next = nextLoc(game)
+    board.tiles.get(next) match {
       case None => ScoutResult(resources = Set(), altitude = 0, unreachable = true)
       case Some(nextTile) => {
-        val  crewLoc = game.crew.location.get
+        val crewLoc = game.crew.location.get
         val current = board.at(crewLoc._1, crewLoc._2)
         ScoutResult(resources = nextTile.resources, altitude = current.diffAltitude(nextTile))
       }
@@ -236,11 +260,14 @@ case class Explore() extends Action {
     ExploreResult(cost = cost.ceil.toInt, resources = resources, pois = pois)
   }*/
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
-
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val biomeFactor = board.biomeFactor(game.crew.location.get)
+    val factor = (biomeFactor + Game.movingCostModel(game.normalizeMen)) / 2.0
+    (1 + Random.nextInt(5)) * factor
+  }
 
   override def buildResult(board: GameBoard, game: Game): Result = {
-    require(game.boat.isDefined, "Cannot explore without having landed before")
+    require(game.crew.location.isDefined, "Cannot explore without having landed before")
     val current = game.crew.location.get  // cannot be None as game.boat is not empty
     val tile = board.at(current._1, current._2)
     val pois = board.pois.getOrElse((current._1, current._2), Seq()).toSet
@@ -277,7 +304,10 @@ case class Exploit(resource: PrimaryResource) extends Action {
     ExploitResult(cost = cost.ceil.toInt, amount = extracted, r = resource)
   } */
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val exploitationFactor = Game.exploitationCostModel(game.normalizeMen)
+    (game.crew.landed * exploitationFactor * resource.difficulty) + Math.sqrt(game.distanceToBoat)
+  }
 
 
   override def buildResult(board: GameBoard, game: Game): Result = {
@@ -288,8 +318,8 @@ case class Exploit(resource: PrimaryResource) extends Action {
     val stock = tile.stock.find(s => s.resource == resource).get
     val alreadyExtracted = game.harvested(resource,current)
     val avail = stock.amount - alreadyExtracted
-    val theoretical = (game.crew.landed * 0.5 * stock.extraction * avail).ceil.toInt
-    val amount = Math.min(avail, theoretical)
+    val theoretical = game.crew.landed * Game.exploitationResourceModel(game.normalizeMen) * stock.extraction * avail
+    val amount = Math.min(avail, theoretical.ceil.toInt)
     ExploitResult(amount = amount, r = resource)
   }
 
@@ -299,7 +329,7 @@ case class Exploit(resource: PrimaryResource) extends Action {
 // { "action": "glimpse" }
 case class Glimpse() extends Action {
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
+  override def computeCost(board: GameBoard, game: Game): Double = 0.0
 
   override def buildResult(board: GameBoard, game: Game): Result = ???
 

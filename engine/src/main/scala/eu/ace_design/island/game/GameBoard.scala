@@ -91,6 +91,19 @@ case class GameBoard(size: Int, m: IslandMap,
     val grouped = all groupBy { _.resource } map { case (k,v) => k -> (v map { _.amount}).sum }
     grouped
   }
+
+  def pitchFactor(loc1: (Int, Int), loc2: (Int, Int)): Double = {
+    import eu.ace_design.island.map.resources.PIXEL_FACTOR
+    val t1 = at(loc1._1, loc1._1); val t2 = at(loc2._1, loc2._2)
+    val rise = Math.abs(t1.altitude - t2.altitude) // altitude already stored as meters
+    val run = tileUnit.toDouble * PIXEL_FACTOR // run to be transformed from pixel to meters
+    1 + (rise / run) - 0.3 // pitch = 100 * (rise / run), here normalised in [0,1] with a /100
+  }
+
+  def biomeFactor(loc:(Int, Int)): Double = {
+    val biomes = at(loc._1, loc._2).biomes
+    (biomes map { _._1.crossFactor }).sum / biomes.size
+  }
 }
 
 object Directions extends Enumeration {

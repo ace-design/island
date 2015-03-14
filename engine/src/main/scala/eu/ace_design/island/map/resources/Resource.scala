@@ -19,7 +19,7 @@ trait PrimaryResource extends Resource  {
   val perHectare: Int
 
   // The extraction difficulty multiplicative factor
-  protected val difficulty: Double
+  val difficulty: Double
 
   /**
    * The amount of resource available on a given face depends on the area, and the typeof soil. A random generator is
@@ -99,7 +99,7 @@ trait PrimaryResource extends Resource  {
  * This object represents the lack of resources
  */
 object NoResource extends PrimaryResource {
-  override val perHectare = 0; override protected val difficulty = 0.0
+  override val perHectare = 0; override val difficulty = 0.0
 }
 
 trait ManufacturedResource extends Resource
