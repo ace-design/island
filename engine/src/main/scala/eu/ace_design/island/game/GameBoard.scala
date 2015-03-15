@@ -60,19 +60,6 @@ case class GameBoard(size: Int, m: IslandMap,
     val all = this.pois map { case (k,v) => v map { e => k -> e } }
     (all.flatten.filter { case (k,v) => v.getClass == prototype.getClass }).toSet
   }
-  /**
-   * Compute the neighbors (existing tiles) for a given location.
-   * @param x the x coordinate
-   * @param y the y coordinate
-   * @return the set of Direction leading to existing neighbors
-   */
-  def neighbors(x: Int, y: Int): Set[Directions.Direction] = {
-    val candidates = Directions.values map { dir => dir -> Directions.move(x,y,dir) }
-    val existing = candidates.filter { case (_, (u,v)) =>
-      try { at(u,v); true } catch { case e: IllegalArgumentException => false }
-    }
-    existing map { _._1 }
-  }
 
   /**
    * Identify which resources are produced by a given tile on the board
@@ -92,17 +79,24 @@ case class GameBoard(size: Int, m: IslandMap,
     grouped
   }
 
+  /**
+   * Compute the pitch factor between two locations. if the 2 locs are at the very same altitude, the pitch factor is
+   * equal to 1.
+   * @param loc1
+   * @param loc2
+   * @return
+   */
   def pitchFactor(loc1: (Int, Int), loc2: (Int, Int)): Double = {
     import eu.ace_design.island.map.resources.PIXEL_FACTOR
-    val t1 = at(loc1._1, loc1._1); val t2 = at(loc2._1, loc2._2)
+    val t1 = at(loc1._1, loc1._2); val t2 = at(loc2._1, loc2._2)
     val rise = Math.abs(t1.altitude - t2.altitude) // altitude already stored as meters
     val run = tileUnit.toDouble * PIXEL_FACTOR // run to be transformed from pixel to meters
-    1 + (rise / run) - 0.3 // pitch = 100 * (rise / run), here normalised in [0,1] with a /100
+    1 + ((rise/run) / 10)
   }
 
   def biomeFactor(loc:(Int, Int)): Double = {
     val biomes = at(loc._1, loc._2).biomes
-    (biomes map { _._1.crossFactor }).sum / biomes.size
+    (biomes map { d => d._1.crossFactor * d._2}).sum
   }
 }
 
