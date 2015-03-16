@@ -46,7 +46,7 @@ case class EmptyResult(override val cost: Int = 0, override val shouldStop: Bool
   def withCost(c: Int) = this.copy(cost = c)
 }
 
-case class MovedBoatResult(override val cost: Int = 0, loc: (Int,Int), val men: Int) extends Result {
+case class MovedBoatResult(override val cost: Int = 0, loc: (Int,Int), men: Int) extends Result {
   override val ok: Boolean = true
   override val shouldStop: Boolean = false
   override protected def extras(): JSONObject = new JSONObject()

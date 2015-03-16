@@ -1,33 +1,38 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
-import org.specs2.mock.Mockito
 
 @RunWith(classOf[JUnitRunner])
-class ActionsTest extends SpecificationWithJUnit with Mockito {
+class ActionsTest extends SpecificationWithJUnit {
 
   "ActionsTest Specifications".title
 
-  val budget = Budget(800);  val crew = Crew(50); val objective = (Resources.WOOD, 600)
-  val game   = Game(budget, crew, Set(objective))
+  private def exec(actions: Seq[Result], g: Game): Game = {
+    if (actions.isEmpty) g else exec(actions.tail, (g updatedBy actions.head)._1)
+  }
+
 
   "The Stop action" should {
-    val map   = mock[IslandMap] ; map.size   returns 600
-    val board = mock[GameBoard] ; board.size returns 100 ; board.m returns map
+    val g = Game(Budget(800), Crew(50), Set((Resources.WOOD, 600)))
+    val b = GameBoard(size = 600, m = null)
+    val action = Stop()
 
-    "be available even if not landed" in {
-      val action = Stop()
-      val (after, result) = action(board, game)
-      result.cost must beGreaterThanOrEqualTo(1)
-      after.budget.remaining must_== game.budget.remaining - result.cost
+    "cost nothing if not landed" in {
+      action.computeCost(b,g) must_== 0.0
+      action.buildResult(b,g).shouldStop must beTrue
     }
-
+    "cost something if landed" in {
+      val game = exec(Seq(MovedBoatResult(loc = (10,10), men = 30)), g)
+      action.computeCost(b,game) must beGreaterThan(0.0)
+    }
   }
+
+  ""
+
 
   "The ActionParser" should {
 

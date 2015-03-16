@@ -33,8 +33,8 @@ sealed trait Action extends Logger {
    * @return an instance of Result, with the eight cost
    */
    private def build(board: GameBoard, game: Game): Result = {
-    val overhead  = Random.nextInt(4) + 1            // overhead \in [1,5]
-    val variation = (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
+    val overhead  = Random.nextInt(4) + 1                 // overhead \in [1,5]
+    val variation = 1 + (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
     val result = buildResult(board, game)  // will throw an exception if the action cannot be performed
     val rawCost   = computeCost(board, game)
     val cost = 1.0 + ( (overhead + rawCost) * variation)
@@ -74,7 +74,7 @@ case class Stop() extends Action {
 
   override def computeCost(board: GameBoard, game: Game): Double = game.distanceToPort match {
     case None => 0
-    case Some(toPort) => Math.sqrt((game.menRatio * game.distanceToBoat) + toPort)
+    case Some(toPort) => (game.menRatio * game.distanceToBoat) + Math.sqrt(toPort)
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = EmptyResult(shouldStop = true)
@@ -88,9 +88,12 @@ case class Stop() extends Action {
 case class Land(creek: String, people: Int) extends Action          {
 
   override def computeCost(board: GameBoard, game: Game): Double = {
-    val alreadyLanded = game.crew.landed
     val creekLocation = board.findPOIsByType(Creek(null, null)).find { case (loc,c) => c.identifier == creek }.get._1
-    game.distanceByBoat(creekLocation)  + (alreadyLanded * Game.MEN_RATIO) + (people * Game.MEN_RATIO)
+    // TODO update
+    val comingBack = game.menRatio * Game.movingCostModel(game.normalizeMen) * game.distanceToBoat
+    val landing = people / Game.MEN_RATIO  * Game.movingCostModel(game.normalizeMen)
+    val moving = Math.sqrt(game.distanceByBoat(creekLocation))
+    moving + comingBack + landing
   }
 
 
@@ -116,7 +119,8 @@ case class MoveTo(override val direction: Directions.Direction) extends ActionWi
     val pitchFactor = board.pitchFactor(current, next)
     val biomeFactor = (board.biomeFactor(current) + board.biomeFactor(next)) / 2
     val factor = (2*movingRawFactor + pitchFactor + 2*biomeFactor) / 5
-    game.menRatio * factor
+    val result = game.menRatio * factor
+    result
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = {
@@ -139,7 +143,7 @@ case class Scout(direction: Directions.Direction) extends ActionWithDirection {
       case None => 0.0
       case Some(_) => (board.biomeFactor(game.crew.location.get) + board.biomeFactor(next)) / 2
     }
-    (1 + Random.nextInt(3)) * factor
+    Math.sqrt((1 + Random.nextInt(3)) * factor)
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = {
