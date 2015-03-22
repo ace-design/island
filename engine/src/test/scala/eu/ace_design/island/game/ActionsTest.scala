@@ -1,5 +1,6 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
 import org.json.JSONObject
 import org.specs2.mutable._
@@ -15,15 +16,15 @@ class ActionsTest extends SpecificationWithJUnit {
     if (actions.isEmpty) g else exec(actions.tail, (g updatedBy actions.head)._1)
   }
 
+  val g = Game(Budget(800), Crew(50), Set((Resources.WOOD, 600)))
+  val b = GameBoard(size = 600, m = null, pois = Map((0,0) -> Set(Creek(identifier = "c", location = None))))
 
   "The Stop action" should {
-    val g = Game(Budget(800), Crew(50), Set((Resources.WOOD, 600)))
-    val b = GameBoard(size = 600, m = null)
     val action = Stop()
 
     "cost nothing if not landed" in {
-      action.computeCost(b,g) must_== 0.0
       action.buildResult(b,g).shouldStop must beTrue
+      action.computeCost(b,g) must_== 0.0
     }
     "cost something if landed" in {
       val game = exec(Seq(MovedBoatResult(loc = (10,10), men = 30)), g)
@@ -31,7 +32,30 @@ class ActionsTest extends SpecificationWithJUnit {
     }
   }
 
-  ""
+  "The Land action" should {
+    val action = Land(creek = "c", people = 15)
+
+    "be available even if not landed" in {
+      action.buildResult(b,g) must not(throwAn[IllegalArgumentException])
+      action.computeCost(b,g) must beGreaterThanOrEqualTo(0.0)
+    }
+    "reject landing on an unknown creek" in {
+      val bad = Land(creek = "unkown", people = 15)
+      bad.buildResult(b,g) must throwAn[IllegalArgumentException]
+    }
+    "reject a landing that leaves no one on the boad" in {
+      val bad = Land(creek = "c", people = 50)
+      bad.buildResult(b,g) must throwAn[IllegalArgumentException]
+    }
+    "reject a landing with 0- people" in {
+      Land(creek = "c", people = 0).buildResult(b,g) must throwAn[IllegalArgumentException]
+      Land(creek = "c", people = 0).buildResult(b,g) must throwAn[IllegalArgumentException]
+    }
+    "store the information about the landing" in {
+
+    }
+
+  }
 
 
   "The ActionParser" should {
