@@ -108,7 +108,7 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
   }).toSeq
 
   def biomeCover(cover: Map[(Int, Int), Double], biome: Biome): Seq[((Int, Int), (Biome, Double))] = (cover map {
-    case (key, percent) => key -> (biome -> percent)
+    case (key, percent) => key -> (biome -> percent / 100)
   }).toSeq
 
   def moistureCover(cover: Map[(Int, Int), Double], moisture: Double): Seq[((Int, Int), Double)] = (cover map {

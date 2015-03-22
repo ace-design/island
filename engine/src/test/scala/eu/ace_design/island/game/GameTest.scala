@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.stdlib.Resources.{FUR, WOOD}
+import eu.ace_design.island.stdlib.Resources.{FLOWER, FUR, WOOD}
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -18,8 +18,48 @@ class GameTest extends SpecificationWithJUnit {
       g.visited must_== Set()
       g.boat must beNone
       g.isOK must beTrue
-
     }
+
+    "support harvesting of resources" in {
+      g.harvested(WOOD, (0,0)) must_== 0
+      val g2 = g.harvest(WOOD, (0,0), 100)
+      g2.harvested(WOOD, (0,0)) must_== 100
+      val g3 = g2.harvest(WOOD, (0,0), 2).harvest(WOOD, (0,1), 100).harvest(FLOWER, (0,0), 20)
+      g3.harvested(WOOD, (0,1)) must_== 100
+      g3.harvested(WOOD, (0,0)) must_== 102
+      g3.harvested(FLOWER, (0,0)) must_== 20
+    }
+
+    "compute the distance to go back to the home port" in {
+      g.distanceToPort must beNone
+      val (g1,_) = g updatedBy MovedBoatResult(loc = (10,10), men = 10)
+      g1.distanceToPort must beSome
+      g1.distanceToPort.get must beGreaterThan(0.0)
+    }
+
+    "compute the distance to reach the boat when on the island" in {
+      g.distanceToBoat must_== 0.0 // everybody on the boat
+      val (g1,_) = g updatedBy MovedBoatResult(loc = (10,10), men = 10)
+      g1.distanceToBoat must_== 0.0 // still close to the boat
+      val (g2,_) = g1 updatedBy MovedCrewResult(loc = (10,11))
+      g2.distanceToBoat must beGreaterThan(0.0)
+    }
+
+    "support the projection of landed mens into something much smaller (costs models)" in {
+      val (g1,_) = g updatedBy MovedBoatResult(loc = (10,10), men = 10)
+      g1.menRatio must beLessThan(10.0)
+    }
+
+    "support normalization of landed mens (projection into [0,1]" in {
+      g.normalizeMen must_== 0.0
+      val (g1,_) = g updatedBy MovedBoatResult(loc = (10,10), men = 10)
+      g1.normalizeMen must beLessThan(1.0)
+    }
+
+    "compute the distance to move the boat from one place to another one" in {
+      g.distanceByBoat((10,10)) must beGreaterThan(0.0)
+    }
+
     "be flagged as KO when relevant"  in {
       val g1 = g.flaggedAsKO
       g.isOK  must beTrue
@@ -93,7 +133,5 @@ class GameTest extends SpecificationWithJUnit {
       val c1 = crew movedTo (14,17)
       c1.location must_== Some((14,17))
     }
-
   }
-
 }

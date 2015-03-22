@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.stdlib.Resources
+import eu.ace_design.island.stdlib.Biomes._
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -16,6 +17,7 @@ class GameBoardTest extends SpecificationWithJUnit {
     val empty = GameBoard(20, null)
     val contents = for(x <- 0 until 3; y <- 0 until 3) yield (x,y) -> (Tile() + Stock(FISH, 10*x+y))
     val complete = (GameBoard(3, null) /: contents) { _ + _ }
+
     "be composed of tiles associated to locations" in {
       val bPrime = empty + ((0,0) -> Tile())
       bPrime.at(0,0) must_== Tile()
@@ -26,11 +28,7 @@ class GameBoardTest extends SpecificationWithJUnit {
       val bPrime = empty + ((0,0) -> Tile()) + ((0,0) -> t)
       bPrime.at(0,0) must_== t
     }
-    "identify the available neighbors for a tile" in {
-      complete.neighbors(0,0) must_== Set(Directions.SOUTH, Directions.EAST)
-      complete.neighbors(1,1) must_== Directions.values
-      complete.neighbors(-10,-10) must_== Set()
-    }
+
     "identify the production of a given location" in {
       val local = complete + ((0,0) -> (Tile() + Stock(FISH,10) + Stock(ORE, 10)))
       local.produces(0,1) must_== Set(FISH)
@@ -56,6 +54,31 @@ class GameBoardTest extends SpecificationWithJUnit {
       up.findPOIsByType(Creek(null,null)) must_== Set((0,0) -> c1, (0,1) -> c2)
       up.findPOIsByType(Hideout(null,null)) must_== Set((0,0) -> h)
     }
+
+    "compute the pitch factor to move from one tile to another one" in {
+      val mocked = empty + ((0,0) -> Tile(altitude = 100.0)) + ((0,1) -> Tile(altitude = 100.0))  +
+                           ((1,0) -> Tile(altitude = 150.0)) + ((1,1) -> Tile(altitude = 0.0))   +
+                           ((0,2) -> Tile(altitude = 350.0))
+      mocked.pitchFactor((0,0), (0,0)) must_== 1.0    // flat, same loc
+      mocked.pitchFactor((0,0), (0,1)) must_== 1.0    // flat, locs ≠
+      mocked.pitchFactor((0,0), (1,0)) must beGreaterThan(1.0) // going up
+      mocked.pitchFactor((0,0), (1,1)) must beGreaterThan(1.0) // going down
+      mocked.pitchFactor((0,0), (0,2)) must beGreaterThan(mocked.pitchFactor((0,0), (1,0)))  // Comparison
+      mocked.pitchFactor((0,0), (1,1)) must beGreaterThan(mocked.pitchFactor((0,0), (1,0)))
+      // reflexivity
+      mocked.pitchFactor((0,0), (0,0)) must_==  mocked.pitchFactor((0,0), (0,0))
+      mocked.pitchFactor((0,0), (0,1)) must_==  mocked.pitchFactor((0,1), (0,0))
+      mocked.pitchFactor((0,0), (1,0)) must_==  mocked.pitchFactor((1,0), (0,0))
+      mocked.pitchFactor((0,0), (1,1)) must_==  mocked.pitchFactor((1,1), (0,0))
+      mocked.pitchFactor((0,0), (0,2)) must_==  mocked.pitchFactor((0,2), (0,0))
+    }
+
+    "compute the biome factor (cost of crossing the current biomes)" in {
+      val b = empty + ((0,0) -> Tile(biomes = Set((BEACH, 0.2), (MANGROVE, 0.8))))
+      b.biomeFactor((0,0)) must_== (0.2 * BEACH.crossFactor) + (0.8 * MANGROVE.crossFactor)
+    }
+
+
   }
 
   "A Tile" should {

@@ -31,6 +31,7 @@ class Game private(val budget: Budget,
         case e: EmptyResult   => this // no side effect (except on budget)
         case s: ScoutResult   => this // no side effect (except on budget)
         case e: ExploreResult => this // no side effect (except on budget)
+        case g: GlimpseResult => this // no side effect (except on budget)
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
           this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
@@ -47,11 +48,24 @@ class Game private(val budget: Budget,
     }
   }
 
+  /**
+   * Identify the amount of resources harvested on a given tile
+   * @param r the resource to work with
+   * @param loc the location of the tile
+   * @return an integer value stating how many units of this resource was extracted
+   */
   def harvested(r: Resource, loc: (Int, Int)): Int = {
     val forResource = extracted.getOrElse(r,Map())
     forResource.getOrElse(loc,0)
   }
 
+  /**
+   * Harvest a given quantity of resource on the game
+   * @param r the resource to harvest
+   * @param loc tile location
+   * @param amount amount of resource to harvest
+   * @return
+   */
   def harvest(r: Resource, loc: (Int, Int), amount: Int): Game = {
     val updated = extracted.get(r) match {
       case None => extracted + (r -> Map(loc -> amount))
@@ -88,7 +102,11 @@ class Game private(val budget: Budget,
    */
   def menRatio: Double = this.crew.landed * Game.MEN_RATIO
 
-  def normalizeMen: Double = Math.min(1.0, crew.landed / 50.0)
+  /**
+   * Normalize the number of mens on the island (project it into [0,1])
+   * @return
+   */
+  def normalizeMen: Double = Math.min(1.0, crew.landed / Game.MEN_NORMALIZE_THRESHOLD)
 
   /**
    * compute the distance between a destination and the current location of the boat
@@ -100,9 +118,6 @@ class Game private(val budget: Budget,
   // compute the distance between two points
   private def distance(a: (Int, Int), b: (Int, Int)): Double =
     Math.sqrt(Math.pow(a._1 - b._1,2) + Math.pow(a._2 - b._2,2))
-
-
-
 
   /**
    * Quickly tag a game as KO by changing its status
@@ -119,12 +134,20 @@ class Game private(val budget: Budget,
 
 }
 
+/**
+ * Global information about Games
+ */
 object Game {
 
+  // ratio used to work on the number of mens available on the island
   final val MEN_RATIO: Double = 1.0 / 5.0
+
+  final val MEN_NORMALIZE_THRESHOLD = 50.0
 
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
     new Game(budget,crew, objectives, visited = Set(), boat = None, true)
+
+  // Models (polynomials) used for resource exploitation and cost definition
 
   val exploitationCostModel     = Polynomial(Seq(1, -1.0857, 0,6857))
   val exploitationResourceModel = Polynomial(Seq(0, 2,8571, -2.0751))
@@ -138,7 +161,12 @@ object Game {
  */
 class Budget private(val initial: Int, val remaining: Int) {
   require(initial > 0, "Initial budget cannot be negative")
-  // spending action points
+
+  /**
+   * Spend action points in the budget. Throw a NotEnoughBudgetException if necessary
+   * @param cost the number of action points to be removed
+   * @return
+   */
   def -(cost: Int): Budget = {
     val r = this.remaining - cost
     if (r < 0)
@@ -146,14 +174,24 @@ class Budget private(val initial: Int, val remaining: Int) {
     new Budget(initial, r)
   }
 }
+
+/**
+ * Object use to mimic the instantiation of a case class for Budget
+ */
 object Budget {
   def apply(value: Int) = new Budget(value, value)
 }
 
 class NotEnoughBudgetException(message: String) extends Exception(message)
 object NotEnoughBudgetException {
+  /**
+   * Syntactic sugar to throw an exception
+   * @param avail  remaining budget
+   * @param needed needed action points
+   * @return nothing (throws an exception)
+   */
   def apply(avail: Int, needed: Int) = {
-    val m = s"Not enough budget to perform the requested action: needed $needed, available $avail"
+    val m = s"Not enough budget to do that! Needed $needed, Available $avail"
     throw new NotEnoughBudgetException(m)
   }
 }
@@ -165,13 +203,26 @@ object NotEnoughBudgetException {
 class Crew private(val complete: Int, val used: Int, val landed: Int, val location: Option[(Int, Int)]) {
   require(complete > 1, "Not enough men in the crew")
 
+  /**
+   * Update a crew by landing a given amount of people, counting how many folks where used.
+   * @param m number of men to use
+   * @return a copy of this, with updated values
+   */
   def using(m: Int) = this.copy(used = used + m, landed = m)
 
+  /**
+   * move the crew on the island
+   * @param loc
+   * @return
+   */
   def movedTo(loc: (Int, Int)) = this.copy(location = Some(loc))
 
+  /**
+   * private copy constructor
+   * @return
+   */
   private def copy(complete: Int = this.complete,  used: Int = this.used,  landed: Int = this.landed,
                    location: Option[(Int, Int)] = this.location) = new Crew(complete, used, landed, location)
-
 
 }
 object Crew { def apply(men: Int) = new Crew(men, 0, 0, None) }

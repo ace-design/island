@@ -4,7 +4,7 @@ import eu.ace_design.island.map.resources.{Conditions, Soils, PrimaryResource, R
 import eu.ace_design.island.util.{Logger, LogSilos}
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
-import org.json.JSONObject
+import org.json.{JSONArray, JSONObject}
 import scala.util.Random
 
 
@@ -33,8 +33,8 @@ sealed trait Action extends Logger {
    * @return an instance of Result, with the eight cost
    */
    private def build(board: GameBoard, game: Game): Result = {
-    val overhead  = Random.nextInt(4) + 1            // overhead \in [1,5]
-    val variation = (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
+    val overhead  = Random.nextInt(4) + 1                 // overhead \in [1,5]
+    val variation = 1 + (Random.nextDouble() / 2) - 0.25 // variation \in [0.75, 1.25]
     val result = buildResult(board, game)  // will throw an exception if the action cannot be performed
     val rawCost   = computeCost(board, game)
     val cost = 1.0 + ( (overhead + rawCost) * variation)
@@ -74,7 +74,7 @@ case class Stop() extends Action {
 
   override def computeCost(board: GameBoard, game: Game): Double = game.distanceToPort match {
     case None => 0
-    case Some(toPort) => Math.sqrt((game.menRatio * game.distanceToBoat) + toPort)
+    case Some(toPort) => (game.menRatio * game.distanceToBoat) + Math.sqrt(toPort)
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = EmptyResult(shouldStop = true)
@@ -86,11 +86,14 @@ case class Stop() extends Action {
  * @param people
  */
 case class Land(creek: String, people: Int) extends Action          {
-
+  require(people > 0, "Cannot land less than one man")
   override def computeCost(board: GameBoard, game: Game): Double = {
-    val alreadyLanded = game.crew.landed
     val creekLocation = board.findPOIsByType(Creek(null, null)).find { case (loc,c) => c.identifier == creek }.get._1
-    game.distanceByBoat(creekLocation)  + (alreadyLanded * Game.MEN_RATIO) + (people * Game.MEN_RATIO)
+    // TODO update
+    val comingBack = game.menRatio * Game.movingCostModel(game.normalizeMen) * game.distanceToBoat
+    val landing = people / Game.MEN_RATIO  * Game.movingCostModel(game.normalizeMen)
+    val moving = Math.sqrt(game.distanceByBoat(creekLocation))
+    moving + comingBack + landing
   }
 
 
@@ -116,7 +119,8 @@ case class MoveTo(override val direction: Directions.Direction) extends ActionWi
     val pitchFactor = board.pitchFactor(current, next)
     val biomeFactor = (board.biomeFactor(current) + board.biomeFactor(next)) / 2
     val factor = (2*movingRawFactor + pitchFactor + 2*biomeFactor) / 5
-    game.menRatio * factor
+    val result = game.menRatio * factor
+    result
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = {
@@ -139,7 +143,7 @@ case class Scout(direction: Directions.Direction) extends ActionWithDirection {
       case None => 0.0
       case Some(_) => (board.biomeFactor(game.crew.location.get) + board.biomeFactor(next)) / 2
     }
-    (1 + Random.nextInt(3)) * factor
+    Math.sqrt((1 + Random.nextInt(3)) * factor)
   }
 
   override def buildResult(board: GameBoard, game: Game): Result = {
@@ -156,6 +160,45 @@ case class Scout(direction: Directions.Direction) extends ActionWithDirection {
   }
 
 }
+
+
+case class Glimpse(range: Int, override val direction: Directions.Direction) extends ActionWithDirection {
+
+  require(range > 0,  "Range for glimpse must be greater than zero")
+  require(range <= 4, "Range for glimpse cannot exceed 4")
+
+  override def computeCost(board: GameBoard, game: Game): Double = math.sqrt(range)
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.crew.location.isDefined, "Cannot glimpse without having landed before")
+    val start = game.crew.location.get
+    val raw = ((1 to range) :\ Seq[JSONArray]()) { (idx, acc) => buildReport(moveTo(idx, start), idx, board) +: acc }
+    val report = raw filterNot { _.length() == 0 }
+    GlimpseResult(report = report, asked = range)
+  }
+
+  private def buildReport(position: (Int, Int), range: Int, board: GameBoard): JSONArray = {
+    if (!board.tiles.contains(position))
+      return new JSONArray()
+    val tile = board.at(position._1, position._2)
+    val contents = tile.biomes map { case (b,v) => new JSONArray().put(0,b.name).put(1,round(v)) }
+    range match {
+      case x if x <= 2 => (contents.toSeq.sortBy { _.getDouble(1) } :\ new JSONArray()) { (rep, acc) => acc.put(rep) }
+      case 3 => (contents.map { _.getString(0) } :\ new JSONArray()) { (elem, acc) => acc.put(elem) }
+      case 4 => new JSONArray().put(contents.toSeq.sortBy( _ .getDouble(1) ).last.getString(0))
+    }
+  }
+
+  private def moveTo(idx: Int, acc: (Int, Int)): (Int, Int) = idx match {
+    case 1 => acc
+    case _ => moveTo(idx-1, Directions.move(acc._1, acc._2, direction))
+  }
+
+  private def round(v: Double) = (v * 100).round / 100.0
+
+
+}
+
 
 
 // { "action": "explore" }
@@ -203,17 +246,6 @@ case class Exploit(resource: PrimaryResource) extends Action {
 
 }
 
-
-// { "action": "glimpse" }
-case class Glimpse() extends Action {
-
-  override def computeCost(board: GameBoard, game: Game): Double = 0.0
-
-  override def buildResult(board: GameBoard, game: Game): Result = ???
-
-}
-
-
 /**
  * Keywords to be used in JSON actions
  */
@@ -224,6 +256,7 @@ object Actions {
   final val SCOUT   = "scout"
   final val EXPLOIT = "exploit"
   final val STOP    =  "stop"
+  final val GLIMPSE = "glimpse"
 }
 
 /**
@@ -245,6 +278,7 @@ object ActionParser {
       case Actions.SCOUT   => scout(json.getJSONObject("parameters"))
       case Actions.EXPLOIT => exploit(json.getJSONObject("parameters"))
       case Actions.STOP    => Stop()
+      case Actions.GLIMPSE => glimpse(json.getJSONObject("parameters"))
     }
   } catch {
     case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")
@@ -274,5 +308,7 @@ object ActionParser {
   private def scout(params: JSONObject) = Scout(direction = letter2Direction(params))
 
   private def exploit(params: JSONObject) = Exploit(resource = string2Resource(params).asInstanceOf[PrimaryResource])
+
+  private def glimpse(params: JSONObject) = Glimpse(range = params.getInt("range"), direction = letter2Direction(params))
 
 }
