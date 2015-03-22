@@ -49,10 +49,20 @@ class ActionsTest extends SpecificationWithJUnit {
     }
     "reject a landing with 0- people" in {
       Land(creek = "c", people = 0).buildResult(b,g) must throwAn[IllegalArgumentException]
-      Land(creek = "c", people = 0).buildResult(b,g) must throwAn[IllegalArgumentException]
+      Land(creek = "c", people = -1).buildResult(b,g) must throwAn[IllegalArgumentException]
     }
     "store the information about the landing" in {
+      true must beTrue
+    }
+  }
 
+  "The Glimpse action" should {
+    "reject a negative or null range" in {
+      Glimpse(range = -1, direction = Directions.NORTH) must throwAn[IllegalArgumentException]
+      Glimpse(range = 0, direction = Directions.NORTH) must throwAn[IllegalArgumentException]
+    }
+    "reject a range greater than 4" in {
+      Glimpse(range = 5, direction = Directions.NORTH) must throwAn[IllegalArgumentException]
     }
 
   }
@@ -105,6 +115,14 @@ class ActionsTest extends SpecificationWithJUnit {
       exploit.resource must_== Resources.WOOD
       val illegal = """ { "action": "exploit", "parameters": { "resource": "FOO" } } """
       ActionParser(illegal) must throwAn[IllegalArgumentException]
+    }
+
+    "build a Glimpse action when asked for" in {
+      val action = ActionParser(""" { "action": "glimpse", "parameters": { "range": 4, "direction": "S" } } """)
+      action must beAnInstanceOf[Glimpse]
+      val glimpse = action.asInstanceOf[Glimpse]
+      glimpse.direction must_== Directions.SOUTH
+      glimpse.range must_== 4
     }
 
     "translate one-letter codes to directions" in {

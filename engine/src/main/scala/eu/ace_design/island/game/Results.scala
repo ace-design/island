@@ -77,6 +77,22 @@ case class ScoutResult(override val cost: Int= 0,
   def withCost(c: Int) = this.copy(cost = c)
 }
 
+
+case class GlimpseResult(override val cost: Int= 0, report: Seq[JSONArray], asked: Int) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+
+  override def withCost(c: Int): Result = this.copy(cost = c)
+
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("asked_range", asked)
+    result.put("report", report.toArray)
+    result
+  }
+
+}
+
 case class ExploitResult(override val cost: Int = 0, amount: Int, r: Resource) extends Result {
   override val ok: Boolean = true
   override val shouldStop: Boolean = false
