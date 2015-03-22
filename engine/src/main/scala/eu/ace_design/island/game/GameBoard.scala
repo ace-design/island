@@ -162,7 +162,7 @@ case class Tile(stock: Set[Stock] = Set(), altitude: Double = 0.0,
    */
   def resources: Set[Resource] = stock map { _.resource }
 
-  def diffAltitude(that: Tile): Int = (this.altitude - that.altitude).ceil.toInt
+  def diffAltitude(that: Tile): Int = (that.altitude - this.altitude).ceil.toInt
   
 }
 
