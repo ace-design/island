@@ -194,7 +194,7 @@ case class Glimpse(range: Int, override val direction: Directions.Direction) ext
     case _ => moveTo(idx-1, Directions.move(acc._1, acc._2, direction))
   }
 
-  private def round(v: Double) = (v * 100).round / 100.0
+  private def round(v: Double) = (v * 100 * 100).round / 100.0
 
 
 }
