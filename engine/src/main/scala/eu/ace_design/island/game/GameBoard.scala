@@ -15,7 +15,8 @@ import org.json.JSONObject
 case class GameBoard(size: Int, m: IslandMap,
                      tiles: Map[(Int,Int), Tile] = Map(),
                      pois:  Map[(Int,Int), Set[PointOfInterest]] = Map(),
-                     tileUnit: Int = DEFAULT_TILE_UNIT) {
+                     tileUnit: Int = DEFAULT_TILE_UNIT,
+                     startingTile: Option[(Int, Int)] = None) {
 
   /**
    * Add a location/tile couple to the current GameBoard (update if already existing)

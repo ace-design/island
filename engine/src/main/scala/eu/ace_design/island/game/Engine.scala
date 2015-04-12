@@ -81,7 +81,11 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
 
   def buildInitializationContext(): JSONObject = {
     val creeks = board.findPOIsByType(Creek(null, null)) map { case (k,v) => v }
-    val creek = creeks.toSeq(rand.nextInt(creeks.size)).identifier
+    val creek = board.startingTile match {
+      case None => creeks.toSeq(rand.nextInt(creeks.size)).identifier
+      case Some((x,y)) => board.pois(x,y).filter( _.isInstanceOf[Creek]).head.identifier
+    }
+
     val ctx = new JSONObject()
     ctx.put("creek", creek); ctx.put("budget", game.budget.initial); ctx.put("men", game.crew.complete)
     val objs = new JSONArray()

@@ -117,7 +117,7 @@ object Biomes {
 
   object BEACH extends Biome {
     override val code = "BEA"
-    override protected val production = Seq((FISH, 0.4))
+    override protected val production = Seq((QUARTZ, 0.2))
     override val color = LIGHT_YELLOW
     override val crossFactor = 0.9
   }

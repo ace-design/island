@@ -18,6 +18,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   val emptyBoard = mock[GameBoard]
   emptyBoard.findPOIsByType(any) returns Set((10,10) -> Creek("c1", None), (0,0) -> Creek("border", None))
   emptyBoard.size returns 10
+  emptyBoard.startingTile returns None
   val t0 = Tile(altitude = 3, biomes = Set((TUNDRA, 100.0)), stock = Set(Stock(WOOD, 30, 1.1)))
   val t1 = Tile(altitude = 12, biomes = Set((MANGROVE, 100.0)))
   emptyBoard.tiles returns Map((10,9) -> t1, (10,10) -> t0)
