@@ -86,6 +86,18 @@ class GameTest extends SpecificationWithJUnit {
       val g3 = g.harvest(FUR, (0,0), 25)
       g3.harvested(FUR, (0,0)) must_== 25
     }
+
+    "support the consumption of resources" in {
+      g.consumeResource(WOOD, 10) must throwAn[IllegalArgumentException]
+      val g1 = g.harvest(WOOD, (0,0), 100)
+      g1.collectedResources must contain(WOOD -> 100)
+      val g2 = g1.consumeResource(WOOD, 90)
+      g2.collectedResources must contain(WOOD -> 10)
+      g2.consumeResource(WOOD, 20) must throwAn[IllegalArgumentException]
+      val g3 = g2.consumeResource(WOOD, 10)
+      g3.collectedResources must contain(WOOD -> 0)
+    }
+
   }
 
   "A budget" should {
