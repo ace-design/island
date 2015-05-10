@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.stdlib.Resources.{FLOWER, FUR, WOOD}
+import eu.ace_design.island.stdlib.Resources._
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -96,6 +96,19 @@ class GameTest extends SpecificationWithJUnit {
       g2.consumeResource(WOOD, 20) must throwAn[IllegalArgumentException]
       val g3 = g2.consumeResource(WOOD, 10)
       g3.collectedResources must contain(WOOD -> 0)
+    }
+
+    "support the storage of manufactured resources in the ship hold" in {
+      val g1 = g.storeTransformedResources(PLANK, 10)
+      g1.collectedResources must contain(PLANK -> 10)
+
+      val g2 = g1.storeTransformedResources(INGOT, 5)
+      g2.collectedResources must contain(PLANK -> 10)
+      g2.collectedResources must contain(INGOT -> 5)
+
+      val g3 = g2.storeTransformedResources(PLANK, 32)
+      g3.collectedResources must contain(PLANK -> 42)
+      g3.collectedResources must contain(INGOT -> 5)
     }
 
   }

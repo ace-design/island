@@ -47,6 +47,10 @@ class Game private(val budget: Budget,
           this.copy(crew = updatedCrew, visited = visited + m.loc)
         }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
+        case t: TransformResult => {
+          val primaryRemoved = (this /: t.consumed) { (g, cons) => g.consumeResource(cons._1, cons._2) }
+          primaryRemoved.storeTransformedResources(t.kind, t.production)
+        }
         case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
       }
       val remaining = budget - res.cost
@@ -149,6 +153,12 @@ class Game private(val budget: Budget,
   def consumeResource(res: PrimaryResource, amount: Int): Game = {
     require(collectedResources.getOrElse(res,0) >= amount, "Cannot consume resource you do not have")
     copy(consumed = consumed + (res -> (consumed.getOrElse(res,0) + amount)))
+  }
+
+  // Store transformed resources in the ship hold
+  def storeTransformedResources(res: ManufacturedResource, amount: Int): Game = {
+    val legacy = transformed.getOrElse(res,0)
+    copy(transformed = transformed + (res -> (legacy + amount)))
   }
 
   // copy a game into another one (simulating case class behavior)

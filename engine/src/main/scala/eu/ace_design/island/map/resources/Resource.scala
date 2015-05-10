@@ -99,7 +99,7 @@ trait PrimaryResource extends Resource  {
  * This object represents the lack of resources
  */
 object NoResource extends PrimaryResource {
-  override val perHectare = 0;
+  override val perHectare = 0
   override val difficulty = 0.0
 }
 

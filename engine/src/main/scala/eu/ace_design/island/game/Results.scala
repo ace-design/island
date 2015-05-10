@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{ManufacturedResource, Resource, Conditions}
+import eu.ace_design.island.map.resources.{PrimaryResource, ManufacturedResource, Resource, Conditions}
 import org.json.{JSONArray, JSONObject}
 
 /**
@@ -142,7 +142,9 @@ case class ResourceExploration(resource: Resource, amount: ResourceLevels.Resour
 
 
 case class TransformResult(override val cost: Int = 0,
-                           kind: ManufacturedResource, production: Int) extends Result {
+                           kind: ManufacturedResource, production: Int,
+                           consumed: Map[PrimaryResource, Int]) extends Result {
+
   override val ok: Boolean = true
   override val shouldStop: Boolean = false
 

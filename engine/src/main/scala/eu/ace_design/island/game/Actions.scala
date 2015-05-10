@@ -261,7 +261,7 @@ case class Transform(materials: Map[PrimaryResource, Int])  extends Action {
               s"Cannot transform with material you do not have: [$res / $amount]")
     }
     val (k, p) = produce(game)
-    TransformResult(kind = k, production = p.floor.toInt)
+    TransformResult(kind = k, production = p.floor.toInt, consumed = materials)
   }
 
   private def produce(game: Game): (ManufacturedResource, Double) = {

@@ -101,6 +101,7 @@ class ActionsTest extends SpecificationWithJUnit {
   }
 
   "The Transform action" should {
+
     val getSomeRum  = Transform(Map(SUGAR_CANE -> 102, FRUITS -> 15))    // should produced around 10 units, +/- 10%
     val onLand = exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g) // Mens are on land now
 
@@ -121,6 +122,7 @@ class ActionsTest extends SpecificationWithJUnit {
     "transform resources according to recipes" in {
       val g1 = onLand.harvest(SUGAR_CANE, (0,0), 900).harvest(FRUITS,(0,0),50)
       val res = getSomeRum.buildResult(b, g1).asInstanceOf[TransformResult]
+      res.consumed must_== getSomeRum.materials
       res.kind must_== RUM
       res.production must beGreaterThanOrEqualTo(9)
       res.production must beLessThanOrEqualTo(11)
@@ -134,11 +136,20 @@ class ActionsTest extends SpecificationWithJUnit {
       val stupidTransformation = Transform(Map(QUARTZ -> 1200, WOOD -> 10))
       val g1 = onLand.harvest(QUARTZ, (0,0), 1500).harvest(WOOD,(0,0),50)
       val res = stupidTransformation.buildResult(b, g1).asInstanceOf[TransformResult]
+      res.consumed must_== stupidTransformation.materials
       res.kind must_== GLASS
       res.production must beGreaterThanOrEqualTo(1)
       res.production must beLessThanOrEqualTo(3)
       val cost = stupidTransformation.computeCost(b, g1)
       cost must beGreaterThan(0.0)
+    }
+
+    "adapt the game with the relevant resources after transformation" in {
+      val result = TransformResult(kind = RUM, production = 1, consumed = getSomeRum.materials)
+      val updated = exec(Seq(result), onLand.harvest(SUGAR_CANE, (0,0), 900).harvest(FRUITS,(0,0),50))
+      updated.collectedResources must contain(SUGAR_CANE -> 798)
+      updated.collectedResources must contain(FRUITS     -> 35)
+      updated.collectedResources must contain(RUM        -> 1)
     }
   }
 
