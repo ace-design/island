@@ -99,7 +99,19 @@ trait PrimaryResource extends Resource  {
  * This object represents the lack of resources
  */
 object NoResource extends PrimaryResource {
-  override val perHectare = 0; override val difficulty = 0.0
+  override val perHectare = 0;
+  override val difficulty = 0.0
 }
 
-trait ManufacturedResource extends Resource
+trait ManufacturedResource extends Resource  {
+
+  val recipe: Set[(PrimaryResource, Double)]
+  val factor: Double
+
+  val isAloneActivity: Boolean = false // override if the number of men does not influence the cost
+
+
+  def costFunction(production: Double, men: Int): Double =
+    Math.max(1.0, (if (isAloneActivity) production else production / men) * factor)
+
+}

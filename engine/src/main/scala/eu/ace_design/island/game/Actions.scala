@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{Conditions, Soils, PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
 import eu.ace_design.island.util.{Logger, LogSilos}
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
@@ -249,9 +249,31 @@ case class Exploit(resource: PrimaryResource) extends Action {
 
 case class Transform(materials: Map[PrimaryResource, Int])  extends Action {
 
-  override def computeCost(board: GameBoard, game: Game): Double = ???
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val (resource, production) = produce(game)
+    resource.costFunction(production, game.crew.landed)
+  }
 
-  override def buildResult(board: GameBoard, game: Game): Result = ???
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.crew.location.isDefined, "Cannot transform without men on land")
+    materials foreach { case (res, amount) =>
+      require(game.collectedResources.getOrElse(res, 0) >= amount,
+              s"Cannot transform with material you do not have: [$res / $amount]")
+    }
+    val (k, p) = produce(game)
+    TransformResult(kind = k, production = p.floor.toInt)
+  }
+
+  private def produce(game: Game): (ManufacturedResource, Double) = {
+    val rawKind = Resources.manufactured.find { _.recipe.map{ _._1 } == materials.keySet }
+    require(rawKind.isDefined, "Cannot transform elements according to an unknown recipe")
+    val recipe = rawKind.get.recipe.toMap
+    val maxProd = materials map { case (k,v) => v / recipe(k) }
+    val rawProduction = maxProd.min
+    val factor = 0.9 + (Random.nextDouble() / 10 * 2) // ==> factor \in [ 0.9, 1.1 ]
+    (rawKind.get,rawProduction * factor)
+  }
+
 }
 
 /**
