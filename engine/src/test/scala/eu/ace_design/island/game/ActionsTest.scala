@@ -88,7 +88,7 @@ class ActionsTest extends SpecificationWithJUnit {
 
       val g4 = Glimpse(4, Directions.SOUTH)
       val r4 = g4.buildResult(board, exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g)).asInstanceOf[GlimpseResult]
-      r4.asked must_== 4;  r4.report must haveSize(4)  ; println(r4)
+      r4.asked must_== 4;  r4.report must haveSize(4)  ;
       r4.report(0).length() must_== 2; r4.report(1).length() must_== 3; r4.report(2).length must_== 3
       r4.report(3).length() must_== 1
     }
@@ -155,6 +155,15 @@ class ActionsTest extends SpecificationWithJUnit {
       val glimpse = action.asInstanceOf[Glimpse]
       glimpse.direction must_== Directions.SOUTH
       glimpse.range must_== 4
+    }
+
+    "build a Transform action when asked for" in {
+      val action = ActionParser("""{ "action": "transform", "parameters": { "WOOD": 10, "QUARTZ": 100 } }""")
+      action must beAnInstanceOf[Transform]
+      val transform = action.asInstanceOf[Transform]
+      transform.materials must haveSize(2)
+      transform.materials must contain(Resources.WOOD -> 10)
+      transform.materials must contain(Resources.QUARTZ -> 100)
     }
 
     "translate one-letter codes to directions" in {

@@ -246,17 +246,26 @@ case class Exploit(resource: PrimaryResource) extends Action {
 
 }
 
+
+case class Transform(materials: Map[PrimaryResource, Int])  extends Action {
+
+  override def computeCost(board: GameBoard, game: Game): Double = ???
+
+  override def buildResult(board: GameBoard, game: Game): Result = ???
+}
+
 /**
  * Keywords to be used in JSON actions
  */
 object Actions {
-  final val LAND    = "land"
-  final val EXPLORE = "explore"
-  final val MOVE_TO = "move_to"
-  final val SCOUT   = "scout"
-  final val EXPLOIT = "exploit"
-  final val STOP    =  "stop"
-  final val GLIMPSE = "glimpse"
+  final val LAND      = "land"
+  final val EXPLORE   = "explore"
+  final val MOVE_TO   = "move_to"
+  final val SCOUT     = "scout"
+  final val EXPLOIT   = "exploit"
+  final val STOP      =  "stop"
+  final val GLIMPSE   = "glimpse"
+  final val TRANSFORM = "transform"
 }
 
 /**
@@ -272,13 +281,14 @@ object ActionParser {
   def apply(data: String): Action = try {
     val json  =  new JSONObject(data)
     json.getString("action") match {
-      case Actions.LAND    => land(json.getJSONObject("parameters"))
-      case Actions.EXPLORE => Explore()
-      case Actions.MOVE_TO => moveTo(json.getJSONObject("parameters"))
-      case Actions.SCOUT   => scout(json.getJSONObject("parameters"))
-      case Actions.EXPLOIT => exploit(json.getJSONObject("parameters"))
-      case Actions.STOP    => Stop()
-      case Actions.GLIMPSE => glimpse(json.getJSONObject("parameters"))
+      case Actions.LAND      => land(json.getJSONObject("parameters"))
+      case Actions.EXPLORE   => Explore()
+      case Actions.MOVE_TO   => moveTo(json.getJSONObject("parameters"))
+      case Actions.SCOUT     => scout(json.getJSONObject("parameters"))
+      case Actions.EXPLOIT   => exploit(json.getJSONObject("parameters"))
+      case Actions.STOP      => Stop()
+      case Actions.GLIMPSE   => glimpse(json.getJSONObject("parameters"))
+      case Actions.TRANSFORM => transform(json.getJSONObject("parameters"))
     }
   } catch {
     case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")
@@ -311,4 +321,10 @@ object ActionParser {
 
   private def glimpse(params: JSONObject) = Glimpse(range = params.getInt("range"), direction = letter2Direction(params))
 
+  private def transform(params: JSONObject) = {
+    import scala.collection.JavaConversions._
+    val materials =
+      (params.keys map  { k => Resources.bindings(k).asInstanceOf[PrimaryResource] -> params.getInt(k) }).toMap
+    Transform(materials)
+  }
 }
