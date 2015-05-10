@@ -1,7 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.Resource
-import eu.ace_design.island.map.resources.Conditions
+import eu.ace_design.island.map.resources.{PrimaryResource, ManufacturedResource, Resource, Conditions}
 import org.json.{JSONArray, JSONObject}
 
 /**
@@ -139,6 +138,24 @@ case class ResourceExploration(resource: Resource, amount: ResourceLevels.Resour
     result.put("cond", condition)
     result
   }
+}
+
+
+case class TransformResult(override val cost: Int = 0,
+                           kind: ManufacturedResource, production: Int,
+                           consumed: Map[PrimaryResource, Int]) extends Result {
+
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("kind", kind.name)
+    result.put("production", production)
+    result
+  }
+
+  def withCost(c: Int) = this.copy(cost = c)
 }
 
 

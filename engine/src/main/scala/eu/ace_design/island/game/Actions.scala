@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{Conditions, Soils, PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
 import eu.ace_design.island.util.{Logger, LogSilos}
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
@@ -246,17 +246,48 @@ case class Exploit(resource: PrimaryResource) extends Action {
 
 }
 
+
+case class Transform(materials: Map[PrimaryResource, Int])  extends Action {
+
+  override def computeCost(board: GameBoard, game: Game): Double = {
+    val (resource, production) = produce(game)
+    resource.costFunction(production, game.crew.landed)
+  }
+
+  override def buildResult(board: GameBoard, game: Game): Result = {
+    require(game.crew.location.isDefined, "Cannot transform without men on land")
+    materials foreach { case (res, amount) =>
+      require(game.collectedResources.getOrElse(res, 0) >= amount,
+              s"Cannot transform with material you do not have: [$res / $amount]")
+    }
+    val (k, p) = produce(game)
+    TransformResult(kind = k, production = p.floor.toInt, consumed = materials)
+  }
+
+  private def produce(game: Game): (ManufacturedResource, Double) = {
+    val rawKind = Resources.manufactured.find { _.recipe.map{ _._1 } == materials.keySet }
+    require(rawKind.isDefined, "Cannot transform elements according to an unknown recipe")
+    val recipe = rawKind.get.recipe.toMap
+    val maxProd = materials map { case (k,v) => v / recipe(k) }
+    val rawProduction = maxProd.min
+    val factor = 0.9 + (Random.nextDouble() / 10 * 2) // ==> factor \in [ 0.9, 1.1 ]
+    (rawKind.get,rawProduction * factor)
+  }
+
+}
+
 /**
  * Keywords to be used in JSON actions
  */
 object Actions {
-  final val LAND    = "land"
-  final val EXPLORE = "explore"
-  final val MOVE_TO = "move_to"
-  final val SCOUT   = "scout"
-  final val EXPLOIT = "exploit"
-  final val STOP    =  "stop"
-  final val GLIMPSE = "glimpse"
+  final val LAND      = "land"
+  final val EXPLORE   = "explore"
+  final val MOVE_TO   = "move_to"
+  final val SCOUT     = "scout"
+  final val EXPLOIT   = "exploit"
+  final val STOP      =  "stop"
+  final val GLIMPSE   = "glimpse"
+  final val TRANSFORM = "transform"
 }
 
 /**
@@ -272,13 +303,14 @@ object ActionParser {
   def apply(data: String): Action = try {
     val json  =  new JSONObject(data)
     json.getString("action") match {
-      case Actions.LAND    => land(json.getJSONObject("parameters"))
-      case Actions.EXPLORE => Explore()
-      case Actions.MOVE_TO => moveTo(json.getJSONObject("parameters"))
-      case Actions.SCOUT   => scout(json.getJSONObject("parameters"))
-      case Actions.EXPLOIT => exploit(json.getJSONObject("parameters"))
-      case Actions.STOP    => Stop()
-      case Actions.GLIMPSE => glimpse(json.getJSONObject("parameters"))
+      case Actions.LAND      => land(json.getJSONObject("parameters"))
+      case Actions.EXPLORE   => Explore()
+      case Actions.MOVE_TO   => moveTo(json.getJSONObject("parameters"))
+      case Actions.SCOUT     => scout(json.getJSONObject("parameters"))
+      case Actions.EXPLOIT   => exploit(json.getJSONObject("parameters"))
+      case Actions.STOP      => Stop()
+      case Actions.GLIMPSE   => glimpse(json.getJSONObject("parameters"))
+      case Actions.TRANSFORM => transform(json.getJSONObject("parameters"))
     }
   } catch {
     case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")
@@ -311,4 +343,10 @@ object ActionParser {
 
   private def glimpse(params: JSONObject) = Glimpse(range = params.getInt("range"), direction = letter2Direction(params))
 
+  private def transform(params: JSONObject) = {
+    import scala.collection.JavaConversions._
+    val materials =
+      (params.keys map  { k => Resources.bindings(k).asInstanceOf[PrimaryResource] -> params.getInt(k) }).toMap
+    Transform(materials)
+  }
 }

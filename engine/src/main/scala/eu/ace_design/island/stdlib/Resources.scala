@@ -48,11 +48,37 @@ object Resources  {
     override val difficulty = 0.95
   }
 
-  val manufactured: Set[ManufacturedResource] = Set()
-  //val GLASS, INGOT, PLANK, RUM, ELIXIR, LEATHER
+  val manufactured: Set[ManufacturedResource] = Set(GLASS, INGOT, PLANK, LEATHER, RUM)
+
+  object GLASS   extends ManufacturedResource {
+    override val recipe = Set((QUARTZ, 10.0), (WOOD, 5.0))
+    override val factor = 0.5
+  }
+
+  object INGOT   extends ManufacturedResource {
+    override val recipe = Set((ORE, 5.0), (WOOD, 5.0))
+    override val factor = 1.0
+    override val isAloneActivity = true
+  }
+
+  object PLANK   extends ManufacturedResource {
+    override val recipe = Set((WOOD.asInstanceOf[PrimaryResource], 0.25))
+    override val factor = 0.1
+  }
+
+  object LEATHER extends ManufacturedResource {
+    override val recipe = Set((FUR.asInstanceOf[PrimaryResource], 3.0))
+    override val factor = 1.2
+  }
+
+  object RUM     extends ManufacturedResource {
+    override val recipe = Set((SUGAR_CANE, 10.0), (FRUITS, 1.0))
+    override val factor = 3.0
+    override val isAloneActivity = true
+  }
+
 
   val values: Set[Resource] = primaries ++ manufactured
-
   val bindings: Map[String, Resource] = (values map { r => r.name -> r }).toMap
 
 }

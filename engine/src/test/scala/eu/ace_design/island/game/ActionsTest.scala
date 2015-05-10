@@ -3,7 +3,8 @@ package eu.ace_design.island.game
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
 import eu.ace_design.island.stdlib.Biomes._
-import org.json.{JSONArray, JSONObject}
+import eu.ace_design.island.stdlib.Resources._
+import org.json.JSONObject
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
@@ -53,7 +54,7 @@ class ActionsTest extends SpecificationWithJUnit {
       Land(creek = "c", people = -1).buildResult(b,g) must throwAn[IllegalArgumentException]
     }
     "store the information about the landing" in {
-      true must beTrue
+      true must beTrue  // TODO ugly stuff here !! FIXME
     }
   }
 
@@ -88,7 +89,7 @@ class ActionsTest extends SpecificationWithJUnit {
 
       val g4 = Glimpse(4, Directions.SOUTH)
       val r4 = g4.buildResult(board, exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g)).asInstanceOf[GlimpseResult]
-      r4.asked must_== 4;  r4.report must haveSize(4)  ; println(r4)
+      r4.asked must_== 4;  r4.report must haveSize(4)  ;
       r4.report(0).length() must_== 2; r4.report(1).length() must_== 3; r4.report(2).length must_== 3
       r4.report(3).length() must_== 1
     }
@@ -96,6 +97,59 @@ class ActionsTest extends SpecificationWithJUnit {
       val g2 = Glimpse(2, Directions.NORTH)
       val r2 = g2.buildResult(board, exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g)).asInstanceOf[GlimpseResult]
       r2.report must haveSize(1)
+    }
+  }
+
+  "The Transform action" should {
+
+    val getSomeRum  = Transform(Map(SUGAR_CANE -> 102, FRUITS -> 15))    // should produced around 10 units, +/- 10%
+    val onLand = exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g) // Mens are on land now
+
+    "reject to build something with no mens on land" in {
+      getSomeRum.buildResult(b, g) must throwAn[IllegalArgumentException]
+    }
+
+    "reject to build something without enough resources to do so" in {
+      getSomeRum.buildResult(b, onLand) must throwAn[IllegalArgumentException]
+    }
+
+    "reject to transform using an unknown recipe" in {
+      val unknown = Transform(Map(WOOD -> 15, FUR -> 15))
+      val g1 = onLand.harvest(WOOD, (0,0), 100).harvest(FUR,(0,0),100)
+      unknown.buildResult(b,g1) must throwAn[IllegalArgumentException]
+    }
+
+    "transform resources according to recipes" in {
+      val g1 = onLand.harvest(SUGAR_CANE, (0,0), 900).harvest(FRUITS,(0,0),50)
+      val res = getSomeRum.buildResult(b, g1).asInstanceOf[TransformResult]
+      res.consumed must_== getSomeRum.materials
+      res.kind must_== RUM
+      res.production must beGreaterThanOrEqualTo(9)
+      res.production must beLessThanOrEqualTo(11)
+      val cost = getSomeRum.computeCost(b, g1)
+      cost must beGreaterThan(0.0)
+    }
+
+    "produce the minimum of what can be actually produced with the given resources" in {
+      // Asking to transform GLASS with 1200 units of QUARTZ but only 10 WOODs will only yield ~2 units of GLASS
+      // The remaining resources are wasted
+      val stupidTransformation = Transform(Map(QUARTZ -> 1200, WOOD -> 10))
+      val g1 = onLand.harvest(QUARTZ, (0,0), 1500).harvest(WOOD,(0,0),50)
+      val res = stupidTransformation.buildResult(b, g1).asInstanceOf[TransformResult]
+      res.consumed must_== stupidTransformation.materials
+      res.kind must_== GLASS
+      res.production must beGreaterThanOrEqualTo(1)
+      res.production must beLessThanOrEqualTo(3)
+      val cost = stupidTransformation.computeCost(b, g1)
+      cost must beGreaterThan(0.0)
+    }
+
+    "adapt the game with the relevant resources after transformation" in {
+      val result = TransformResult(kind = RUM, production = 1, consumed = getSomeRum.materials)
+      val updated = exec(Seq(result), onLand.harvest(SUGAR_CANE, (0,0), 900).harvest(FRUITS,(0,0),50))
+      updated.collectedResources must contain(SUGAR_CANE -> 798)
+      updated.collectedResources must contain(FRUITS     -> 35)
+      updated.collectedResources must contain(RUM        -> 1)
     }
   }
 
@@ -155,6 +209,15 @@ class ActionsTest extends SpecificationWithJUnit {
       val glimpse = action.asInstanceOf[Glimpse]
       glimpse.direction must_== Directions.SOUTH
       glimpse.range must_== 4
+    }
+
+    "build a Transform action when asked for" in {
+      val action = ActionParser("""{ "action": "transform", "parameters": { "WOOD": 10, "QUARTZ": 100 } }""")
+      action must beAnInstanceOf[Transform]
+      val transform = action.asInstanceOf[Transform]
+      transform.materials must haveSize(2)
+      transform.materials must contain(Resources.WOOD -> 10)
+      transform.materials must contain(Resources.QUARTZ -> 100)
     }
 
     "translate one-letter codes to directions" in {

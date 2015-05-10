@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.Resource
+import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
 import eu.ace_design.island.util.Polynomial
 
 /**
@@ -10,6 +10,10 @@ import eu.ace_design.island.util.Polynomial
  * @param objectives the objectives given by the
  * @param visited the locations visited by the explorer
  * @param boat The location of the boat
+ * @param isOK is the game ok ? Setting this to false stops the game engine
+ * @param extracted the resources extracted from the map, tile per tile
+ * @param consumed the amount of resource consumed to perform resource transformation
+ * @param transformed the amount of resources obtained through transformation
  */
 class Game private(val budget: Budget,
                    val crew: Crew,
@@ -17,7 +21,9 @@ class Game private(val budget: Budget,
                    val visited: Set[(Int, Int)],
                    val boat: Option[(Int, Int)],
                    val isOK: Boolean = true,
-                   val extracted: Map[Resource,Map[(Int,Int),Int]] = Map()) {
+                   val extracted: Map[Resource,Map[(Int,Int),Int]] = Map(),
+                   val consumed: Map[PrimaryResource, Int] = Map(),
+                   val transformed: Map[ManufacturedResource, Int] = Map()) {
 
   /**
    * Update the current game based on the contents of the result of an action
@@ -41,6 +47,10 @@ class Game private(val budget: Budget,
           this.copy(crew = updatedCrew, visited = visited + m.loc)
         }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
+        case t: TransformResult => {
+          val primaryRemoved = (this /: t.consumed) { (g, cons) => g.consumeResource(cons._1, cons._2) }
+          primaryRemoved.storeTransformedResources(t.kind, t.production)
+        }
         case _ => throw new UnsupportedOperationException("Game cannot handle update with " + res)
       }
       val remaining = budget - res.cost
@@ -75,6 +85,18 @@ class Game private(val budget: Budget,
       }
     }
     this.copy(extracted = updated)
+  }
+
+  /**
+   * Compute the collected resources for a player. This is built as the following :
+   *   collected = resources harvested on the map - resources consumed by transformation + manufactured resources
+   * @return
+   */
+  def collectedResources: Map[Resource, Int] = {
+    val harvested = this.extracted map { case (resource, data) => resource -> data.values.sum }
+    val withConsumed =
+      harvested map { case (res, collected) => res -> (collected - consumed.getOrElse(res.asInstanceOf[PrimaryResource], 0)) }
+    withConsumed ++ transformed
   }
 
   /**
@@ -125,12 +147,28 @@ class Game private(val budget: Budget,
    */
   def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
 
+  /**
+   * Consumes resources on the board
+   */
+  def consumeResource(res: PrimaryResource, amount: Int): Game = {
+    require(collectedResources.getOrElse(res,0) >= amount, "Cannot consume resource you do not have")
+    copy(consumed = consumed + (res -> (consumed.getOrElse(res,0) + amount)))
+  }
+
+  // Store transformed resources in the ship hold
+  def storeTransformedResources(res: ManufacturedResource, amount: Int): Game = {
+    val legacy = transformed.getOrElse(res,0)
+    copy(transformed = transformed + (res -> (legacy + amount)))
+  }
+
   // copy a game into another one (simulating case class behavior)
   private def copy(budget: Budget = this.budget, crew: Crew = this.crew,
                    objectives: Set[(Resource, Int)] = this.objectives,
                    visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat,
-                   isOK: Boolean = this.isOK, extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted) =
-    new Game(budget, crew, objectives, visited, boat, isOK, extracted)
+                   isOK: Boolean = this.isOK, extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
+                   consumed: Map[PrimaryResource, Int] = this.consumed,
+                   transformed: Map[ManufacturedResource, Int] = this.transformed) =
+    new Game(budget, crew, objectives, visited, boat, isOK, extracted, consumed, transformed)
 
 }
 
