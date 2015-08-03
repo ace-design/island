@@ -83,6 +83,13 @@ trait Registry[T] {
       }
     }
   }
+
+  override def hashCode(): Int = _contents.hashCode()
+
+  override def equals(that: Any): Boolean = that match {
+    case that: Registry[T] => this._contents == that._contents
+    case _ => false
+  }
 }
 
 /**
@@ -113,8 +120,6 @@ class EdgeRegistry private (override protected val _contents: Map[Edge, Int]= Ma
     val matched = _contents.par filter { case (edge, ref) => edge involves pRef } map { case (e,r) => e }
     (matched map { e => Seq(e.p1, e.p2) }).flatten.seq.toSet - pRef
   }
-
-
 }
 object EdgeRegistry { def apply() = new EdgeRegistry(Map()) }
 
