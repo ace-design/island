@@ -94,8 +94,9 @@
   </organization>
   
   <modules>
-    <module>engine</module>
-    <module>player</module>
+      <module>engine</module>
+      <module>player</module>
+      <module>bot</module>
   </modules>    
 
 </project>
