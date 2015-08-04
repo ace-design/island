@@ -14,9 +14,10 @@ sealed trait Property[T] {
   val value: T
 }
 
-/*********************************************
- ** Properties available in the Island game **
- *********************************************/
+/*****************************************************
+ ** Properties available in the Island game         **
+ ** For serialization purpose, see PropertyFactory  **
+ *****************************************************/
 
 case class IsBorder(override val value: Boolean = true) extends Property[Boolean] {
   override val key = "isBorder"
@@ -28,7 +29,7 @@ case class IsWater(override val value: Boolean = true) extends Property[Boolean]
   def unary_!() = IsWater(value = ! this.value)
 }
 
-case class WaterKind(override val value: ExistingWaterKind.ExistingWaterKind)
+case class WaterKind(override val value: ExistingWaterKind.ExistingWaterKind = ExistingWaterKind.OCEAN)
   extends Property[ExistingWaterKind.ExistingWaterKind] {
   override val key = "waterKind"
 }
