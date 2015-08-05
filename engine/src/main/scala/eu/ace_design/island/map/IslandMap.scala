@@ -41,6 +41,8 @@ class IslandMap private (
 
   val size: Int = _mesh.size.get
 
+  def mesh: Mesh = _mesh
+
   /**
    * Working with faces
    */
