@@ -3,17 +3,39 @@ package eu.ace_design.island.io
 import eu.ace_design.island.map._
 import eu.ace_design.island.map.resources.{Biome, Soils, Conditions}
 import eu.ace_design.island.stdlib.Biomes
-import org.json.JSONObject
+import org.json.{JSONArray, JSONObject}
 
 /**
- * This file is part of the island project
- * @author mosser (03/08/2015, 21:39)
+ * This object is used to read/write a property set in a JSON array
  **/
 object PropertySetFactory {
 
+  /**
+   * Transform a JSON array into a property set
+   * @param obj
+   * @return
+   */
+  def apply(obj: JSONArray): PropertySet = {
+    val entries = for(i <- 0 until obj.length) yield obj.getJSONObject(i)
+    (PropertySet() /: entries) { (acc, json) =>
+      val ref = json.getInt("key")
+      val values = for (v <- 0 until json.getJSONArray("vals").length)
+                    yield PropertyFactory(json.getJSONArray("vals").getJSONObject(v))
+      (acc /: values) { (set, prop) =>  set + (ref -> prop) }
+    }
+  }
 
-
-
+  /**
+   * Transform a property set into a JSON Array
+   * @param pSet
+   * @return
+   */
+  def apply(pSet: PropertySet): JSONArray = {
+    (new JSONArray() /: pSet.references) { (result, ref) =>
+      val props = (new JSONArray() /: (pSet.get(ref) map { PropertyFactory(_) })) { _.put(_) }
+      result.put(new JSONObject().put("key", ref).put("vals", props))
+    }
+  }
 }
 
 

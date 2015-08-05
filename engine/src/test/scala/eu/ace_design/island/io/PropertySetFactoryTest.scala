@@ -13,6 +13,36 @@ class PropertySetFactoryTest extends SpecificationWithJUnit {
   "PropertySetFactoryTest Specifications".title
 
 
+  "The JSON property set factory" should {
+    val empty = PropertySet()
+    val pSet = empty bulkAdd(Set(1), IsWater()) bulkAdd(Set(1,2), IsCoast()) bulkAdd(Set(1,2,3), IsBorder())
+
+    "Return the empty array for the empty property set" in {
+      PropertySetFactory(empty).length() must_== 0
+    }
+
+    "Serialize the right number of elements" in {
+      val json = PropertySetFactory(pSet)
+      for(i <- 0 until json.length) {
+        val elem = json.getJSONObject(i)
+        val oracle = elem.getInt("key") match {
+          case 1 => 3 // 1 is annotated as IsWater, IsCoast and IsBorder
+          case 2 => 2 // 2 is annotated as IsCoast and IsBorder
+          case 3 => 1 // 3 is annotated as IsBorder
+        }
+        elem.getJSONArray("vals").length must_== oracle
+      }
+      json.length() must_== pSet.size
+    }
+
+    "be bidirectional" in {
+      PropertySetFactory(PropertySetFactory(empty)) must_== empty
+      PropertySetFactory(PropertySetFactory(pSet)) must_== pSet
+    }
+
+  }
+
+
   "The JSON property factory" should {
 
     val f = PropertyFactory
