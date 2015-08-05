@@ -119,7 +119,7 @@ object Statistics extends Enumeration {
   val ELEVATION_MAX     = Value("Land elevation (m) [max]       ")
   val ELEVATION_AVG     = Value("Land elevation (m) [avg]       ")
   val PITCH_MIN         = Value("Pitch for lands (%) [min]      ")
-  val PITCH_MAX         = Value("Pitch for lands (%) ]max]      ")
+  val PITCH_MAX         = Value("Pitch for lands (%) [max]      ")
   val PITCH_AVG         = Value("Pitch for lands (%) [avg]      ")
 
 }

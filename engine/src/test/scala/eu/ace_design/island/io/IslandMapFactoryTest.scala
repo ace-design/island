@@ -13,14 +13,20 @@ class IslandMapFactoryTest extends SpecificationWithJUnit {
 
   "The Island Map Factory" should {
 
-    "support JSON serialization" in {
-      IslandMapFactory(Islands.default) must beAnInstanceOf[JSONObject]
+    val json = IslandMapFactory(Islands.default)
+
+    "support JSON serialization as a JSON object" in {
+      json must beAnInstanceOf[JSONObject]
     }
 
     "be a bidirectional transformation" in {
-      val json = IslandMapFactory(Islands.default)
-      val map  = IslandMapFactory(json)
-      map must_== Islands.default
+      IslandMapFactory(json) must_== Islands.default
     }
+
+    "support serialization of optional elements" in {
+      val downgraded = Islands.default.copy(uuid = None, stats = None)
+      IslandMapFactory(IslandMapFactory(downgraded)) must_== downgraded
+    }
+
   }
 }
