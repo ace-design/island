@@ -31,8 +31,11 @@ object Islands extends DiSLand {
    * Ref: http://en.wikipedia.org/wiki/Tortuga_Island,_Haiti
    */
   lazy val tortuga: IslandMap =  {
-    createIsland shapedAs ellipsis(x=95.percent, y=40.percent, theta=20) builtWith Seq(
-      plateau(45), flowing(rivers = 30, distance = 0.6), withMoisture(soils.wet, distance = 100),
+    createIsland shapedAs ellipsis(x = 95.percent,
+                                   y = 40.percent,
+                                   theta = 20) builtWith Seq(
+      plateau(45), flowing(rivers = 30, distance = 60.percent),
+      withMoisture(soils.wet, distance = 100),
       AssignPitch, usingBiomes(WhittakerDiagrams.caribbean)
     ) usingSeed 0x24F84E32B98D3CF5L withSize 1600 having 3000.faces
   }
