@@ -1,4 +1,12 @@
+# Site Settings
+title: Island programming game website
+email: mosser@i3s.unice.fr
+author: S&eacute;bastien Mosser
+baseurl: /island/
 name: Island
+punchline: Discover and explore wild islands!
+github: "https://github.com/ace-design/island/"
+
+# Build settings
 markdown: redcarpet
-highlighter: pygments
-baseurl: /island
+permalink: pretty

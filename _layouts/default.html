@@ -8,20 +8,15 @@
     <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/stylesheets/stylesheet.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/stylesheets/pygment_trac.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="{{ site.baseurl }}/stylesheets/print.css" media="print" />
-
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <title> {{ page.title }} </title>
+    <title> {{ site.name}} :: {{ page.title }} </title>
   </head>
 
   <body>
     <header>
       <div class="inner">
-        <h1> {{ site.name }} </h1>
-        <h2>An Open Source Programming Game</h2>
-        <a href="https://github.com/ace-design/island/" class="button"><small>View project on</small>GitHub</a>
+        <h1> <a href="{{ site.baseurl }}">{{ site.name }}</a> </h1>
+        <h2> {{ site.punchline }} </h2>
+        <a href={{site.github}} class="button"><small>View project on</small>GitHub</a>
       </div>
     </header>
 
@@ -34,16 +29,44 @@
         </section>
 
         <aside id="sidebar">
-          <a href="https://github.com/ace-design/island/archive/master.zip" class="button">
-            <small>Download</small>
-            .zip file
-          </a>
-          <a href="https://github.com/ace-design/island/archive/master.tar.gz" class="button">
-            <small>Download</small>
-            .tar.gz file
+
+	  <div id="menu">
+	    
+	    <h2>Menu</h2>
+	    <ul>
+	      <li> <a href="{{  site.baseurl  }}">Home</a> </li>
+	      <li> <a href="{{  site.baseurl  }}about">About</a> </li>
+	      <li> Latest news </li>
+	    </ul>
+	    
+	    <h2>Island Generation</h2>
+	    <ul>
+	      <li><a href="{{  site.baseurl  }}generate">Generating Islands</a></li>
+	      <li><a href="{{  site.baseurl  }}build_process">Map building process</a></li>
+	      <li>Data model &amp; map properties</li>
+	      <li>Extending the engine</li>
+	    </ul>
+	    
+	    <h2>Exploration Game</h2>
+	    <ul>
+	      <li>Game description &amp; Resources</li>
+	      <li>Available actions</li>
+	      <li>Creating an Explorer bot</li>
+	      <li>Running the game engine</li>
+	    </ul>
+
+	  </div>
+	  
+          <a href="https://oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=eu.ace-design&a=island-engine&v=1.0-SNAPSHOT&e=jar" class="button">
+            <small>Go to</small>
+            Arena
           </a>
 
-          <p class="repo-owner"><a href="https://github.com/ace-design/island">architect-theme</a> is maintained by <a href="http://www.i3s.unice.fr/~mosser">S&eacute;bastien Mosser</a>.</p>
+
+          <p class="repo-owner"><a href={{ site.baseurl}} >{{ site.name }}</a> is developed and maintained by <a href="mailto:{{ site.email }}?subject={{  site.name  }}">{{  site.author  }}</a>.</p>
+
+
+	  <p align="center"> <a href="https://drone.io/github.com/ace-design/island/latest" target="_blank"><img src="https://drone.io/github.com/ace-design/island/status.png" /></a></p>
 
           <p>This page uses the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>, powered by a Jekyll engine and GitHub pages.</p>
         </aside>
