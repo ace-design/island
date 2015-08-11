@@ -112,8 +112,22 @@ header h2 {
   display: block;
 }
 
-img.center-image {
+#main-content p {
+  text-align: justify;
+  text-justify: inter-word;
+}
 
+#main-content li {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+#main-content strong {
+  font-weight: bold;
+}
+
+#main-content em {
+  font-style: italic;
 }
 
 aside#sidebar {
