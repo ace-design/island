@@ -28,9 +28,9 @@ The ultimate goal of the player is to optimize the exploration, in order to coll
 
 Here are some examples of Islands one can generate and explore using this software.
 
-![Image Island galery]({{ site.baseurl }}assets/galery-portrait.png)
-
-
+<div align="center">
+  <img src="{{ site.baseurl }}assets/galery-portrait.png" />
+</div>
 
 
   
