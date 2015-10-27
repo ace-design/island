@@ -1,7 +1,6 @@
 ---
 layout: default
 title: Homepage
-
 ---
 
 # The project
@@ -10,11 +9,11 @@ _Software Engineering_ takes an important part in the course portfolio offered b
 
 When the course _Tools for Software Engineering_ was refactored in 2012, we were looking for a lab project that will support project development with tools such a _version control systems_, _build automation_, and _unit tests_. After 2 years experimenting with a board game named [Myrmes](https://boardgamegeek.com/boardgame/126792/myrmes), we obtain the following specifications for this lab project:
 
-  1. __Competition triggers commitment__. By asking student teams to create bots acting like Myrmes players and running a championship on a weekly basis, we obtained very good project from students, with a continuous amelioration of the deliveries after each championship;
+  1. __Competition triggers commitment__. By asking student teams to create bots acting like Myrmes players and running a championship on a weekly basis, we obtained very good projects from students, with a continuous amelioration of the deliveries after each championship;
   2. __Keep it simple__. Myrmes was _almost_ too complicated by nature. The main issue with Myrmes was the interactions that exists between rules. It was a real overhead for a single semester project. We need a game with an understandable rule set, and a clear scope definition of each action available during the game;
   3. __Surprise them__! Myrmes was too predictable and deterministic. It was almost possible to hardcode a single strategy and play always the same actions. We need something less predictable.
 
-Based on theses 3 hypothesis, the **Island** programming game was designed during a the hot summer months of 2014, and experimented in its initial version with undergraduate students during Spring'15.
+Based on theses 3 hypothesis, the **Island** programming game was designed during the hot summer months of 2014, and experimented in its initial version with undergraduate students during Spring'15.
 
 ## Principles
 
