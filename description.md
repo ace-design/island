@@ -37,7 +37,7 @@ Obviously, exploring an unknown island is a risky business. Ephron do prefer the
 Islands are modeled according to non-stupid geographical choices. However the generator does not ensure to always produce _valid_ island with respect to classical Earth standards. The map is covered by _biomes_, representing formation of plants and animals with consistent characteristics. In standard geography, biome repartition is modeled as a Whittaker diagrams. For a given location on Earth, a function of the average temperature and annual precipitation amount identifies the associated biome. The following figure ([source](http://w3.marietta.edu/~biol/biomes/biome_main.htm)) describes such a diagram:
 
 <div align="center">
-  <img src="{{ site.baseurl }}assets/whittaker.png" />
+  <img src="{{ site.baseurl }}assets/whittaker.jpg" />
 </div>
 
 The Island game model does not implement temperature and annual precipitation values. We mapped those values to _(i)_ altitude for temperature (the higher you are, the colder it is) and _(ii)_ humidity for annual precipitations. This is a gross approximation, but it is good enough for the  map generator. 
@@ -74,7 +74,7 @@ For each biome, a short description and the `code` the game engine returns when 
 The following picture gives an overview of the different biomes ([sources](https://gist.github.com/mosser/cc787790d4137cec7677))
 
 <div align="center">
-  <img src="{{ site.baseurl }}assets/panorama" />
+  <img src="{{ site.baseurl }}assets/panorama.png" />
 </div>
 
 ## Resource descriptions
