@@ -17,11 +17,11 @@ A map relies on a [mesh](https://en.wikipedia.org/wiki/Polygon_mesh), _i.e._, a 
 
 Meshes are automatically created from a set of points representing the face centers expected in the final mesh. Considering such a set of points, the `MeshBuilder` will automatically create vertices, edges and faces (_i.e._, a [Voronoi diagram](https://en.wikipedia.org/wiki/Voronoi_diagram)), as well as computing the neighborhood relation. 
 
-Set of points can also be automatically generated, using a `PointGenerator`. Ww provide in Island 3 generators, but one can extend the engine with a new one through the implementation of the `PointGenerator` trait.
+Set of points can also be automatically generated, using a `PointGenerator`. We provide in Island 3 generators, but one can extend the engine with a new one through the implementation of the `PointGenerator` trait.
 
-  * [`SquaredGrid`](http://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/SquaredGrid.scala){:target="_blank"} generate a set of points aligned on a squared grid. It will generate a regular mesh using squared faces;
-  * [`RandomGrid`](http://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/RandomGrid.scala){:target="_blank"} generates a set of random points. Meshes created thanks to this technique are "sharp", leading to island that does not looks pretty;
-  * [`RelaxedRandomGrid`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/RelaxedRandomGrid.scala){:target="_blank"} starts by generating a random grid, and relax the sharpness of the previous generators by generating a voronoi diagram for this set of point, and move each point to the centroid of the associated polygon. Repeating this operation several times relax the mesh and make it more pretty.
+  * [`SquaredGrid`](http://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/SquaredGrid.scala) generate a set of points aligned on a squared grid. It will generate a regular mesh using squared faces;
+  * [`RandomGrid`](http://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/RandomGrid.scala) generates a set of random points. Meshes created thanks to this technique are "sharp", leading to island that does not looks pretty;
+  * [`RelaxedRandomGrid`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/geom/generators/RelaxedRandomGrid.scala) starts by generating a random grid, and relax the sharpness of the previous generators by generating a voronoi diagram for this set of point, and move each point to the centroid of the associated polygon. Repeating this operation several times relax the mesh and make it more pretty.
 
 
 ## Applying processes to enrich the map
@@ -36,9 +36,9 @@ At the implementation level, a processor is implemented as a function `p: Island
 
 The following figure depicts a map under construction, where several processors were applied:
 
-  1. [`IdentifyBorders`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyBorders.scala){:target="_blank"}, marking as _border_ faces touching the boundaries of the map;
-  2. [`IdentifyWaterArea`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyWaterArea.scala){:target="_blank"}, using a mathematical function to decide if a face is a land or a water area;
-  3. [`IdentifyLakesAndOcean`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyLakesAndOcean.scala){:target="_blank"}, which annotates water area transitively connected to the borders as ocean ones (painted in dark blue), and others as inner lakes in the island (painted in light blue);
-  4. [`IdentifyCoastLine`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyCoastLine.scala){:target="_blank"}, annotating as _coast_ the land faces bordering the ocean (painted in light yellow).
+  1. [`IdentifyBorders`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyBorders.scala), marking as _border_ faces touching the boundaries of the map;
+  2. [`IdentifyWaterArea`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyWaterArea.scala), using a mathematical function to decide if a face is a land or a water area;
+  3. [`IdentifyLakesAndOcean`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyLakesAndOcean.scala), which annotates water area transitively connected to the borders as ocean ones (painted in dark blue), and others as inner lakes in the island (painted in light blue);
+  4. [`IdentifyCoastLine`](https://github.com/ace-design/island/blob/develop/engine/src/main/scala/eu/ace_design/island/map/processes/IdentifyCoastLine.scala), annotating as _coast_ the land faces bordering the ocean (painted in light yellow).
 
 ![Map under construction]({{ site.baseurl }}/assets/map_under_construction.png)

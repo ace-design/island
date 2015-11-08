@@ -203,8 +203,8 @@ A tile that is covered by a forest might not be a right place to produce wood. T
 This action allows the player to identify quickly the biomes to be encountered in a given direction. Semantically, it means to send one explorer on a nearby culminating point and ask her what is in front of her. The action is cheap, but does not deliver that much of information. One can ask a report up to 4 tiles (it costs obviously more to ask for 4 tiles than for 2), including the current one. The relevance of the information decreases with the distance to the current tile. For the two initial tiles, the report includes the percentage of the tile covered by each identified biomes. For the third one, it includes the identified biomes, without percentages. And for the fourth one, it only include the main biome. The action is less costly than a `SCOUT`, but only identifies biomes and not resources.
 
   * Request example:
-    * `{ "action": "scout", "parameters": { "direction": "N", "range": 2 } }`
-    * `{ "action": "scout", "parameters": { "direction": "W", "range": 4 } }` 
+    * `{ "action": "glimpse", "parameters": { "direction": "N", "range": 2 } }`
+    * `{ "action": "glimpse", "parameters": { "direction": "W", "range": 4 } }` 
   * Response example:
 
 ```json
