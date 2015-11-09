@@ -60,6 +60,14 @@ case class MovedCrewResult(override val cost: Int= 0, loc: (Int,Int)) extends Re
 }
 
 
+case class MovedPlaneResult(override val cost: Int= 0, planeLoc: (Int,Int)) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = new JSONObject()
+  def withCost(c: Int) = this.copy(cost = c)
+}
+
+
 case class ScoutResult(override val cost: Int= 0,
                        resources: Set[Resource], altitude: Int, unreachable: Boolean = false) extends Result {
   override val ok: Boolean = true

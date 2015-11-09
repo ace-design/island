@@ -89,6 +89,7 @@ object ActionParser {
       case Actions.STOP      => Stop()
       case Actions.GLIMPSE   => glimpse(json.getJSONObject("parameters"))
       case Actions.TRANSFORM => transform(json.getJSONObject("parameters"))
+      case Actions.FLY       => Fly()
     }
   } catch {
     case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")

@@ -12,4 +12,5 @@ object Actions {
   final val STOP      =  "stop"
   final val GLIMPSE   = "glimpse"
   final val TRANSFORM = "transform"
+  final val FLY       = "fly"
 }
