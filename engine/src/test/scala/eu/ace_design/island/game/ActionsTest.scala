@@ -1,5 +1,6 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.game.actions._
 import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.stdlib.Resources
 import eu.ace_design.island.stdlib.Biomes._

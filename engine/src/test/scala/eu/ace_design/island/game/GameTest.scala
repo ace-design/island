@@ -111,6 +111,55 @@ class GameTest extends SpecificationWithJUnit {
       g3.collectedResources must contain(INGOT -> 5)
     }
 
+    "locate no plane initially" in {
+      g.plane must beNone
+    }
+  }
+
+
+  "a plane" should {
+    "be initialized easily" in {
+      val p: Plane = Plane(0,0,Directions.SOUTH)
+      p.initial must_== (0,0)
+      p.position must_== (0,0)
+      p.heading must_== Directions.SOUTH
+    }
+    "define a bounding box under the plane" in {
+      val p = Plane(5,7,Directions.NORTH)
+      val box = p.boundingBox
+      box must_== Set((4,6), (4,7), (4,8),
+                      (5,6), (5,7), (5,8),
+                      (6,6), (6,7), (6,8))
+    }
+    "fly forward" in {
+      val p1 = Plane(5,7,Directions.NORTH)
+      val pNorth = p1.forward
+      pNorth.position must_== (5-3, 7)
+      val p2 = Plane(5,7,Directions.SOUTH)
+      val pSouth = p2.forward
+      pSouth.position must_== (5+3, 7)
+      val p3 = Plane(5,7,Directions.WEST)
+      val pWest = p3.forward
+      pWest.position must_== (5, 7-3)
+      val p4 = Plane(5,7,Directions.EAST)
+      val pEast = p4.forward
+      pEast.position must_== (5, 7+3)
+    }
+    "reject invalid changes in heading" in {
+      val p1 = Plane(50,50,Directions.NORTH)
+      p1.turn(Directions.SOUTH) must throwAn[IllegalArgumentException]
+      val p2 = Plane(50,50, Directions.SOUTH)
+      p2.turn(Directions.NORTH) must throwAn[IllegalArgumentException]
+      val p3 = Plane(50,50, Directions.EAST)
+      p3.turn(Directions.WEST) must throwAn[IllegalArgumentException]
+      val p4 = Plane(50,50, Directions.WEST)
+      p4.turn(Directions.EAST) must throwAn[IllegalArgumentException]
+    }
+    "support turning while flying" in {
+      val p = Plane(50, 35, Directions.NORTH)
+      val turned = p.turn(Directions.EAST)
+      turned.position must_== (50-3, 35+3)
+    }
   }
 
   "A budget" should {

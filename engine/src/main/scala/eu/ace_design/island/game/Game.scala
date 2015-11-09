@@ -20,6 +20,7 @@ class Game private(val budget: Budget,
                    val objectives: Set[(Resource, Int)],
                    val visited: Set[(Int, Int)],
                    val boat: Option[(Int, Int)],
+                   val plane: Option[Plane],
                    val isOK: Boolean = true,
                    val extracted: Map[Resource,Map[(Int,Int),Int]] = Map(),
                    val consumed: Map[PrimaryResource, Int] = Map(),
@@ -145,7 +146,7 @@ class Game private(val budget: Budget,
    * Quickly tag a game as KO by changing its status
    * @return
    */
-  def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
+  def flaggedAsKO: Game = this.copy(isOK = false)
 
   /**
    * Consumes resources on the board
@@ -165,10 +166,11 @@ class Game private(val budget: Budget,
   private def copy(budget: Budget = this.budget, crew: Crew = this.crew,
                    objectives: Set[(Resource, Int)] = this.objectives,
                    visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat,
-                   isOK: Boolean = this.isOK, extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
+                   plane: Option[Plane] = this.plane, isOK: Boolean = this.isOK,
+                   extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
                    consumed: Map[PrimaryResource, Int] = this.consumed,
                    transformed: Map[ManufacturedResource, Int] = this.transformed) =
-    new Game(budget, crew, objectives, visited, boat, isOK, extracted, consumed, transformed)
+    new Game(budget, crew, objectives, visited, boat, plane, isOK, extracted, consumed, transformed)
 
 }
 
@@ -183,7 +185,7 @@ object Game {
   final val MEN_NORMALIZE_THRESHOLD = 50.0
 
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
-    new Game(budget,crew, objectives, visited = Set(), boat = None, true)
+    new Game(budget,crew, objectives, visited = Set(), boat = None, plane = None, true)
 
   // Models (polynomials) used for resource exploitation and cost definition
 
@@ -193,6 +195,61 @@ object Game {
 
 }
 
+/**
+ * Represent the
+ * @param initial
+ * @param position
+ * @param heading
+ */
+class Plane private(val initial: (Int, Int), val position: (Int, Int), val heading: Directions.Direction) {
+
+  /**
+    * Computes the ounding box of the plane, that is, the tiles available under the plane
+    * @return
+    */
+  def boundingBox: Set[(Int,Int)] =
+    (for(x <- position._1 - 1 to position._1 + 1; y <- position._2 - 1 to position._2 + 1 ) yield (x,y)).toSet
+
+  /**
+    * Make the plane fly forward
+    * @return a plane with updated location
+    */
+  def forward: Plane = heading match {
+    case Directions.NORTH => new Plane(initial, (position._1 - Plane.MOVE, position._2), heading)
+    case Directions.WEST  => new Plane(initial, (position._1, position._2 - Plane.MOVE), heading)
+    case Directions.SOUTH => new Plane(initial, (position._1 + Plane.MOVE, position._2), heading)
+    case Directions.EAST  => new Plane(initial, (position._1, position._2 + Plane.MOVE), heading)
+  }
+
+  /**
+    * Make the plane change heading while flying forward
+    * @param d
+    * @return
+    */
+  def turn(d: Directions.Direction): Plane = {
+    import Directions._
+    def isLegal: Boolean = this.heading match {
+      case WEST  => Set(SOUTH, NORTH).contains(d)
+      case EAST  => Set(SOUTH, NORTH).contains(d)
+      case NORTH => Set(EAST, WEST).contains(d)
+      case SOUTH => Set(EAST, WEST).contains(d)
+    }
+    require(isLegal, s"Cannot turn [${d}] when heading [${heading}]")
+    forward.copy(heading = d).forward    // go straight, turn, go straight again
+  }
+
+  def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
+    new Plane(initial, position, heading)
+  }
+
+}
+
+object Plane {
+
+  private val MOVE = 3
+
+  def apply(x: Int, y: Int, h: Directions.Direction) = new Plane((x,y), (x,y), h)
+}
 
 /**
  * A budget represent the complete amount of action points available, and the remaining ones.
