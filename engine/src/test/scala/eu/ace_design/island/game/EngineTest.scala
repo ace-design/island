@@ -206,6 +206,18 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
     }
+
+    "support flying from one zone to another one" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "fly" }""" thenReturn stop
+      val plane = Plane(7,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.plane.get.position must_!= plane.position
+      g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
   }
 
 }

@@ -47,6 +47,10 @@ class Game private(val budget: Budget,
           val updatedCrew = crew movedTo m.loc
           this.copy(crew = updatedCrew, visited = visited + m.loc)
         }
+        case m: MovedPlaneResult => {
+          val updatedPlane = plane.get.copy(position = m.planeLoc)
+          this.copy(plane = Some(updatedPlane))
+        }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
         case t: TransformResult => {
           val primaryRemoved = (this /: t.consumed) { (g, cons) => g.consumeResource(cons._1, cons._2) }
