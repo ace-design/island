@@ -163,7 +163,7 @@ class Game private(val budget: Budget,
   }
 
   // copy a game into another one (simulating case class behavior)
-  private def copy(budget: Budget = this.budget, crew: Crew = this.crew,
+  def copy(budget: Budget = this.budget, crew: Crew = this.crew,
                    objectives: Set[(Resource, Int)] = this.objectives,
                    visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat,
                    plane: Option[Plane] = this.plane, isOK: Boolean = this.isOK,
