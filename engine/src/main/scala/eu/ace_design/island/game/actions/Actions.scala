@@ -13,4 +13,5 @@ object Actions {
   final val GLIMPSE   = "glimpse"
   final val TRANSFORM = "transform"
   final val FLY       = "fly"
+  final val HEADING   = "heading"
 }

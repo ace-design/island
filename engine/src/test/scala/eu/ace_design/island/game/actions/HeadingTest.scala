@@ -9,9 +9,9 @@ import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class FlyTest extends SpecificationWithJUnit with Mockito {
+class HeadingTest extends SpecificationWithJUnit with Mockito {
 
-  "Fly Action Specifications".title
+  "Heading Action Specifications".title
 
   val board = mock[GameBoard]
   board.size returns 600
@@ -23,9 +23,9 @@ class FlyTest extends SpecificationWithJUnit with Mockito {
   val plane = Plane(10,10,Directions.EAST)
   val gPlane = g.copy(plane = Some(plane))
 
-  "The fly action" should {
+  "The heading action" should {
 
-    val action = Fly()
+    val action = Heading(Directions.NORTH)
 
     "not be available with no plane on the board" in {
       action.buildResult(board,g) must throwAn[IllegalArgumentException]

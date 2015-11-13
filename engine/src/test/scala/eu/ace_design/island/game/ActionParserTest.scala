@@ -86,6 +86,11 @@ class ActionParserTest extends SpecificationWithJUnit {
       action must beAnInstanceOf[Fly]
     }
 
+    "build an Heading action when asked for" in {
+      val action = ActionParser("""{"action": "heading", "parameters": {"direction": "N"}}""")
+      action must beAnInstanceOf[Heading]
+    }
+
     "translate one-letter codes to directions" in {
       ActionParser.letter2Direction(new JSONObject(""" { "direction": "N" } """)) must_== Directions.NORTH
       ActionParser.letter2Direction(new JSONObject(""" { "direction": "S" } """)) must_== Directions.SOUTH

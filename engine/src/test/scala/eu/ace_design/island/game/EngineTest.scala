@@ -213,10 +213,22 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val plane = Plane(7,10,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
       val (_, g) = engine.run(explorer)
-      g.plane.get.position must_!= plane.position
       g.isOK must beTrue
+      g.plane.get.position must_!= plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
     }
+
+    "support heading changes" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "heading", parameters: { "direction": "W" } }""" thenReturn stop
+      val plane = Plane(7,13,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_!= plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
 
   }
 
