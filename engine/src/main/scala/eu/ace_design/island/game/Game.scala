@@ -218,12 +218,10 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     * Make the plane fly forward
     * @return a plane with updated location
     */
-  def forward: Plane = heading match {
-    case Directions.NORTH => new Plane(initial, (position._1 - Plane.MOVE, position._2), heading)
-    case Directions.WEST  => new Plane(initial, (position._1, position._2 - Plane.MOVE), heading)
-    case Directions.SOUTH => new Plane(initial, (position._1 + Plane.MOVE, position._2), heading)
-    case Directions.EAST  => new Plane(initial, (position._1, position._2 + Plane.MOVE), heading)
+  def forward: Plane = {
+     this.copy(position = Directions.move(position._1, position._2, heading, Plane.MOVE))
   }
+
 
   /**
     * Make the plane change heading while flying forward
@@ -242,10 +240,19 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     forward.copy(heading = d).forward    // go straight, turn, go straight again
   }
 
+
+  def radar(d: Directions.Direction): (Int, RadarValue.Value) = ???
+
+
+
   def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
     new Plane(initial, position, heading)
   }
 
+}
+
+object RadarValue extends Enumeration {
+  val GROUND, OUT_OF_RANGE = Value
 }
 
 object Plane {

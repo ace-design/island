@@ -210,7 +210,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "support flying from one zone to another one" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "fly" }""" thenReturn stop
-      val plane = Plane(7,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val plane = Plane(10,7,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
       val (_, g) = engine.run(explorer)
       g.isOK must beTrue
@@ -221,7 +221,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "support heading changes" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "heading", parameters: { "direction": "W" } }""" thenReturn stop
-      val plane = Plane(7,13,Directions.SOUTH)   // (10,10) is defined in the mock
+      val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
       val (_, g) = engine.run(explorer)
       g.isOK must beTrue

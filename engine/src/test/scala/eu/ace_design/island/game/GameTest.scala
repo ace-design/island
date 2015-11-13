@@ -134,16 +134,16 @@ class GameTest extends SpecificationWithJUnit {
     "fly forward" in {
       val p1 = Plane(5,7,Directions.NORTH)
       val pNorth = p1.forward
-      pNorth.position must_== (5-3, 7)
+      pNorth.position must_== (5, 7-3)
       val p2 = Plane(5,7,Directions.SOUTH)
       val pSouth = p2.forward
-      pSouth.position must_== (5+3, 7)
+      pSouth.position must_== (5, 7+3)
       val p3 = Plane(5,7,Directions.WEST)
       val pWest = p3.forward
-      pWest.position must_== (5, 7-3)
+      pWest.position must_== (5-3, 7)
       val p4 = Plane(5,7,Directions.EAST)
       val pEast = p4.forward
-      pEast.position must_== (5, 7+3)
+      pEast.position must_== (5+3, 7)
     }
     "reject invalid changes in heading" in {
       val p1 = Plane(50,50,Directions.NORTH)
@@ -158,7 +158,7 @@ class GameTest extends SpecificationWithJUnit {
     "support turning while flying" in {
       val p = Plane(50, 35, Directions.NORTH)
       val turned = p.turn(Directions.EAST)
-      turned.position must_== (50-3, 35+3)
+      turned.position must_== (50+3, 35-3)
     }
   }
 
