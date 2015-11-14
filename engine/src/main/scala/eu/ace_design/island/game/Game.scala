@@ -259,11 +259,16 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     }
 
     require(d != Directions.opposite(this.heading), s"No radar for [${d}] when heading [${heading}]")
+    //moving the pointer out of the current bounding box of the plane
+    val (tX,tY) = Directions.move(position._1, position._2,d)
+    val (sX,sY) = Directions.move(tX, tY,d)
     // Send up to 3 signals if possible
-    val others: Set[(Int,Int)] = Directions.orthogonal(d) map {
-      Directions.move(position._1,position._2,_)
-    } filter { case (x,y) => board.tiles.keySet.contains((x,y)) }
-    val raw = (others + ((position._1,position._2))) map { case (x,y) => signal(x,y) }
+    val others = Directions.orthogonal(d) map { Directions.move(sX,sY,_) } filter {
+      case (x,y) => board.tiles.keySet.contains((x,y))
+    }
+    // Sending the signals
+    val raw = (others + ((sX,sY))) map { case (x,y) => signal(x,y) }
+    // finding the minimal return result
     val minimal = raw minBy { case (i,_) => i }
     (minimal._1 / 3, minimal._2)
   }

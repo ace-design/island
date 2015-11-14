@@ -1,12 +1,15 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.stdlib.Biomes.{BEACH, OCEAN}
 import eu.ace_design.island.stdlib.Resources._
+import org.specs2.mock.Mockito
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class GameTest extends SpecificationWithJUnit {
+class GameTest extends SpecificationWithJUnit with Mockito {
 
   "GameTest Specifications".title
 
@@ -163,6 +166,17 @@ class GameTest extends SpecificationWithJUnit {
     "reject rear radar" in {
       val p = Plane(50, 35, Directions.NORTH)
       p.radar(Directions.SOUTH, null) must throwAn[IllegalArgumentException]
+    }
+
+    "Support radar information retrieval" in {
+      val p = Plane(1,1, Directions.EAST)
+      // Create an empty ocean
+      val ocean = ( for(x <- 0 until 100; y <- 0 until 100) yield (x,y) -> Tile(biomes = Set((OCEAN,100.0))) ).toMap
+      val withGround = ocean + ((50,2) -> Tile(biomes = Set((BEACH,100.0))))
+      val gameBoard = GameBoard(100, mock[IslandMap], tiles = withGround)
+      p.radar(Directions.NORTH, gameBoard) must_== (0,  RadarValue.OUT_OF_RANGE)
+      p.radar(Directions.SOUTH, gameBoard) must_== (32, RadarValue.OUT_OF_RANGE)
+      p.radar(Directions.EAST,  gameBoard) must_== (15, RadarValue.GROUND)
     }
 
   }
