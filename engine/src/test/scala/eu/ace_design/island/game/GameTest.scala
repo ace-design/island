@@ -160,6 +160,11 @@ class GameTest extends SpecificationWithJUnit {
       val turned = p.turn(Directions.EAST)
       turned.position must_== (50+3, 35-3)
     }
+    "reject rear radar" in {
+      val p = Plane(50, 35, Directions.NORTH)
+      p.radar(Directions.SOUTH, null) must throwAn[IllegalArgumentException]
+    }
+
   }
 
   "A budget" should {

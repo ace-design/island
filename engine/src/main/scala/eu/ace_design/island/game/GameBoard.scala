@@ -111,6 +111,31 @@ object Directions extends Enumeration {
     case WEST  => (x-delta, y      )
     case EAST  => (x+delta, y      )
   }
+
+  /**
+    * Return the direction opposite to a given one
+    * @param d
+    * @return
+    */
+  def opposite(d: Direction): Direction = d match {
+    case NORTH => SOUTH
+    case SOUTH => NORTH
+    case EAST  => WEST
+    case WEST  => EAST
+  }
+
+  /**
+    * Returns directions orthogonal to a given one
+    * @param d the direction to check
+    * @return a set of directions
+    */
+  def orthogonal(d: Direction): Set[Direction] = d match {
+    case WEST  => Set(SOUTH, NORTH)
+    case EAST  => Set(SOUTH, NORTH)
+    case NORTH => Set(EAST, WEST)
+    case SOUTH => Set(EAST, WEST)
+  }
+
 }
 
 /**

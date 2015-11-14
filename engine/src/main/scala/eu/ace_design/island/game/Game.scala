@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
+import eu.ace_design.island.stdlib.Biomes
 import eu.ace_design.island.util.Polynomial
 
 /**
@@ -229,21 +230,43 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     * @return
     */
   def turn(d: Directions.Direction): Plane = {
-    import Directions._
-    def isLegal: Boolean = this.heading match {
-      case WEST  => Set(SOUTH, NORTH).contains(d)
-      case EAST  => Set(SOUTH, NORTH).contains(d)
-      case NORTH => Set(EAST, WEST).contains(d)
-      case SOUTH => Set(EAST, WEST).contains(d)
-    }
-    require(isLegal, s"Cannot turn [${d}] when heading [${heading}]")
+    require(Directions.orthogonal(this.heading).contains(d), s"Cannot turn [${d}] when heading [${heading}]")
     forward.copy(heading = d).forward    // go straight, turn, go straight again
   }
 
+  /**
+    * Send a radar signal to a given direction, identifying ground tiles or out of range limit.
+    * /!\ Warning: No radar at the rear of the plane
+    * @param d the direction of the radar
+    * @param board the underlying board
+    * @return a couple (d,K) where r is the distance (number of tiles / 3) and K the encountered kind of element
+    */
+  def radar(d: Directions.Direction, board: GameBoard): (Int, RadarValue.Value) = {
 
-  def radar(d: Directions.Direction): (Int, RadarValue.Value) = ???
+    // return the number of tiles (a range) between x,y and the end of the map or something which is not the Ocean
+     def signal(x: Int, y: Int, range: Int = 0): (Int, RadarValue.Value) = {
+      if (! board.tiles.keySet.contains((x,y))) {
+        (range, RadarValue.OUT_OF_RANGE)
+      } else {
+        val biomes = board.tiles.get((x,y)).get.biomes map { _._1 }
+        if (! biomes.contains(Biomes.OCEAN)) {
+          (range, RadarValue.GROUND)
+        } else {
+          val (nX, nY) = Directions.move(x,y,d)
+          signal(nX,nY,range + 1)
+        }
+      }
+    }
 
-
+    require(d != Directions.opposite(this.heading), s"No radar for [${d}] when heading [${heading}]")
+    // Send up to 3 signals if possible
+    val others: Set[(Int,Int)] = Directions.orthogonal(d) map {
+      Directions.move(position._1,position._2,_)
+    } filter { case (x,y) => board.tiles.keySet.contains((x,y)) }
+    val raw = (others + ((position._1,position._2))) map { case (x,y) => signal(x,y) }
+    val minimal = raw minBy { case (i,_) => i }
+    (minimal._1 / 3, minimal._2)
+  }
 
   def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
     new Plane(initial, position, heading)
