@@ -1,6 +1,6 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{PrimaryResource, ManufacturedResource, Resource, Conditions}
+import eu.ace_design.island.map.resources._
 import org.json.{JSONArray, JSONObject}
 
 /**
@@ -59,6 +59,12 @@ case class MovedCrewResult(override val cost: Int= 0, loc: (Int,Int)) extends Re
   def withCost(c: Int) = this.copy(cost = c)
 }
 
+case class MovedPlaneResult(override val cost: Int= 0, planeLoc: (Int,Int)) extends Result {
+  override val ok: Boolean = true
+  override val shouldStop: Boolean = false
+  override protected def extras(): JSONObject = new JSONObject()
+  def withCost(c: Int) = this.copy(cost = c)
+}
 
 case class ScoutResult(override val cost: Int= 0,
                        resources: Set[Resource], altitude: Int, unreachable: Boolean = false) extends Result {
@@ -101,6 +107,34 @@ case class ExploitResult(override val cost: Int = 0, amount: Int, r: Resource) e
     result
   }
   def withCost(c: Int) = this.copy(cost = c)
+}
+
+
+case class EchoResult(override val cost: Int = 0, range: Int, found: RadarValue.Value) extends Result {
+  override val shouldStop: Boolean = false
+  override val ok: Boolean = true
+  override def withCost(c: Int): Result = this.copy(cost = c)
+
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("range", range)
+    result.put("found", found)
+    result
+  }
+}
+
+case class ScanResult(override val cost: Int = 0,
+                      biomes: Set[Biome], creeks: Set[PointOfInterest], scanned: Set[(Int,Int)]) extends Result {
+  override val shouldStop: Boolean = false
+  override val ok: Boolean = true
+  override def withCost(c: Int): Result = this.copy(cost = c)
+
+  override protected def extras(): JSONObject = {
+    val result = new JSONObject()
+    result.put("biomes", (new JSONArray() /: biomes ) { (acc, b) => acc.put(b) } )
+    result.put("creeks", (new JSONArray() /: creeks ) { (acc, c) => acc.put(c.identifier) })
+    result
+  }
 }
 
 /**********************************

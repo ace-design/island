@@ -25,7 +25,9 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   emptyBoard.at(10,9)  returns t1 ; emptyBoard.at(10,10) returns t0
   emptyBoard.pois returns Map((10,10) -> Set(Creek("c1", None).asInstanceOf[PointOfInterest]), (0,0) -> Set(Creek("border", None)))
   emptyBoard.m returns mock[IslandMap]; emptyBoard.m.size returns 800
-  val emptyGame = Game(Budget(600), Crew(50), Set())
+
+  val plane = Plane(1,1,Directions.EAST)
+  val emptyGame = Game(Budget(600), Crew(50), Set()).copy(plane = Some(plane))
 
   "for the sake of error handling, the engine" should {
 
@@ -67,7 +69,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "exit with an error when no more budget is available" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land",  "parameters": { "creek": "c1", "people": 30 } } }"""
-      val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()))
+      val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()).copy(plane = Some(plane)))
       val (events, g) = engine.run(explorer)
       g.isOK must beFalse
       events.size must_== 3 // initialization context + received action + exception event
@@ -98,6 +100,16 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       there was one(explorer).takeDecision
       there was one(explorer).acknowledgeResults(anyString)
     }
+
+    "support transition from aerial to terrestrial phase" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame)
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane must beNone
+    }
+
     "reject landing with too much men" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "c1", "people": 50 } } }"""
@@ -204,6 +216,59 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
+    "support flying from one zone to another one" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "fly" }""" thenReturn stop
+      val plane = Plane(10,7,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_!= plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
+    "support heading changes" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "heading", parameters: { "direction": "W" } }""" thenReturn stop
+      val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_!= plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
+    "reject echoing in the wrong direction" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "N" } }""" thenReturn stop
+      val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beFalse
+    }
+
+    "support echoing" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "S" } }""" thenReturn stop
+      val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_== plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
+    "support scanning" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "scan" }""" thenReturn stop
+      val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_== plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
     }
   }

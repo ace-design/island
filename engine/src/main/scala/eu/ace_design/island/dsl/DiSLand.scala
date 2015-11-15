@@ -171,6 +171,7 @@ trait DiSLand {
    */
   protected class Percentage(val i: Int) { require(i >=0 && i <= 100); val percent = this; def value = i.toDouble/100 }
   implicit protected def integerToPercentage(i: Int): Percentage = new Percentage(i)
+  implicit protected def percentageToDouble(p: Percentage): Double = p.value
 
   /**
    * Syntactic elements to support the "island -> ("fileName" as outputFormat) construction

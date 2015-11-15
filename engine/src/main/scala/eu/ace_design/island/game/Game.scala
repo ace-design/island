@@ -1,6 +1,8 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{Biome, ManufacturedResource, PrimaryResource, Resource}
+import eu.ace_design.island.stdlib.Biomes
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.util.Polynomial
 
 /**
@@ -20,10 +22,12 @@ class Game private(val budget: Budget,
                    val objectives: Set[(Resource, Int)],
                    val visited: Set[(Int, Int)],
                    val boat: Option[(Int, Int)],
+                   val plane: Option[Plane],
                    val isOK: Boolean = true,
                    val extracted: Map[Resource,Map[(Int,Int),Int]] = Map(),
                    val consumed: Map[PrimaryResource, Int] = Map(),
-                   val transformed: Map[ManufacturedResource, Int] = Map()) {
+                   val transformed: Map[ManufacturedResource, Int] = Map(),
+                   val scanned: Set[(Int,Int)] = Set()) {
 
   /**
    * Update the current game based on the contents of the result of an action
@@ -38,13 +42,19 @@ class Game private(val budget: Budget,
         case s: ScoutResult   => this // no side effect (except on budget)
         case e: ExploreResult => this // no side effect (except on budget)
         case g: GlimpseResult => this // no side effect (except on budget)
+        case e: EchoResult    => this // no side effect (except on budget)
+        case s: ScanResult    => this.copy(scanned = s.scanned ++ scanned)
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
-          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
+          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc, plane = None)
         }
         case  m: MovedCrewResult => {
           val updatedCrew = crew movedTo m.loc
           this.copy(crew = updatedCrew, visited = visited + m.loc)
+        }
+        case m: MovedPlaneResult => {
+          val updatedPlane = plane.get.copy(position = m.planeLoc)
+          this.copy(plane = Some(updatedPlane))
         }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
         case t: TransformResult => {
@@ -108,6 +118,11 @@ class Game private(val budget: Budget,
     case Some(boatLoc) => Some(distance((0,0), boatLoc))
   }
 
+  def distanceByPlane: Option[Double] = this.plane match {
+    case None => None
+    case Some(plane) => Some(distance(plane.initial,plane.position))
+  }
+
   /**
    * Compute the distance between the team and the boat
    * //TODO: explore the visited tiles to find the shortest path
@@ -145,7 +160,7 @@ class Game private(val budget: Budget,
    * Quickly tag a game as KO by changing its status
    * @return
    */
-  def flaggedAsKO: Game = new Game(budget, crew, objectives, visited, boat, false)
+  def flaggedAsKO: Game = this.copy(isOK = false)
 
   /**
    * Consumes resources on the board
@@ -162,13 +177,15 @@ class Game private(val budget: Budget,
   }
 
   // copy a game into another one (simulating case class behavior)
-  private def copy(budget: Budget = this.budget, crew: Crew = this.crew,
+  def copy(budget: Budget = this.budget, crew: Crew = this.crew,
                    objectives: Set[(Resource, Int)] = this.objectives,
                    visited: Set[(Int, Int)] = this.visited, boat: Option[(Int, Int)] = this.boat,
-                   isOK: Boolean = this.isOK, extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
+                   plane: Option[Plane] = this.plane, isOK: Boolean = this.isOK,
+                   extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
                    consumed: Map[PrimaryResource, Int] = this.consumed,
-                   transformed: Map[ManufacturedResource, Int] = this.transformed) =
-    new Game(budget, crew, objectives, visited, boat, isOK, extracted, consumed, transformed)
+                   transformed: Map[ManufacturedResource, Int] = this.transformed,
+                   scanned: Set[(Int,Int)] = this.scanned) =
+    new Game(budget, crew, objectives, visited, boat, plane, isOK, extracted, consumed, transformed, scanned)
 
 }
 
@@ -183,7 +200,7 @@ object Game {
   final val MEN_NORMALIZE_THRESHOLD = 50.0
 
   def apply(budget: Budget, crew: Crew, objectives: Set[(Resource, Int)]) =
-    new Game(budget,crew, objectives, visited = Set(), boat = None, true)
+    new Game(budget,crew, objectives, visited = Set(), boat = None, plane = None, true)
 
   // Models (polynomials) used for resource exploitation and cost definition
 
@@ -193,6 +210,116 @@ object Game {
 
 }
 
+/**
+ * Represent the
+ * @param initial
+ * @param position
+ * @param heading
+ */
+class Plane private(val initial: (Int, Int), val position: (Int, Int), val heading: Directions.Direction) {
+
+  /**
+    * Computes the ounding box of the plane, that is, the tiles available under the plane
+    * @return
+    */
+  def boundingBox: Set[(Int,Int)] =
+    (for(x <- position._1 - 1 to position._1 + 1; y <- position._2 - 1 to position._2 + 1 ) yield (x,y)).toSet
+
+  /**
+    * Make the plane fly forward
+    * @return a plane with updated location
+    */
+  def forward: Plane = {
+     this.copy(position = Directions.move(position._1, position._2, heading, Plane.MOVE))
+  }
+
+
+  /**
+    * Make the plane change heading while flying forward
+    * @param d
+    * @return
+    */
+  def turn(d: Directions.Direction): Plane = {
+    require(Directions.orthogonal(this.heading).contains(d), s"Cannot turn [${d}] when heading [${heading}]")
+    forward.copy(heading = d).forward    // go straight, turn, go straight again
+  }
+
+  /**
+    * Send a radar signal to a given direction, identifying ground tiles or out of range limit.
+    * /!\ Warning: No radar at the rear of the plane
+    * @param d the direction of the radar
+    * @param board the underlying board
+    * @return a couple (d,K) where r is the distance (number of tiles / 3) and K the encountered kind of element
+    */
+  def radar(d: Directions.Direction, board: GameBoard): (Int, RadarValue.Value) = {
+
+    // return the number of tiles (a range) between x,y and the end of the map or something which is not the Ocean
+     def signal(x: Int, y: Int, range: Int = 0): (Int, RadarValue.Value) = {
+      if (! board.tiles.keySet.contains((x,y))) {
+        (range, RadarValue.OUT_OF_RANGE)
+      } else {
+        val biomes = board.tiles.get((x,y)).get.biomes map { _._1 }
+        if (! biomes.contains(Biomes.OCEAN)) {
+          (range, RadarValue.GROUND)
+        } else {
+          val (nX, nY) = Directions.move(x,y,d)
+          signal(nX,nY,range + 1)
+        }
+      }
+    }
+
+    require(d != Directions.opposite(this.heading), s"No radar for [${d}] when heading [${heading}]")
+    //moving the pointer out of the current bounding box of the plane
+    val (tX,tY) = Directions.move(position._1, position._2,d)
+    val (sX,sY) = Directions.move(tX, tY,d)
+    // Send up to 3 signals if possible
+    val others = Directions.orthogonal(d) map { Directions.move(sX,sY,_) } filter {
+      case (x,y) => board.tiles.keySet.contains((x,y))
+    }
+    // Sending the signals
+    val raw = (others + ((sX,sY))) map { case (x,y) => signal(x,y) }
+    // finding the minimal return result
+    val minimal = raw minBy { case (i,_) => i }
+    (minimal._1 / 3, minimal._2)
+  }
+
+  /**
+    * Take a snapshot under the plane, identifying main biomes (> scanner precision) and creeks
+    * @param board the game board under the plane
+    * @return a set of biomes, a set of POIs, and the scanned tiles
+    */
+  def snapshot(board: GameBoard): (Set[Biome], Set[PointOfInterest], Set[(Int,Int)]) = {
+    val area = (boundingBox intersect board.tiles.keySet).toSeq
+    val tiles = area map { board.tiles.get(_).get }
+    val biomes = tiles.toSeq flatMap { _.biomes } groupBy { _._1 } map {
+      case (b,l) => b -> (( 0.0 /: l) { (acc,pair) => acc + pair._2 } / area.size )
+    } filter { case (_,value) => value >= Plane.SCAN_PRECISION }
+    val creeks = area flatMap { board.pois.getOrElse(_,Set()) } filter { _ match {
+      case Creek(_,_) => true
+      case _ => false
+    }}
+    (biomes.keySet, creeks.toSet, area.toSet)
+  }
+
+
+  def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
+    new Plane(initial, position, heading)
+  }
+
+}
+
+object RadarValue extends Enumeration {
+  val GROUND, OUT_OF_RANGE = Value
+}
+
+object Plane {
+
+  private val MOVE = 3
+
+  private val SCAN_PRECISION = 20.0
+
+  def apply(x: Int, y: Int, h: Directions.Direction) = new Plane((x,y), (x,y), h)
+}
 
 /**
  * A budget represent the complete amount of action points available, and the remaining ones.

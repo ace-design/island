@@ -105,12 +105,37 @@ object Directions extends Enumeration {
   type Direction = Value
   val NORTH, EAST, WEST, SOUTH = Value
 
-  def move(x: Int, y: Int, d: Direction): (Int,Int) = d match {
-    case NORTH => (x, y-1)
-    case SOUTH => (x, y+1)
-    case WEST  => (x-1, y)
-    case EAST  => (x+1, y)
+  def move(x: Int, y: Int, d: Direction, delta: Int = 1): (Int,Int) = d match {
+    case NORTH => (x,       y-delta)
+    case SOUTH => (x,       y+delta)
+    case WEST  => (x-delta, y      )
+    case EAST  => (x+delta, y      )
   }
+
+  /**
+    * Return the direction opposite to a given one
+    * @param d
+    * @return
+    */
+  def opposite(d: Direction): Direction = d match {
+    case NORTH => SOUTH
+    case SOUTH => NORTH
+    case EAST  => WEST
+    case WEST  => EAST
+  }
+
+  /**
+    * Returns directions orthogonal to a given one
+    * @param d the direction to check
+    * @return a set of directions
+    */
+  def orthogonal(d: Direction): Set[Direction] = d match {
+    case WEST  => Set(SOUTH, NORTH)
+    case EAST  => Set(SOUTH, NORTH)
+    case NORTH => Set(EAST, WEST)
+    case SOUTH => Set(EAST, WEST)
+  }
+
 }
 
 /**

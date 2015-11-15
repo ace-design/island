@@ -1,12 +1,16 @@
 package eu.ace_design.island.game
 
+import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.stdlib.Biomes.{MANGROVE, BEACH, OCEAN}
+import eu.ace_design.island.stdlib.PointOfInterests.{Hideout, Creek}
 import eu.ace_design.island.stdlib.Resources._
+import org.specs2.mock.Mockito
 import org.specs2.mutable._
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class GameTest extends SpecificationWithJUnit {
+class GameTest extends SpecificationWithJUnit with Mockito {
 
   "GameTest Specifications".title
 
@@ -110,6 +114,90 @@ class GameTest extends SpecificationWithJUnit {
       g3.collectedResources must contain(PLANK -> 42)
       g3.collectedResources must contain(INGOT -> 5)
     }
+
+    "locate no plane initially" in {
+      g.plane must beNone
+    }
+  }
+
+
+  "a plane" should {
+    "be initialized easily" in {
+      val p: Plane = Plane(0,0,Directions.SOUTH)
+      p.initial must_== (0,0)
+      p.position must_== (0,0)
+      p.heading must_== Directions.SOUTH
+    }
+    "define a bounding box under the plane" in {
+      val p = Plane(5,7,Directions.NORTH)
+      val box = p.boundingBox
+      box must_== Set((4,6), (4,7), (4,8),
+                      (5,6), (5,7), (5,8),
+                      (6,6), (6,7), (6,8))
+    }
+    "fly forward" in {
+      val p1 = Plane(5,7,Directions.NORTH)
+      val pNorth = p1.forward
+      pNorth.position must_== (5, 7-3)
+      val p2 = Plane(5,7,Directions.SOUTH)
+      val pSouth = p2.forward
+      pSouth.position must_== (5, 7+3)
+      val p3 = Plane(5,7,Directions.WEST)
+      val pWest = p3.forward
+      pWest.position must_== (5-3, 7)
+      val p4 = Plane(5,7,Directions.EAST)
+      val pEast = p4.forward
+      pEast.position must_== (5+3, 7)
+    }
+    "reject invalid changes in heading" in {
+      val p1 = Plane(50,50,Directions.NORTH)
+      p1.turn(Directions.SOUTH) must throwAn[IllegalArgumentException]
+      val p2 = Plane(50,50, Directions.SOUTH)
+      p2.turn(Directions.NORTH) must throwAn[IllegalArgumentException]
+      val p3 = Plane(50,50, Directions.EAST)
+      p3.turn(Directions.WEST) must throwAn[IllegalArgumentException]
+      val p4 = Plane(50,50, Directions.WEST)
+      p4.turn(Directions.EAST) must throwAn[IllegalArgumentException]
+    }
+    "support turning while flying" in {
+      val p = Plane(50, 35, Directions.NORTH)
+      val turned = p.turn(Directions.EAST)
+      turned.position must_== (50+3, 35-3)
+    }
+    "reject rear radar" in {
+      val p = Plane(50, 35, Directions.NORTH)
+      p.radar(Directions.SOUTH, null) must throwAn[IllegalArgumentException]
+    }
+
+    "Support radar information retrieval" in {
+      val p = Plane(1,1, Directions.EAST)
+      // Create an empty ocean
+      val ocean = ( for(x <- 0 until 100; y <- 0 until 100) yield (x,y) -> Tile(biomes = Set((OCEAN,100.0))) ).toMap
+      val withGround = ocean + ((50,2) -> Tile(biomes = Set((BEACH,100.0))))
+      val gameBoard = GameBoard(100, mock[IslandMap], tiles = withGround)
+      p.radar(Directions.NORTH, gameBoard) must_== (0,  RadarValue.OUT_OF_RANGE)
+      p.radar(Directions.SOUTH, gameBoard) must_== (32, RadarValue.OUT_OF_RANGE)
+      p.radar(Directions.EAST,  gameBoard) must_== (15, RadarValue.GROUND)
+    }
+
+    "Support snapshot analysis" in {
+      val p = Plane(1,1, Directions.EAST)
+      val ocean = ( for(x <- 0 until 100; y <- 0 until 100) yield (x,y) -> Tile(biomes = Set((OCEAN,100.0))) ).toMap
+      val (b1, c1, _) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = ocean))
+      b1 must_== Set(OCEAN)
+      c1 must_== Set()
+      val withGround = ocean + ((0,0) -> Tile(biomes = Set((BEACH,70.0), (MANGROVE, 30.0)))) +
+                               ((0,1) -> Tile(biomes = Set((BEACH,90.0), (MANGROVE, 10.0)))) +
+                               ((0,2) -> Tile(biomes = Set((BEACH,80.0), (MANGROVE, 20.0))))
+      val pois: Map[(Int, Int), Set[PointOfInterest]] = Map(
+        (1,1) -> Set(Creek(identifier = "aCreek", None)),
+        (0,1) -> Set(Hideout(identifier = "anHideout", None))
+      )
+      val (b2,c2, _) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = withGround, pois = pois))
+      b2 must_== Set(OCEAN, BEACH)
+      c2 must_== Set(Creek(identifier = "aCreek", None))
+    }
+
 
   }
 

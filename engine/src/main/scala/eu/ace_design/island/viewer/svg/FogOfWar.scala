@@ -3,7 +3,9 @@ package eu.ace_design.island.viewer.svg
 import java.awt.geom.Ellipse2D
 import java.awt.{BasicStroke, Color, Rectangle, Graphics2D}
 
-class FogOfWar(factor: Int, visited: Set[(Int, Int)], pois: Set[(Double, Double)], size: Int) extends SVGEnhancer {
+class FogOfWar(factor: Int,
+               visited: Set[(Int, Int)], scanned: Set[(Int,Int)],
+               pois: Set[(Double, Double)], size: Int) extends SVGEnhancer {
 
 
   override def apply(g: Graphics2D): Unit = {
@@ -19,9 +21,19 @@ class FogOfWar(factor: Int, visited: Set[(Int, Int)], pois: Set[(Double, Double)
       g.drawLine(s,0,s,size)
     }
 
-    // Drawing transparent fog on top of unvisited tiles
     val tiles = (for (x <- 0 to size / factor; y <- 0 to size / factor) yield (x,y)).toSet
-    val fog = tiles -- visited
+
+    // Drawing dark rectangle on top of unvisited and unscanned tiles
+    val incognita = tiles -- visited -- scanned
+    val black = new Color(0,0,0)
+    g.setColor(black)
+    incognita foreach { tile =>
+      val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
+      g.fill(rectangle)
+    }
+
+    // Drawing transparent fog on top of unvisited tiles
+    val fog = scanned -- visited
     fog foreach { tile =>
       val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
       g.fill(rectangle)

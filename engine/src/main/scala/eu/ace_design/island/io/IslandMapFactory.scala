@@ -1,5 +1,7 @@
 package eu.ace_design.island.io
 
+import java.io.{BufferedWriter, File, PrintWriter}
+
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.map.processes.Statistics
 import org.json.JSONObject
@@ -10,6 +12,18 @@ import org.json.JSONObject
  **/
 object IslandMapFactory {
 
+
+  def apply(map: IslandMap, file: File): Unit = {
+      val data = IslandMapFactory(map).toString
+      val w = new BufferedWriter(new PrintWriter(file))
+      w.write(data)
+      w.close()
+  }
+
+  def apply(file: File): IslandMap = {
+    val data = scala.io.Source.fromFile(file).mkString
+    IslandMapFactory(new JSONObject(data))
+  }
 
   def apply(map: IslandMap): JSONObject = {
     val result = new JSONObject()
