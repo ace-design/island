@@ -89,7 +89,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
       acc.put(deal)
     }}
     ctx.put("contracts",objs)
-    ctx.put("heading", game.plane.get.heading)
+    ctx.put("heading", game.plane.get.heading.toString.substring(0,1))
     ctx
   }
 

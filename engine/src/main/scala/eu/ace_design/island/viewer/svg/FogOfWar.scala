@@ -11,7 +11,7 @@ class FogOfWar(factor: Int,
   override def apply(g: Graphics2D): Unit = {
 
     // Setting up the color
-    val gray = new Color(0,0,0,200)
+    val gray = new Color(0,0,0,128)
     g.setColor(gray)
     g.setStroke(new BasicStroke(0.1f))
 
@@ -21,30 +21,33 @@ class FogOfWar(factor: Int,
       g.drawLine(s,0,s,size)
     }
 
-    val tiles = (for (x <- 0 to size / factor; y <- 0 to size / factor) yield (x,y)).toSet
-
-    // Drawing dark rectangle on top of unvisited and unscanned tiles
-    val incognita = tiles -- visited -- scanned
-    val black = new Color(0,0,0)
-    g.setColor(black)
-    incognita foreach { tile =>
-      val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
-      g.fill(rectangle)
-    }
-
-    // Drawing transparent fog on top of unvisited tiles
-    val fog = scanned -- visited
-    fog foreach { tile =>
-      val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
-      g.fill(rectangle)
-    }
-
     // Drawing POIs as red points
     g.setColor(Color.RED)
     pois.foreach { poi =>
       val circle = new Ellipse2D.Double(poi._1,poi._2, 3.0, 3.0)
       g.fill(circle)
     }
+
+    val tiles = (for (x <- 0 to size / factor; y <- 0 to size / factor) yield (x,y)).toSet
+
+    // Drawing dark rectangle on top of unvisited and unscanned tiles
+    val incognita = tiles -- visited -- scanned
+    g.setColor(new Color(0,0,0))
+    incognita foreach { tile =>
+      val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
+      g.fill(rectangle)
+    }
+
+
+    // Drawing transparent fog on top of unvisited tiles
+    val fog = scanned -- visited
+    g.setColor(gray)
+    fog foreach { tile =>
+      val rectangle = new Rectangle(tile._1*factor, tile._2*factor, factor, factor)
+      g.fill(rectangle)
+    }
+
+
 
 
   }
