@@ -25,7 +25,9 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
   emptyBoard.at(10,9)  returns t1 ; emptyBoard.at(10,10) returns t0
   emptyBoard.pois returns Map((10,10) -> Set(Creek("c1", None).asInstanceOf[PointOfInterest]), (0,0) -> Set(Creek("border", None)))
   emptyBoard.m returns mock[IslandMap]; emptyBoard.m.size returns 800
-  val emptyGame = Game(Budget(600), Crew(50), Set())
+
+  val plane = Plane(1,1,Directions.EAST)
+  val emptyGame = Game(Budget(600), Crew(50), Set()).copy(plane = Some(plane))
 
   "for the sake of error handling, the engine" should {
 
@@ -248,6 +250,27 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.isOK must beFalse
     }
 
+    "support echoing" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "S" } }""" thenReturn stop
+      val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_== plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
+
+    "support scanning" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "scan" }""" thenReturn stop
+      val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane.get.position must_== plane.position
+      g.budget.remaining must beLessThan(g.budget.initial)
+    }
 
   }
 
