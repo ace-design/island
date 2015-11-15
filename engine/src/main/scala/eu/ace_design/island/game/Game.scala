@@ -1,7 +1,8 @@
 package eu.ace_design.island.game
 
-import eu.ace_design.island.map.resources.{ManufacturedResource, PrimaryResource, Resource}
+import eu.ace_design.island.map.resources.{Biome, ManufacturedResource, PrimaryResource, Resource}
 import eu.ace_design.island.stdlib.Biomes
+import eu.ace_design.island.stdlib.PointOfInterests.Creek
 import eu.ace_design.island.util.Polynomial
 
 /**
@@ -273,6 +274,24 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     (minimal._1 / 3, minimal._2)
   }
 
+  /**
+    * Take a snapshot under the plane, identifying main biomes (> scanner precision) and creeks
+    * @param board the game board under the plane
+    * @return a set of biomes, and a set of POIs
+    */
+  def snapshot(board: GameBoard): (Set[Biome], Set[PointOfInterest]) = {
+    val area = (boundingBox intersect board.tiles.keySet).toSeq
+    val tiles = area map { board.tiles.get(_).get }
+    val biomes = tiles.toSeq flatMap { _.biomes } groupBy { _._1 } map {
+      case (b,l) => b -> (( 0.0 /: l) { (acc,pair) => acc + pair._2 } / area.size )
+    } filter { case (_,value) => value >= Plane.SCAN_PRECISION }
+    val creeks = area flatMap { board.pois.getOrElse(_,Set()) } filter { _ match {
+      case Creek(_,_) => true
+      case _ => false
+    }}
+    (biomes.keySet, creeks.toSet)
+  }
+
 
   def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
     new Plane(initial, position, heading)
@@ -287,6 +306,8 @@ object RadarValue extends Enumeration {
 object Plane {
 
   private val MOVE = 3
+
+  private val SCAN_PRECISION = 20.0
 
   def apply(x: Int, y: Int, h: Directions.Direction) = new Plane((x,y), (x,y), h)
 }

@@ -1,7 +1,8 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.IslandMap
-import eu.ace_design.island.stdlib.Biomes.{BEACH, OCEAN}
+import eu.ace_design.island.stdlib.Biomes.{MANGROVE, BEACH, OCEAN}
+import eu.ace_design.island.stdlib.PointOfInterests.{Hideout, Creek}
 import eu.ace_design.island.stdlib.Resources._
 import org.specs2.mock.Mockito
 import org.specs2.mutable._
@@ -178,6 +179,25 @@ class GameTest extends SpecificationWithJUnit with Mockito {
       p.radar(Directions.SOUTH, gameBoard) must_== (32, RadarValue.OUT_OF_RANGE)
       p.radar(Directions.EAST,  gameBoard) must_== (15, RadarValue.GROUND)
     }
+
+    "Support snapshot analysis" in {
+      val p = Plane(1,1, Directions.EAST)
+      val ocean = ( for(x <- 0 until 100; y <- 0 until 100) yield (x,y) -> Tile(biomes = Set((OCEAN,100.0))) ).toMap
+      val (b1, c1) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = ocean))
+      b1 must_== Set(OCEAN)
+      c1 must_== Set()
+      val withGround = ocean + ((0,0) -> Tile(biomes = Set((BEACH,70.0), (MANGROVE, 30.0)))) +
+                               ((0,1) -> Tile(biomes = Set((BEACH,90.0), (MANGROVE, 10.0)))) +
+                               ((0,2) -> Tile(biomes = Set((BEACH,80.0), (MANGROVE, 20.0))))
+      val pois: Map[(Int, Int), Set[PointOfInterest]] = Map(
+        (1,1) -> Set(Creek(identifier = "aCreek", None)),
+        (0,1) -> Set(Hideout(identifier = "anHideout", None))
+      )
+      val (b2,c2) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = withGround, pois = pois))
+      b2 must_== Set(OCEAN, BEACH)
+      c2 must_== Set(Creek(identifier = "aCreek", None))
+    }
+
 
   }
 
