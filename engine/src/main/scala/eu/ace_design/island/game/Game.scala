@@ -53,7 +53,7 @@ class Game private(val budget: Budget,
           this.copy(crew = updatedCrew, visited = visited + m.loc)
         }
         case m: MovedPlaneResult => {
-          val updatedPlane = plane.get.copy(position = m.planeLoc)
+          val updatedPlane = plane.get.copy(position = m.planeLoc, heading = m.heading)
           this.copy(plane = Some(updatedPlane))
         }
         case e: ExploitResult => harvest(e.r, crew.location.get, e.amount)
@@ -316,7 +316,7 @@ object Plane {
 
   private val MOVE = 3
 
-  private val SCAN_PRECISION = 20.0
+  private val SCAN_PRECISION = 0.20 // 20%
 
   def apply(x: Int, y: Int, h: Directions.Direction) = new Plane((x,y), (x,y), h)
 }

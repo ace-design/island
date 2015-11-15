@@ -85,7 +85,8 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> {
       // sum of similar biomes appearing on the very same tile
       val biomes = aggrBiomes((x,y)) groupBy { _._1 } map { case (b, d) => b -> (0.0 /: d ) { (acc,p) => acc + p._2}}
-                  Tile(altitude = aggrAlts((x,y)), biomes = biomes.toSet, moisture = aggrMoists((x,y)))
+      //Tile(altitude = aggrAlts((x,y)), biomes = biomes.toSet, moisture = aggrMoists((x,y)))
+      Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)), moisture = aggrMoists((x,y)))
       }).toMap
 
     val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>

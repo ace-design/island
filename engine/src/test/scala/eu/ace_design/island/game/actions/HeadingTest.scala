@@ -35,6 +35,7 @@ class HeadingTest extends SpecificationWithJUnit with Mockito {
       val res = action.buildResult(board,gPlane)
       res must beAnInstanceOf[MovedPlaneResult]
       gPlane.plane.get.position must_!= res.asInstanceOf[MovedPlaneResult].planeLoc
+      res.asInstanceOf[MovedPlaneResult].heading must_== Directions.NORTH
     }
 
     "identify when going out of range" in {

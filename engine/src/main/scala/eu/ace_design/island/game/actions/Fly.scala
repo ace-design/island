@@ -22,7 +22,7 @@ case class Fly() extends Action {
     require(game.plane.isDefined, "Cannot fly without a plane")
     val next = game.plane.get.forward.position
     require(board.tiles.keySet.contains(next), "Congrats, the plane is out of radio range...")
-    MovedPlaneResult(planeLoc = next)
+    MovedPlaneResult(planeLoc = next, heading = game.plane.get.heading)
   }
 
 }
