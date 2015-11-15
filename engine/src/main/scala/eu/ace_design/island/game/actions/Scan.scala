@@ -2,7 +2,7 @@ package eu.ace_design.island.game.actions
 
 import eu.ace_design.island.game._
 
-class Scan () extends Action {
+case class Scan () extends Action {
 
   override def computeCost(board: GameBoard, game: Game): Double = 1.0
 

@@ -91,6 +91,8 @@ object ActionParser {
       case Actions.TRANSFORM => transform(json.getJSONObject("parameters"))
       case Actions.FLY       => Fly()
       case Actions.HEADING   => heading(json.getJSONObject("parameters"))
+      case Actions.SCAN      => Scan()
+      case Actions.ECHO      => echo(json.getJSONObject("parameters"))
     }
   } catch {
     case e: Exception => throw new IllegalArgumentException(s"Invalid JSON input : $e \ndata: $data")
@@ -124,6 +126,8 @@ object ActionParser {
   private def glimpse(params: JSONObject) = Glimpse(range = params.getInt("range"), direction = letter2Direction(params))
 
   private def heading(params: JSONObject) = Heading(direction = letter2Direction(params))
+
+  private def echo(params: JSONObject) = Echo(direction = letter2Direction(params))
 
   private def transform(params: JSONObject) = {
     import scala.collection.JavaConversions._

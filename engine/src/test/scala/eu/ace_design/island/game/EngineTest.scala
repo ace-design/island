@@ -239,6 +239,15 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.budget.remaining must beLessThan(g.budget.initial)
     }
 
+    "reject echoing in the wrong direction" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "N" } }""" thenReturn stop
+      val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
+      val (_, g) = engine.run(explorer)
+      g.isOK must beFalse
+    }
+
 
   }
 

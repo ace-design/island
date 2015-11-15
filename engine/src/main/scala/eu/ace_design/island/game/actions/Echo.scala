@@ -2,7 +2,7 @@ package eu.ace_design.island.game.actions
 
 import eu.ace_design.island.game._
 
-class Echo(override val direction: Directions.Direction) extends ActionWithDirection {
+case class Echo(override val direction: Directions.Direction) extends ActionWithDirection {
 
   override def computeCost(board: GameBoard, game: Game): Double = 1.0
 

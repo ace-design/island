@@ -91,6 +91,16 @@ class ActionParserTest extends SpecificationWithJUnit {
       action must beAnInstanceOf[Heading]
     }
 
+    "build an Echo action when asked for" in {
+      val action = ActionParser("""{"action": "echo", "parameters": {"direction": "N"}}""")
+      action must beAnInstanceOf[Echo]
+    }
+
+    "build a Scan action when asked for" in {
+      val action = ActionParser("""{"action": "scan" }""")
+      action must beAnInstanceOf[Scan]
+    }
+
     "translate one-letter codes to directions" in {
       ActionParser.letter2Direction(new JSONObject(""" { "direction": "N" } """)) must_== Directions.NORTH
       ActionParser.letter2Direction(new JSONObject(""" { "direction": "S" } """)) must_== Directions.SOUTH
