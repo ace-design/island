@@ -26,7 +26,8 @@ class Game private(val budget: Budget,
                    val isOK: Boolean = true,
                    val extracted: Map[Resource,Map[(Int,Int),Int]] = Map(),
                    val consumed: Map[PrimaryResource, Int] = Map(),
-                   val transformed: Map[ManufacturedResource, Int] = Map()) {
+                   val transformed: Map[ManufacturedResource, Int] = Map(),
+                   val scanned: Set[(Int,Int)] = Set()) {
 
   /**
    * Update the current game based on the contents of the result of an action
@@ -41,6 +42,8 @@ class Game private(val budget: Budget,
         case s: ScoutResult   => this // no side effect (except on budget)
         case e: ExploreResult => this // no side effect (except on budget)
         case g: GlimpseResult => this // no side effect (except on budget)
+        case e: EchoResult    => this // no side effect (except on budget)
+        case s: ScanResult    => this.copy(scanned = s.scanned ++ scanned)
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
           this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc, plane = None)
@@ -115,6 +118,11 @@ class Game private(val budget: Budget,
     case Some(boatLoc) => Some(distance((0,0), boatLoc))
   }
 
+  def distanceByPlane: Option[Double] = this.plane match {
+    case None => None
+    case Some(plane) => Some(distance(plane.initial,plane.position))
+  }
+
   /**
    * Compute the distance between the team and the boat
    * //TODO: explore the visited tiles to find the shortest path
@@ -175,8 +183,9 @@ class Game private(val budget: Budget,
                    plane: Option[Plane] = this.plane, isOK: Boolean = this.isOK,
                    extracted: Map[Resource,Map[(Int,Int),Int]] = this.extracted,
                    consumed: Map[PrimaryResource, Int] = this.consumed,
-                   transformed: Map[ManufacturedResource, Int] = this.transformed) =
-    new Game(budget, crew, objectives, visited, boat, plane, isOK, extracted, consumed, transformed)
+                   transformed: Map[ManufacturedResource, Int] = this.transformed,
+                   scanned: Set[(Int,Int)] = this.scanned) =
+    new Game(budget, crew, objectives, visited, boat, plane, isOK, extracted, consumed, transformed, scanned)
 
 }
 
@@ -277,9 +286,9 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
   /**
     * Take a snapshot under the plane, identifying main biomes (> scanner precision) and creeks
     * @param board the game board under the plane
-    * @return a set of biomes, and a set of POIs
+    * @return a set of biomes, a set of POIs, and the scanned tiles
     */
-  def snapshot(board: GameBoard): (Set[Biome], Set[PointOfInterest]) = {
+  def snapshot(board: GameBoard): (Set[Biome], Set[PointOfInterest], Set[(Int,Int)]) = {
     val area = (boundingBox intersect board.tiles.keySet).toSeq
     val tiles = area map { board.tiles.get(_).get }
     val biomes = tiles.toSeq flatMap { _.biomes } groupBy { _._1 } map {
@@ -289,7 +298,7 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
       case Creek(_,_) => true
       case _ => false
     }}
-    (biomes.keySet, creeks.toSet)
+    (biomes.keySet, creeks.toSet, area.toSet)
   }
 
 

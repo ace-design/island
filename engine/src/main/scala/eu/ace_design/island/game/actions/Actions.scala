@@ -9,9 +9,11 @@ object Actions {
   final val MOVE_TO   = "move_to"
   final val SCOUT     = "scout"
   final val EXPLOIT   = "exploit"
-  final val STOP      =  "stop"
+  final val STOP      = "stop"
   final val GLIMPSE   = "glimpse"
   final val TRANSFORM = "transform"
   final val FLY       = "fly"
   final val HEADING   = "heading"
+  final val ECHO      = "echo"
+  final val SCAN      = "scan"
 }

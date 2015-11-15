@@ -183,7 +183,7 @@ class GameTest extends SpecificationWithJUnit with Mockito {
     "Support snapshot analysis" in {
       val p = Plane(1,1, Directions.EAST)
       val ocean = ( for(x <- 0 until 100; y <- 0 until 100) yield (x,y) -> Tile(biomes = Set((OCEAN,100.0))) ).toMap
-      val (b1, c1) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = ocean))
+      val (b1, c1, _) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = ocean))
       b1 must_== Set(OCEAN)
       c1 must_== Set()
       val withGround = ocean + ((0,0) -> Tile(biomes = Set((BEACH,70.0), (MANGROVE, 30.0)))) +
@@ -193,7 +193,7 @@ class GameTest extends SpecificationWithJUnit with Mockito {
         (1,1) -> Set(Creek(identifier = "aCreek", None)),
         (0,1) -> Set(Hideout(identifier = "anHideout", None))
       )
-      val (b2,c2) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = withGround, pois = pois))
+      val (b2,c2, _) = p.snapshot(GameBoard(100, mock[IslandMap], tiles = withGround, pois = pois))
       b2 must_== Set(OCEAN, BEACH)
       c2 must_== Set(Creek(identifier = "aCreek", None))
     }
