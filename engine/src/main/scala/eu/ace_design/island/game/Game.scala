@@ -42,7 +42,7 @@ class Game private(val budget: Budget,
         case g: GlimpseResult => this // no side effect (except on budget)
         case m: MovedBoatResult => {
           val updatedCrew = crew movedTo m.loc using m.men
-          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc)
+          this.copy(crew = updatedCrew, boat = Some(m.loc), visited = visited + m.loc, plane = None)
         }
         case  m: MovedCrewResult => {
           val updatedCrew = crew movedTo m.loc
@@ -272,6 +272,7 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     val minimal = raw minBy { case (i,_) => i }
     (minimal._1 / 3, minimal._2)
   }
+
 
   def copy(initial: (Int, Int) = initial, position: (Int, Int) = position, heading: Directions.Direction = heading) = {
     new Plane(initial, position, heading)

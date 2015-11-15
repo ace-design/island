@@ -64,7 +64,6 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     val biomesCoverage = binding map { _._3 }
     val aggrBiomes = biomesCoverage.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 }).toSet }
 
-
     info("Processing resources produced by the biomes")
     val productions = binding map { _._1 }
     val aggrProds = productions.flatten groupBy { _._1 } map { case (k,grouped) =>  k -> (grouped map { _._2 })}
@@ -84,7 +83,9 @@ class GameBoardBuilder(chunk: Int = DEFAULT_TILE_UNIT,
     info("Instantiating the GameBoard")
     val maxIdx = map.size / chunk
     val grid = (for(x <- 0 until maxIdx; y <- 0 until maxIdx) yield (x,y) -> {
-                  Tile(altitude = aggrAlts((x,y)), biomes = aggrBiomes((x,y)), moisture = aggrMoists((x,y)))
+      // sum of similar biomes appearing on the very same tile
+      val biomes = aggrBiomes((x,y)) groupBy { _._1 } map { case (b, d) => b -> (0.0 /: d ) { (acc,p) => acc + p._2}}
+                  Tile(altitude = aggrAlts((x,y)), biomes = biomes.toSet, moisture = aggrMoists((x,y)))
       }).toMap
 
     val tiles = (grid /: aggrProds) { case (acc, (loc, stocks)) =>

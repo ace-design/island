@@ -98,6 +98,16 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       there was one(explorer).takeDecision
       there was one(explorer).acknowledgeResults(anyString)
     }
+
+    "support transition from aerial to terrestrial phase" in {
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() returns land thenReturn stop
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(null)))
+      val (events, g) = engine.run(explorer)
+      g.isOK must beTrue
+      g.plane must beNone
+    }
+
     "reject landing with too much men" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "c1", "people": 50 } } }"""
