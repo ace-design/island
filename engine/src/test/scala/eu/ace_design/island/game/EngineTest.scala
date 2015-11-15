@@ -69,7 +69,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "exit with an error when no more budget is available" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land",  "parameters": { "creek": "c1", "people": 30 } } }"""
-      val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()))
+      val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()).copy(plane = Some(plane)))
       val (events, g) = engine.run(explorer)
       g.isOK must beFalse
       events.size must_== 3 // initialization context + received action + exception event
@@ -104,7 +104,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
     "support transition from aerial to terrestrial phase" in {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn stop
-      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(null)))
+      val engine = new Engine(emptyBoard, emptyGame)
       val (events, g) = engine.run(explorer)
       g.isOK must beTrue
       g.plane must beNone
@@ -271,7 +271,6 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.plane.get.position must_== plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
     }
-
   }
 
 }
