@@ -10,7 +10,7 @@ import scala.util.Random
  * Companion object to hide the private constructor in the class with the apply syntactic sugar
  */
 object IslandMap {
-  def apply(mesh: Mesh, rand: Random = new Random()) = new IslandMap(mesh, rand)
+  def apply(mesh: Mesh) = new IslandMap(mesh)
 }
 
 /**
@@ -30,7 +30,6 @@ object IslandMap {
  */
 class IslandMap private (
     private val _mesh: Mesh,
-    val random: Random = new Random(),
     val uuid: Option[Long]       = None,
     val stats: Option[Map[Statistics.StatName, String]] = None,
     val faceProps: PropertySet   = PropertySet(),
@@ -99,7 +98,7 @@ class IslandMap private (
   def copy(faceProps: PropertySet = this.faceProps, vertexProps: PropertySet = this.vertexProps,
            edgeProps: PropertySet = this.edgeProps, uuid: Option[Long] = this.uuid,
            stats: Option[Map[Statistics.StatName, String]] = this.stats): IslandMap =
-    new IslandMap(this._mesh, this.random, uuid, stats, faceProps, vertexProps, edgeProps)
+    new IslandMap(this._mesh, uuid, stats, faceProps, vertexProps, edgeProps)
 
   /**
    * Structural equality for maps
