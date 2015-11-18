@@ -96,7 +96,7 @@
   <modules>
       <module>engine</module>
       <module>player</module>
-      <module>bot</module>
+      <module>runner</module>
   </modules>    
 
 </project>
