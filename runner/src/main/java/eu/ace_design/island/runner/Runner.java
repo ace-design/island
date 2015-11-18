@@ -2,6 +2,7 @@ package eu.ace_design.island.runner;
 
 import eu.ace_design.island.bot.IExplorerRaid;
 import eu.ace_design.island.game.*;
+import eu.ace_design.island.geom.Point;
 import eu.ace_design.island.io.IslandMapFactory;
 import eu.ace_design.island.map.IslandMap;
 import eu.ace_design.island.map.resources.Resource;
@@ -9,6 +10,7 @@ import eu.ace_design.island.stdlib.POIGenerators;
 import eu.ace_design.island.stdlib.Resources;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,22 +48,38 @@ public class Runner {
 		return this;
 	}
 
+	/**
+	 * Define the budget for this exploration
+	 * @param budget
+	 * @return
+	 */
 	public Runner backBefore(int budget) {
 		this.budget = budget;
 		return this;
 	}
 
+
+	/**
+	 * Define the number of mens available for the raid
+	 * @param nbMens
+	 * @return
+	 */
 	public Runner withCrew(int nbMens) {
 		this.nbMens = nbMens;
 		return this;
 	}
 
+	/**
+	 * Declare a contract to be fullfiled by the raiders
+	 * @param amount  the expected amount of resources
+	 * @param resource the resource to collect
+	 * @return
+	 */
 	public Runner collecting(int amount, String resource) {
 		Resource res = Resources.bindings().get(resource).get();
 		this.contracts.put(res,amount);
 		return this;
 	}
-
 
 	/**
 	 * Define the seed used to initialize the random number generator
@@ -73,17 +91,27 @@ public class Runner {
 		return this;
 	}
 
-
+	/**
+	 * Initial location and heading for the plane
+	 * @param x x location (North -> South axis)
+	 * @param y y location (West  -> East  axis)
+	 * @param heading  direction
+	 * @return
+	 */
 	public Runner startingAt(int x, int y, String heading) {
 		this.thePlane = Plane$.MODULE$.apply(x,y,Directions.withName(heading));
 		return this;
 	}
 
+	/**
+	 * Output directory for the logs
+	 * @param path
+	 * @return
+	 */
 	public Runner storingInto(String path) {
 		this.outputDir = new File(path);
 		return this;
 	}
-
 
 	/**
 	 * Trigger the game engine using the defined configuration
@@ -146,6 +174,11 @@ public class Runner {
 		assert outputDir.canWrite()    : "Output directory must be writable";
 	}
 
+	/**
+	 * Start the engine, in silent mode (stdout and stderr are unavailable while playing)
+	 * @param g
+	 * @param b
+	 */
 	private void startEngine(Game g, GameBoard b) {
 		Engine engine = new Engine(b,g, new Random(seed));
 		Tuple2<scala.collection.Seq<ExplorationEvent>,Game> results = null;
@@ -167,6 +200,12 @@ public class Runner {
 		}
 	}
 
+	/**
+	 * Process the results obtained at the end of the game
+	 * @param events
+	 * @param g
+	 * @param b
+	 */
 	private void processResults(scala.collection.Seq<ExplorationEvent> events, Game g, GameBoard b) {
 		if(g.isOK()) {
 			System.out.println("Remaining budget: " + g.budget().remaining());
@@ -182,6 +221,10 @@ public class Runner {
 		exportMap(g, b);
 	}
 
+	/**
+	 * Generate the JSON event log
+	 * @param events
+	 */
 	private void exportLog(scala.collection.Seq<ExplorationEvent> events) {
 		System.out.println("Generating JSON log file");
 		PrintWriter writer = null;
@@ -199,10 +242,24 @@ public class Runner {
 		}
 	}
 
+	/**
+	 * Generate a picture of the map
+	 * @param g
+	 * @param b
+	 */
 	private void exportMap(Game g, GameBoard b) {
 		System.out.println("Generating SVG map file");
-		// board.pois.values.flatten map { _.location } filter { _.isDefined } map { _.get } map { p => (p.x,p.y) }
+		java.util.List<PointOfInterest> all = new ArrayList<PointOfInterest>();
+		for (Set<PointOfInterest> sp: JavaConversions$.MODULE$.asJavaCollection(b.pois().values())){
+			all.addAll(JavaConversions$.MODULE$.asJavaCollection(sp));
+		}
 		java.util.Set<Tuple2<Object,Object>> tmp = new java.util.HashSet<Tuple2<Object,Object>>();
+		for(PointOfInterest poi: all) {
+			if(poi.location().isDefined()) {
+				Point p = poi.location().get();
+				tmp.add(new Tuple2<Object, Object>(p.x(),p.y()));
+			}
+		}
 		scala.collection.immutable.Set<Tuple2<Object,Object>> pois = JavaConversions$.MODULE$.asScalaSet(tmp).toList().toSet();
 		FogOfWar fog = new FogOfWar(package$.MODULE$.DEFAULT_TILE_UNIT(),g.visited(),g.scanned(),pois,theIsland.size());
 		FogOfWarViewer viewer = new FogOfWarViewer(fog);
