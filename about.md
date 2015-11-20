@@ -25,10 +25,11 @@ Continuous integration is supported by [Drone.io](https://drone.io/github.com/ac
 
 ## Contributors
 
-* Sébastien Mosser (Architecture, main implementation)
-* Philippe Collet  (Variability)
-* Antoine Pultier (Unity-based visualization mechanism)
-* Pascal Tung (Web-based visualization mechanisms)
+* [Sébastien Mosser](mosser@i3s.unice.fr) (Architecture, main implementation)
+* [Philippe Collet](collet@i3s.unice.fr)  (Variability)
+* [Antoine Pultier](a.pultier@gmail.com) (Unity-based visualization mechanism)
+* [Günther Jungbluth](gunther.jungbluth.poirier@gmail.com) (web-based visualization)
+* [Pascal Tung](tung.pascal@gmail.com) (2015, initial web-based visualization)
 
 ## References
 

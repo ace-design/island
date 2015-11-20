@@ -61,3 +61,7 @@ The previous code is a classical Java application. It instantiates an explorer r
   * the output directory (it must exist)
 
 The `fire` method collects all the previously given information, and triggers the engine with this configuration.
+
+# Visualizing a run (FR)
+
+Thanks to [Günther Jungbluth](gunther.jungbluth.poirier@gmail.com), a visualization engine was developed using Javascript (original idea from Pascal Tung). The engine is hosted on github pages: [http://ace-design.github.io/IslandExploration/](http://ace-design.github.io/IslandExploration/)
