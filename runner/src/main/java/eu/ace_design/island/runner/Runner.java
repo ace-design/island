@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import eu.ace_design.island.viewer.PoiJSONViewer;
 import eu.ace_design.island.viewer.svg.FogOfWar;
 import eu.ace_design.island.viewer.svg.FogOfWarViewer;
 import scala.Option;
@@ -219,7 +220,15 @@ public class Runner {
 		}
 		exportLog(events);
 		exportMap(g, b);
+		exportPois(b);
 	}
+
+	private void exportPois(GameBoard b) {
+		System.out.println("Generating JSON POIs file");
+		PoiJSONViewer viewer = new PoiJSONViewer(b);
+		viewer.apply(theIsland).renameTo(new File(outputDir.getPath() + "/_pois.json"));
+	}
+
 
 	/**
 	 * Generate the JSON event log

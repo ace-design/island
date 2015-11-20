@@ -1,9 +1,7 @@
 package eu.ace_design.island.viewer
 
 import java.io.{PrintWriter, File}
-import eu.ace_design.island.geom._
 import eu.ace_design.island.map.processes.Statistics
-import org.json
 import org.json._
 import eu.ace_design.island.map._
 import eu.ace_design.island.util.Logger
