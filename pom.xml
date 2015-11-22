@@ -97,6 +97,7 @@
       <module>engine</module>
       <module>player</module>
       <module>runner</module>
+      <module>arena</module>
   </modules>    
 
 </project>
