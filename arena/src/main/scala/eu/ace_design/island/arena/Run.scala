@@ -26,6 +26,7 @@ trait Run extends Championship with DiSLand {
       out.mkdir()
     IslandMapFactory(theIsland, islFile)
     theIsland -> ( s"$outputDir/_map" as pdf)
+    theIsland -> ( s"$outputDir/_map" as svg)
   }
 
 
