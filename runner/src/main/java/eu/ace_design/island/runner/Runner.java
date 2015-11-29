@@ -10,6 +10,9 @@ import eu.ace_design.island.stdlib.POIGenerators;
 import eu.ace_design.island.stdlib.Resources;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -197,7 +200,12 @@ public class Runner {
 			System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
 		}
 		if(results != null) {
-			processResults(results._1(),results._2(), b);
+			try {
+				processResults(results._1(), results._2(), b);
+			} catch (IOException ioe) {
+				System.err.println(ioe.toString());
+				ioe.printStackTrace();
+			}
 		}
 	}
 
@@ -207,7 +215,7 @@ public class Runner {
 	 * @param g
 	 * @param b
 	 */
-	private void processResults(scala.collection.Seq<ExplorationEvent> events, Game g, GameBoard b) {
+	private void processResults(scala.collection.Seq<ExplorationEvent> events, Game g, GameBoard b) throws IOException {
 		if(g.isOK()) {
 			System.out.println("Remaining budget: " + g.budget().remaining());
 			System.out.println("Collected resources:");
@@ -256,7 +264,7 @@ public class Runner {
 	 * @param g
 	 * @param b
 	 */
-	private void exportMap(Game g, GameBoard b) {
+	private void exportMap(Game g, GameBoard b) throws IOException {
 		System.out.println("Generating SVG map file");
 		java.util.List<PointOfInterest> all = new ArrayList<PointOfInterest>();
 		for (Set<PointOfInterest> sp: JavaConversions$.MODULE$.asJavaCollection(b.pois().values())){
@@ -272,7 +280,8 @@ public class Runner {
 		scala.collection.immutable.Set<Tuple2<Object,Object>> pois = JavaConversions$.MODULE$.asScalaSet(tmp).toList().toSet();
 		FogOfWar fog = new FogOfWar(package$.MODULE$.DEFAULT_TILE_UNIT(),g.visited(),g.scanned(),pois,theIsland.size());
 		FogOfWarViewer viewer = new FogOfWarViewer(fog);
-		viewer.apply(theIsland).renameTo(new File(outputDir.getPath() + "/map.svg"));
+		Path out = Paths.get(viewer.apply(theIsland).getPath());
+		Files.move(out, Paths.get((new File(outputDir.getPath() + "/map.svg")).getAbsolutePath()));
 	}
 
 	public Runner(Class c) throws Exception {

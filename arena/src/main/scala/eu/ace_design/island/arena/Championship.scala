@@ -1,6 +1,7 @@
 package eu.ace_design.island.arena
 
 import java.io._
+import java.nio.file.{Files, Paths}
 
 import eu.ace_design.island.bot.IExplorerRaid
 import eu.ace_design.island.game.{Engine, ExplorationEvent, Game, GameBoard}
@@ -43,7 +44,9 @@ trait Championship extends App with Teams {
 
   def exportPOIs(board: GameBoard, m: IslandMap) = {
     val viewer = PoiJSONViewer(board)
-    viewer(m).renameTo(new File(s"$outputDir/_pois.json"))
+    val tmp = Paths.get(viewer(m).getAbsolutePath)
+    val out = (new File(s"$outputDir/_pois.json")).toPath
+    Files.move(tmp,out)
   }
 
   type ChampResult = Iterable[Either[Result, (String, String)] with Product with Serializable]
@@ -93,11 +96,13 @@ trait Championship extends App with Teams {
     try { writer.write(jsonEvents) } finally { writer.close() }
   }
 
-  def exportVisitedMap(name: String, m: IslandMap, game: Game, tileUnit: Int, board: GameBoard): Boolean = {
+  def exportVisitedMap(name: String, m: IslandMap, game: Game, tileUnit: Int, board: GameBoard) {
     val pois = board.pois.values.flatten map { _.location } filter { _.isDefined } map { _.get } map { p => (p.x,p.y) }
     val fog = new FogOfWar(factor = tileUnit, visited = game.visited, scanned = game.scanned, pois = pois.toSet, size = m.size)
     val viewer = FogOfWarViewer(fog)
-    viewer(m).renameTo(new File(s"$outputDir/$name.svg"))
+    val tmp = Paths.get(viewer(m).getAbsolutePath)
+    val out = (new File(s"$outputDir/$name.json")).toPath
+    Files.move(tmp,out)
   }
 
   def printResults(results: ChampResult): Unit = {
