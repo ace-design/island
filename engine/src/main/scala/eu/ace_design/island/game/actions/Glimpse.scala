@@ -1,6 +1,7 @@
 package eu.ace_design.island.game.actions
 
 import eu.ace_design.island.game._
+import eu.ace_design.island.map.resources.Biome
 import org.json.JSONArray
 
 /**
@@ -26,12 +27,20 @@ case class Glimpse(range: Int, override val direction: Directions.Direction) ext
     if (!board.tiles.contains(position))
       return new JSONArray()
     val tile = board.at(position._1, position._2)
-    val contents = tile.biomes map { case (b,v) => new JSONArray().put(0,b.name).put(1,round(v)) }
+    val contents = simplify(tile.biomes) map { case (b,v) => new JSONArray().put(0,b.name).put(1,round(v)) }
     range match {
       case x if x <= 2 => (contents.toSeq.sortBy { _.getDouble(1) } :\ new JSONArray()) { (rep, acc) => acc.put(rep) }
       case 3 => (contents.map { _.getString(0) } :\ new JSONArray()) { (elem, acc) => acc.put(elem) }
       case 4 => new JSONArray().put(contents.toSeq.sortBy( _ .getDouble(1) ).last.getString(0))
     }
+  }
+
+
+  private def simplify(init: Set[(Biome, Double)]): Set[(Biome, Double)] = {
+    val m = init groupBy { case d => d._1 } map { case (key, lst) =>
+      key -> ( 0.0 /: lst) { (acc, pair) => acc + pair._2 }
+    }
+    m.toSet
   }
 
   private def moveTo(idx: Int, acc: (Int, Int)): (Int, Int) = idx match {
