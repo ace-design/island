@@ -1,7 +1,7 @@
 package eu.ace_design.island.arena
 
 import java.io._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{StandardCopyOption, Files, Paths}
 
 import eu.ace_design.island.bot.IExplorerRaid
 import eu.ace_design.island.game.{Engine, ExplorationEvent, Game, GameBoard}
@@ -46,7 +46,7 @@ trait Championship extends App with Teams {
     val viewer = PoiJSONViewer(board)
     val tmp = Paths.get(viewer(m).getAbsolutePath)
     val out = (new File(s"$outputDir/_pois.json")).toPath
-    Files.move(tmp,out)
+    Files.move(tmp,out, StandardCopyOption.REPLACE_EXISTING)
   }
 
   type ChampResult = Iterable[Either[Result, (String, String)] with Product with Serializable]
@@ -101,8 +101,8 @@ trait Championship extends App with Teams {
     val fog = new FogOfWar(factor = tileUnit, visited = game.visited, scanned = game.scanned, pois = pois.toSet, size = m.size)
     val viewer = FogOfWarViewer(fog)
     val tmp = Paths.get(viewer(m).getAbsolutePath)
-    val out = (new File(s"$outputDir/$name.json")).toPath
-    Files.move(tmp,out)
+    val out = (new File(s"$outputDir/$name.svg")).toPath
+    Files.move(tmp,out, StandardCopyOption.REPLACE_EXISTING)
   }
 
   def printResults(results: ChampResult): Unit = {

@@ -13,6 +13,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -281,7 +282,8 @@ public class Runner {
 		FogOfWar fog = new FogOfWar(package$.MODULE$.DEFAULT_TILE_UNIT(),g.visited(),g.scanned(),pois,theIsland.size());
 		FogOfWarViewer viewer = new FogOfWarViewer(fog);
 		Path out = Paths.get(viewer.apply(theIsland).getPath());
-		Files.move(out, Paths.get((new File(outputDir.getPath() + "/map.svg")).getAbsolutePath()));
+		Files.move(out, Paths.get((new File(outputDir.getPath() + "/map.svg")).getAbsolutePath()),
+				StandardCopyOption.REPLACE_EXISTING);
 	}
 
 	public Runner(Class c) throws Exception {

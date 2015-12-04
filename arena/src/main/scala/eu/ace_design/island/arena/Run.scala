@@ -35,13 +35,13 @@ trait Run extends Championship with DiSLand {
 
     val island =  IslandMapFactory(islFile)
     val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)))
-    val theBoard: GameBoard = builder(island).copy(startingTile = Some((1,1)))
+    val theBoard: GameBoard = builder(island).copy(startingTile = Some(plane.initial))
     printInfo(island, theBoard)
     // Building the game engine and the associated objectives
     val initialization = Game(Budget(budget), Crew(crew), objectives).copy(plane = Some(plane))
     println("\n## Running championship with the following players")
     println(s"  - $playerNames")
-    val results = run(initialization,theBoard, island)
+    val results = run(initialization, theBoard, island)
     // Displaying results
     printResults(results)
   }
