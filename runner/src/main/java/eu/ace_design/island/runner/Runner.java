@@ -225,7 +225,7 @@ public class Runner {
 				System.out.println("  - " + r + ": " + amount);
 			}
 		} else {
-			System.out.println("Game didn't ended well :(");
+			System.out.println("Game didn't end well :(");
 		}
 		exportLog(events);
 		exportMap(g, b);
