@@ -6,6 +6,7 @@ import eu.ace_design.island.io.IslandMapFactory
 import eu.ace_design.island.map.IslandMap
 
 import java.io.File
+import scala.util.Random
 
 import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
 
@@ -23,7 +24,7 @@ trait Run extends Championship with DiSLand {
   def generate(): Unit = {
     val out = new File(outputDir)
     if (! out.exists())
-      out.mkdir()
+      out.mkdirs()
     IslandMapFactory(theIsland, islFile)
     theIsland -> ( s"$outputDir/_map" as pdf)
     theIsland -> ( s"$outputDir/_map" as svg)
@@ -34,7 +35,9 @@ trait Run extends Championship with DiSLand {
     if(!islFile.exists()) { generate() }
 
     val island =  IslandMapFactory(islFile)
-    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)))
+    val random = new Random(seed)
+    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)), rand = random)
+
     val theBoard: GameBoard = builder(island).copy(startingTile = Some(plane.initial))
     printInfo(island, theBoard)
     // Building the game engine and the associated objectives
