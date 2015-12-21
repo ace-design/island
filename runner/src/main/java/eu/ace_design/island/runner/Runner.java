@@ -235,7 +235,14 @@ public class Runner {
 	private void exportPois(GameBoard b) {
 		System.out.println("Generating JSON POIs file");
 		PoiJSONViewer viewer = new PoiJSONViewer(b);
-		viewer.apply(theIsland).renameTo(new File(outputDir.getPath() + "/_pois.json"));
+
+		Path out = Paths.get(viewer.apply(theIsland).getPath());
+		try {
+			Files.move(out, Paths.get((new File(outputDir.getPath() + "/_pois.json")).getAbsolutePath()),
+					StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException ioe) {
+			System.err.println("unable to export POIs as a JSON file, IO error");
+		}
 	}
 
 
