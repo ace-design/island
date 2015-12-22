@@ -68,31 +68,31 @@ The intention of the first phase is to exploit _cheap_ actions to identify where
 			<th><code>SCOUT</code></th>
 			<td>2</td>
 			<td>cheap</td>
-			<td></td>
+			<td>terrain difficulty</td>
 		</tr>
 		<tr>
 			<th><code>GLIMPSE</code></th>
 			<td>2</td>
 			<td>medium</td>
-			<td></td>
+			<td>terrain difficulty and range</td>
 		</tr>
 		<tr>
 			<th><code>EXPLORE</code></th>
 			<td>2</td>
 			<td>expensive</td>
-			<td></td>
+			<td>current tile difficulty</td>
 		</tr>
 		<tr>
 			<th><code>EXPLOIT</code></th>
 			<td>2</td>
 			<td>expensive</td>
-			<td></td>
+			<td>tile difficulty and resource properties</td>
 		</tr>
 		<tr>
 			<th><code>TRANSFORM</code></th>
 			<td>2</td>
 			<td>medium</td>
-			<td></td>
+			<td>recipe</td>
 		</tr>
 	</table>
 </div>
@@ -213,12 +213,13 @@ This action allows the player to identify quickly the biomes to be encountered i
   "extras": {
     "asked_range": 4,
     "report": [
-      [ [ "BEACH", 59.35 ], ["OCEAN", 40.65] ],
-      [ [ "OCEAN", 100 ] ],
-      [ "OCEAN" ],
+      [ [ "BEACH", 59.35 ], [ "OCEAN", 40.65 ] ],
+      [ [ "OCEAN", 70.2  ], [ "BEACH", 29.8  ] ],
+      [ "OCEAN", "BEACH" ],
       [ "OCEAN" ]
     ]
-  }
+  },
+  "status": "OK"
 }  
 ```
   
@@ -235,11 +236,12 @@ The exploration of the current tile gives to the player extensive information ab
   "cost": 5,
   "extras": {
     "resources": [
-      { "amount": "HIGH", "resource": "FUR", "cond": "FAIR" }
+      { "amount": "HIGH", "resource": "FUR", "cond": "FAIR" },
       { "amount": "LOW", "resource": "WOOD", "cond": "HARSH" }
     ],
     "pois": [ "creek-id" ]
-  }
+  }.
+  "status": "OK"
 }
 ``` 
 
