@@ -271,6 +271,16 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       g.plane.get.position must_== plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
     }
-  }
 
+    "allow user to modify timeout delay" in {
+      val delay = 100 // in ms.
+      val explorer = mock[IExplorerRaid]
+      explorer.takeDecision() answers { a => Thread.sleep(delay*3); stop }
+      val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
+      val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)), timeoutDelay = delay)
+      val (e, g) = engine.run(explorer)
+      g.isOK must beFalse
+    }
+
+  }
 }

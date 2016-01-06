@@ -119,6 +119,17 @@ public class Runner {
 	}
 
 	/**
+	 * Timeout value, in milliseconds
+	 * @param delay
+	 * @return
+	 */
+	public Runner withTimeout(int delay) {
+		this.timeoutDelay = delay;
+		return this;
+	}
+
+
+	/**
 	 * Trigger the game engine using the defined configuration
 	 */
 	public void fire() {
@@ -166,6 +177,7 @@ public class Runner {
 	private int howManyCreeks = 10;
 	private File outputDir = new File(".");
 	private Map<Resource,Integer> contracts = new HashMap<Resource, Integer>();
+	private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
 
 	// To enable assertion checking when encoutering an issue, add -ea to the VM arguments
 	private void required() {
@@ -185,7 +197,7 @@ public class Runner {
 	 * @param b
 	 */
 	private void startEngine(Game g, GameBoard b) {
-		Engine engine = new Engine(b,g, new Random(seed));
+		Engine engine = new Engine(b,g, new Random(seed), timeoutDelay);
 		Tuple2<scala.collection.Seq<ExplorationEvent>,Game> results = null;
 		try {
 			System.setOut(new PrintStream(new ByteArrayOutputStream()));

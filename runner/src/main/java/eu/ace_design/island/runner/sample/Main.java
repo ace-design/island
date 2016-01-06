@@ -17,6 +17,7 @@ public class Main {
 				.collecting(300,  "QUARTZ")
 				.collecting(10,   "FLOWER")
 				.storingInto("./outputs")      // The output directory must exists
+				.withTimeout(2000)             // player timeout is 2 seconds
 				.fire();
 
 	}

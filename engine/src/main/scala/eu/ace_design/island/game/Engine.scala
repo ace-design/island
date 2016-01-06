@@ -8,14 +8,18 @@ import scala.collection.mutable.ListBuffer
 import scala.util.Random
 import org.json.{JSONArray, JSONObject}
 
+
+object Engine {
+  final val DEFAULT_TIMEOUT_VALUE = 2000 // The player can take up to 2s to answer to queries
+}
 /**
  * The engine is used to play a party
  **/
-class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) extends Logger with Timeout {
+class Engine(val board: GameBoard, val game: Game,
+             rand: Random = new Random(), val timeoutDelay: Int = Engine.DEFAULT_TIMEOUT_VALUE)
+      extends Logger with Timeout {
 
   override protected val silo: Kind = LogSilos.GAME_ENGINE
-
-  final val DEFAULT_TIMEOUT_VALUE = 2000 // The player can take up to 2s to answer to queries
 
   // run a game using a given explorer. Use mutable state for the events (=> UGLY)
   def run(explorer: IExplorerRaid): (Seq[ExplorationEvent], Game) = {
@@ -27,7 +31,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
       val context = buildInitializationContext()
       events += ExplorationEvent(Actors.Engine, context, method = "initialize")
       info("Initializing context [explorer.initializeContext(...)]")
-      timeout(DEFAULT_TIMEOUT_VALUE) { explorer.initialize(context.toString) }
+      timeout(timeoutDelay) { explorer.initialize(context.toString) }
     } catch {
       case e: Exception => return (events += ExplorationEvent(Actors.Explorer, e, "initialize"), game.flaggedAsKO)
     }
@@ -45,7 +49,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
     // ask player for decision:
     val action = try {
       info("Asking for user's decision [explorer.takeDecision()]")
-      val str = timeout(DEFAULT_TIMEOUT_VALUE) { explorer.takeDecision() }
+      val str = timeout(timeoutDelay) { explorer.takeDecision() }
       events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
       ActionParser(str)
     } catch {
@@ -59,7 +63,7 @@ class Engine(val board: GameBoard, val game: Game, rand: Random = new Random()) 
       events += ExplorationEvent(Actors.Engine, r.toJson)
       try {
         info("Acknowledging results [explorer.acknowledgeResults(...)]")
-        timeout(DEFAULT_TIMEOUT_VALUE) { explorer.acknowledgeResults(r.toJson.toString) }
+        timeout(timeoutDelay) { explorer.acknowledgeResults(r.toJson.toString) }
       } catch {
         case e: Exception => {
           events += ExplorationEvent(Actors.Explorer, e, "acknowledgeResults")
