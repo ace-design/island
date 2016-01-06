@@ -54,6 +54,7 @@ trait Championship extends App with Teams {
   protected def run(g: Game, b:GameBoard, isl: IslandMap): ChampResult  = {
     players map { case (name, bot) =>
       try {
+        println("    Playing " + name)
         Left(handlePlayer(name, bot, g, b, isl))
       } catch {
         case e: Error => Right((name, "Error : " + e.getClass.getCanonicalName))
