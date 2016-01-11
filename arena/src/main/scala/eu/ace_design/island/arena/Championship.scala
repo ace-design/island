@@ -14,10 +14,13 @@ import scala.util.Random
 
 
 trait Championship extends App with Teams {
+  import org.apache.logging.log4j.LogManager
 
   def outputDir: String
   val seed: Long
   val objectives: Set[(Resource, Int)]
+
+  val _logger = LogManager.getLogger("eu.ace_design.Island/Arena")
 
   def printInfo(isl: IslandMap, board: GameBoard) {
     println("\n# Island global statistics")
@@ -54,7 +57,7 @@ trait Championship extends App with Teams {
   protected def run(g: Game, b:GameBoard, isl: IslandMap): ChampResult  = {
     players map { case (name, bot) =>
       try {
-        println("    Playing " + name)
+        _logger.info("Playing " + name)
         Left(handlePlayer(name, bot, g, b, isl))
       } catch {
         case e: Error => Right((name, "Error : " + e.getClass.getCanonicalName))
@@ -106,10 +109,12 @@ trait Championship extends App with Teams {
     Files.move(tmp,out, StandardCopyOption.REPLACE_EXISTING)
   }
 
-  def printResults(results: ChampResult): Unit = {
+  def printResults(results: ChampResult, objectives: Set[(Resource, Int)]): Unit = {
     val (left, right) = results partition { _.isLeft }
     val errors = (right map { _.right.get}).toSeq sortBy { _._1   }
     val (oks, kos) = left map { _.left.get } partition { _ match { case OK(_,_,_,_) => true; case _ => false } }
+
+    rank(oks, objectives)
 
     if (oks.nonEmpty) {
       println("\n# Successful simulations")
@@ -134,8 +139,24 @@ trait Championship extends App with Teams {
       println("\n# Simulation throwing errors or exceptions \n")
       errors.toSeq.sortBy { _._1 } foreach { r => println(s"  - ${r._1.toUpperCase} => ${r._2}")}
     }
+
   }
+
+  def rank(comingBak: Iterable[Result], objectives: Set[(Resource, Int)]): Unit = {
+    val ranker = new ChampRanker(objectives)
+    val ranked = ranker(comingBak)
+    if(comingBak.nonEmpty) {
+      println("\n# Automatic Ranking")
+      ranked foreach { r =>
+        println(s"  - ${r.name.toUpperCase}: ${r.contracts.mkString("[",", ","]")}, ${r.budget} action points left")
+      }
+    }
+  }
+
 }
+
+
+
 
 trait Result { val name: String }
 case class OK(override val name: String, remaining: Int, men: Int, resources: Set[(Resource, Int)]) extends Result

@@ -46,7 +46,7 @@ trait Run extends Championship with DiSLand {
     println(s"  - $playerNames")
     val results = run(initialization, theBoard, island)
     // Displaying results
-    printResults(results)
+    printResults(results, objectives)
   }
 
 }
