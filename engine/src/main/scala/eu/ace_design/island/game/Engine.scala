@@ -46,18 +46,18 @@ class Engine(val board: GameBoard, val game: Game,
   // play an action took by explorer, using events to store the log of the exploration
   // the method is recursive
   def play(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game): Game = {
-    // ask player for decision:
-    val action = try {
-      info("Asking for user's decision [explorer.takeDecision()]")
-      val str = timeout(timeoutDelay) { explorer.takeDecision() }
-      events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
-      ActionParser(str)
-    } catch {
-      case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "takeDecision"); return g.flaggedAsKO
-    }
 
     // Handling the action from the engine point of view
-    val result = try {
+    def process(explorer: IExplorerRaid, events: ListBuffer[ExplorationEvent], g: Game): Game = {
+      // ask player for decision:
+      val action = try {
+        info("Asking for user's decision [explorer.takeDecision()]")
+        val str = timeout(timeoutDelay) { explorer.takeDecision() }
+        events += ExplorationEvent(Actors.Explorer, new JSONObject(str))
+        ActionParser(str)
+      } catch {
+        case e: Exception => events += ExplorationEvent(Actors.Explorer, e, "takeDecision"); return g.flaggedAsKO
+      }
       info("Applying user's decision to the board")
       val (after, r) = action(board, g)
       events += ExplorationEvent(Actors.Engine, r.toJson)
@@ -71,15 +71,20 @@ class Engine(val board: GameBoard, val game: Game,
         }
       }
       r.shouldStop match {
-        case false => play(explorer, events, after) // recursive call for game continuation
+        case false => process(explorer, events, after) // recursive call for game continuation
         case true  => r match {  // end of the game
           case excResult: ExceptionResult => after.flaggedAsKO // as an error
           case _ => after // as a normal stop
         }
       }
+    }
+
+    val result = try {
+      process(explorer, events, g)
     } catch {
       case e: Exception => events += ExplorationEvent(Actors.Engine, e, "takeDecision"); g.flaggedAsKO
     }
+
     result
   }
 
