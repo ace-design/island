@@ -128,6 +128,15 @@ public class Runner {
 		return this;
 	}
 
+	/**
+	 * Do not export map data to the disk
+	 * @return
+	 */
+	public Runner silentMode() {
+		this.exportMapData = false;
+		return this;
+	}
+
 
 	/**
 	 * Trigger the game engine using the defined configuration
@@ -178,6 +187,7 @@ public class Runner {
 	private File outputDir = new File(".");
 	private Map<Resource,Integer> contracts = new HashMap<Resource, Integer>();
 	private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
+	private boolean exportMapData = true;
 
 	// To enable assertion checking when encoutering an issue, add -ea to the VM arguments
 	private void required() {
@@ -240,8 +250,10 @@ public class Runner {
 			System.out.println("Game didn't end well :(");
 		}
 		exportLog(events);
-		exportMap(g, b);
-		exportPois(b);
+		if (exportMapData) {
+			exportMap(g, b);
+			exportPois(b);
+		}
 	}
 
 	private void exportPois(GameBoard b) {
