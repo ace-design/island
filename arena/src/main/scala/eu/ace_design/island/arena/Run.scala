@@ -26,7 +26,7 @@ trait Run extends Championship with DiSLand {
     if (! out.exists())
       out.mkdirs()
     IslandMapFactory(theIsland, islFile)
-    println("  - Seed: [${theIsland.uuid}]")
+    println(s"  - Seed: [0x${theIsland.uuid.get.toHexString.toUpperCase}L]")
     theIsland -> ( s"$outputDir/_map" as pdf)
     theIsland -> ( s"$outputDir/_map" as svg)
   }
