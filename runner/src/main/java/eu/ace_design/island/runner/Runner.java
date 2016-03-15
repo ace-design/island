@@ -209,7 +209,9 @@ public class Runner {
 	private void startEngine(Game g, GameBoard b) {
 		Engine engine = new Engine(b,g, new Random(seed), timeoutDelay);
 		Tuple2<scala.collection.Seq<ExplorationEvent>,Game> results = null;
+		PrintStream old = System.out;
 		try {
+
 			System.setOut(new PrintStream(new ByteArrayOutputStream()));
 			System.setErr(new PrintStream(new ByteArrayOutputStream()));
 			results = engine.run(explorer);
@@ -220,7 +222,7 @@ public class Runner {
 		}
 		finally {
 			System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
-			System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+			System.setOut(old);
 		}
 		if(results != null) {
 			try {
