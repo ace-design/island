@@ -30,11 +30,11 @@ object Retrospective {
     */
   object Runner {
 
-    def apply(players: Set[Player], jobs: Set[Job]): Set[Result] = {
+    def apply(players: Set[Player], jobs: Set[Job]): Set[Either[Result, (String, String)]] = {
       jobs flatMap { job => process(job, players) }
     }
 
-    private def process(job: Job, players: Set[Player]): Set[Result] = {
+    private def process(job: Job, players: Set[Player]): Set[Either[Result, (String, String)]] = {
       val random = new Random(job.islandData.seed)
       val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)), rand = random)
       val theBoard: GameBoard = builder(job.islandData.island).copy(startingTile = Some(job.contract.plane.initial))
@@ -42,8 +42,12 @@ object Retrospective {
         job.contract.objectives).copy(plane = Some(job.contract.plane))
 
       players map { p => {
-        val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed)))
-        Result(p.name, job.islandData.name, raw._1, raw._2)
+        try {
+          val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed)))
+          Left(Result(p.name, job.islandData.name, raw._1, raw._2))
+        } catch {
+          case e: _ => Right((p.name, e.getClass.getCanonicalName))
+        }}
       }
       }
     }
@@ -60,9 +64,6 @@ object Retrospective {
       val game = dataset._2
       (game.budget.remaining, game.collectedResources.toSet filter { case (res, i) => i > 0 })
     }
-
-  }
-
 
   object Displayer {
 
