@@ -68,14 +68,14 @@ case class OK(override val name: String, override val islandName: String,
 
   override def toJson: JSONObject = {
     val res = new JSONArray()
-    resources map { r => new JSONObject().put("res", r._1).put("amount",r._2)}
+    resources foreach { r =>res.put(new JSONObject().put("res", r._1).put("amount",r._2)) }
 
     new JSONObject()
       .put("result", "OK")
       .put("player", name)
       .put("island", islandName)
       .put("remaining", remaining)
-      .put("collected", new JSONArray().put(res))
+      .put("collected", res)
       .put("ms", execTime)
   }
 

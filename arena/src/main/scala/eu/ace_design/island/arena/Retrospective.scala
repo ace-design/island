@@ -38,19 +38,24 @@ trait Retrospective extends Teams with App {
     val minutes = delta.toDouble / 1000 / 60
 
     println(f"  - Execution time: $minutes%.2f minutes (${delta}ms)\n")
+    val avail = (jobs.toSeq flatMap { j => j.contract.objectives.toSeq }).size
+    println(s"  - Available contracts: " + avail)
 
     players.keySet.toSeq.sortBy { s => s } foreach { name =>
-      println(s"## Player ${name.toUpperCase()}: ")
-      val dataset = results.toSeq filter { _.name == name } sortBy { _.islandName }
+      println(s"\n## Player ${name.toUpperCase()}")
+      val dataset: Seq[Result] = results.toSeq filter { _.name == name } sortBy { _.islandName }
+      val retrieved = (dataset filter { d => d.isInstanceOf[OK]} flatMap { r => r.asInstanceOf[OK].resources.toSeq }).size
+      println(f"  - Collected contracts: $retrieved (${retrieved.toDouble / avail * 100.0}%.2f%%)")
+      println("  - Detailed results:")
       dataset foreach { r =>
-        print(s"  - ${r.islandName}: ")
+        print(s"    - Using island ${r.islandName}, ")
         r match {
           case KO(_,_,reason,_) => {  println("KO - " + reason) }
           case OK(_,_,remaining, resources, _) => {
             val contracts = extractContracts(r.asInstanceOf[OK],jobs)
-            print("completed contracts: " + (if (contracts.isEmpty) "none" else contracts.mkString(",")))
+            print("completed : " + (if (contracts.isEmpty) "none" else contracts.mkString(",")))
             println(s" / ${remaining} action points left")
-            resources foreach { case (r,i) => println(s"    - $r: $i") }
+            resources foreach { case (r,i) => println(s"      - $r: $i") }
           }
         }
       }
@@ -80,7 +85,7 @@ trait Retrospective extends Teams with App {
   }
 
   protected def export2json(fileName: String, jobs: Set[Job], results: Set[Result]) {
-    println("# Exporting to JSON")
+    println("## Exporting to JSON")
 
     val jobsData = new JSONArray()
     jobs map { j => jobsData.put(j.toJson) }

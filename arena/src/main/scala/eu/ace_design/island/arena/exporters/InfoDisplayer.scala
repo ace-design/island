@@ -9,6 +9,7 @@ trait InfoDisplayer {
   final def apply(isl: IslandMap, board: GameBoard, game: Game) {
     println(s"\n## $title")
     process(isl, board, game)
+    println()
   }
 
   protected val title: String
@@ -64,9 +65,9 @@ object MapInfo extends InfoDisplayer {
       println(s"  - Starting tile: ${board.startingTile.get}")
     }
     println(s"  - Underlying Mesh: ")
-    println(s"    - #Vertices: ${isl.vertices.size}")
-    println(s"    - #Edges:    ${isl.edges.size}")
-    println(s"    - #Faces:    ${isl.faces.size}")
+    println(s"    - |Vertices|: ${isl.vertices.size}")
+    println(s"    - |Edges|:    ${isl.edges.size}")
+    println(s"    - |Faces|:    ${isl.faces.size}")
   }
 }
 

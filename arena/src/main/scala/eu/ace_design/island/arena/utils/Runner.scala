@@ -49,7 +49,6 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
       job.contract.objectives).copy(plane = Some(job.contract.plane))
 
     displayers foreach { e => e(job.islandData.island, theBoard, game) }
-    println()
 
     val results = players map { process(job, theBoard.copy(), game.copy(), _)}
 
