@@ -44,8 +44,12 @@ trait Retrospective extends Teams with App {
     players.keySet.toSeq.sortBy { s => s } foreach { name =>
       println(s"\n## Player ${name.toUpperCase()}")
       val dataset: Seq[Result] = results.toSeq filter { _.name == name } sortBy { _.islandName }
-      val retrieved = (dataset filter { d => d.isInstanceOf[OK]} flatMap { r => r.asInstanceOf[OK].resources.toSeq }).size
+      val retrieved = (dataset filter { d => d.isInstanceOf[OK]} flatMap {
+        r => extractContracts(r.asInstanceOf[OK], jobs).toSeq
+      }).size
+
       println(f"  - Collected contracts: $retrieved (${retrieved.toDouble / avail * 100.0}%.2f%%)")
+
       println("  - Detailed results:")
       dataset foreach { r =>
         print(s"    - Using island ${r.islandName}, ")
