@@ -38,7 +38,6 @@ case class GameLogExporter(override val outputDir: String)  extends PlayerExport
 
 }
 
-
 case class VisitedMapExporter(override val outputDir: String) extends PlayerExporter {
 
   def apply(name: String, m: IslandMap, game: Game, tileUnit: Int, board: GameBoard) {

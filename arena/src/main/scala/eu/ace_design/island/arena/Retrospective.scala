@@ -2,6 +2,7 @@ package eu.ace_design.island.arena
 
 import java.io.{File, PrintWriter}
 
+import eu.ace_design.island.arena.exporters.GameLogExporter
 import org.json.{JSONArray, JSONObject}
 import eu.ace_design.island.arena.utils._
 import eu.ace_design.island.map.resources.Resource
@@ -17,7 +18,7 @@ trait Retrospective extends Teams with App {
 
     val start = System.currentTimeMillis()
     val jobs = asJobs(weeks)
-    val runner = Runner(outputDir = outputDir)
+    val runner = Runner(outputDir = outputDir, exporters = Seq(classOf[GameLogExporter]))
     val results = runner(asPlayers, jobs)
     val stop = System.currentTimeMillis()
     val delta = stop - start
@@ -37,7 +38,7 @@ trait Retrospective extends Teams with App {
     println("  - Execution time: " + delta + "(ms)\n")
 
     players foreach { case (name, _) =>
-      println(s"## $name: ")
+      println(s"## Player ${name.toUpperCase()}: ")
       val dataset = results.toSeq filter { _.name == name } sortBy { _.islandName }
       dataset foreach { r =>
         print(s"  - ${r.islandName}: ")
