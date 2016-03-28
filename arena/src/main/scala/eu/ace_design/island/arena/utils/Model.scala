@@ -8,6 +8,7 @@ import eu.ace_design.island.map.resources.Resource
 import org.json.JSONObject
 import org.json.JSONArray
 
+import scala.language.existentials
 
 case class Player(name: String, bot: Class[_ <: IExplorerRaid]) {
 
