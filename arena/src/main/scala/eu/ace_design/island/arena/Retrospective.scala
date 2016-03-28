@@ -39,7 +39,7 @@ trait Retrospective extends Teams with App {
 
     println(f"  - Execution time: $minutes%.2f minutes (${delta}ms)\n")
 
-    players.keySet.toSeq.sortBy { _ } foreach { name =>
+    players.keySet.toSeq.sortBy { s => s } foreach { name =>
       println(s"## Player ${name.toUpperCase()}: ")
       val dataset = results.toSeq filter { _.name == name } sortBy { _.islandName }
       dataset foreach { r =>
