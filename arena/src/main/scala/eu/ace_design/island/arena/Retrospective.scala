@@ -35,9 +35,11 @@ trait Retrospective extends Teams with App {
   private def display(delta: Long, results: Set[Result], jobs: Set[Job]): Unit = {
     println("# Retrospective Results\n")
 
-    println("  - Execution time: " + delta + "(ms)\n")
+    val minutes = delta.toDouble / 1000 / 60
 
-    players foreach { case (name, _) =>
+    println(f"  - Execution time: $minutes%.2f minutes (${delta}ms)\n")
+
+    players.keySet.toSeq.sortBy { _ } foreach { name =>
       println(s"## Player ${name.toUpperCase()}: ")
       val dataset = results.toSeq filter { _.name == name } sortBy { _.islandName }
       dataset foreach { r =>
@@ -45,7 +47,9 @@ trait Retrospective extends Teams with App {
         r match {
           case KO(_,_,reason,_) => {  println("KO - " + reason) }
           case OK(_,_,remaining, resources, _) => {
-            println(s"${remaining} left - completed: " + extractContracts(r.asInstanceOf[OK],jobs))
+            val contracts = extractContracts(r.asInstanceOf[OK],jobs)
+            print("completed contracts: " + (if (contracts.isEmpty) "none" else contracts.mkString(",")))
+            println(s" / ${remaining} action points left")
             resources foreach { case (r,i) => println(s"    - $r: $i") }
           }
         }
