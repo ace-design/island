@@ -9,7 +9,7 @@ import org.json.JSONObject
 import org.json.JSONArray
 
 
-case class Player(name: String, bot: IExplorerRaid) {
+case class Player(name: String, bot: Class[_ <: IExplorerRaid]) {
 
   override def toString: String = name
 

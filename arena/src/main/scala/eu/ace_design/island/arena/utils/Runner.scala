@@ -66,7 +66,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
         case false => KO(p.name, job.islandData.name, "game error")
       }
       if(exporters.contains(classOf[GameLogExporter])) {
-        GameLogExporter(outputDir)(p.name, raw._2)
+        GameLogExporter(outputDir)(s"${p.name}_${job.islandData.name}", raw._2)
       }
       if(exporters.contains(classOf[VisitedMapExporter])) {
         VisitedMapExporter(outputDir)(p.name, job.islandData.island, game, theBoard.tileUnit, theBoard)
@@ -87,7 +87,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     val dataset = try {
       System.setOut(new PrintStream(new ByteArrayOutputStream()))
       System.setErr(new PrintStream(new ByteArrayOutputStream()))
-      engine.run(player.bot)
+      engine.run(player.bot.newInstance())
     } finally {
       System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)))
       System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)))

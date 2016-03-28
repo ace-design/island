@@ -10,7 +10,7 @@ trait Teams {
   def playerNames: String = players.map { case (n,_) => n.toUpperCase }.toSeq.sorted mkString ", "
 
   def asPlayers: Set[Player] = {
-    (players map { case (name, bot) => Player(name = name, bot = bot.newInstance()) }).toSet
+    (players map { case (name, bot) => Player(name = name, bot = bot) }).toSet
   }
 
 }
