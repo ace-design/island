@@ -1,6 +1,7 @@
-package eu.ace_design.island.arena
+package eu.ace_design.island.arena.rankers
 
-import eu.ace_design.island.map.resources.{Resource, PrimaryResource}
+import eu.ace_design.island.arena.utils.{Result, OK}
+import eu.ace_design.island.map.resources.{PrimaryResource, Resource}
 
 
 class ChampRanker(private val _objectives: Set[(Resource, Int)]) {

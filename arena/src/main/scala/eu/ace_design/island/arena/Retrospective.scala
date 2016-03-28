@@ -1,89 +1,95 @@
 package eu.ace_design.island.arena
 
-import java.io.{FileDescriptor, FileOutputStream, ByteArrayOutputStream, PrintStream}
+import java.io.{File, PrintWriter}
 
-import eu.ace_design.island.bot.IExplorerRaid
-import eu.ace_design.island.game._
-import eu.ace_design.island.map.IslandMap
+import org.json.{JSONArray, JSONObject}
+import eu.ace_design.island.arena.utils._
 import eu.ace_design.island.map.resources.Resource
-import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
-
-import scala.util.Random
-
-object Retrospective {
-
-  /************************************************************
-   ** Data structures necessary to handle retrospective runs **
-   ************************************************************/
-
-  case class Player(name: String, bot: IExplorerRaid)
-
-  case class Job(islandData: IslandData, contract: Contract)
-  case class IslandData(island: IslandMap, seed: Long, name: String)
-  case class Contract(crew: Int, budget: Int, plane: Plane, objectives: Set[(Resource, Int)])
-
-  case class Result(playerName: String, islandName: String, remaining: Integer, resources: Set[(Resource, Int)])
+import org.json
 
 
-  /**
-    * Supporting the run of a given retrospective
-    */
-  object Runner {
+trait Retrospective extends Teams with App {
 
-    def apply(players: Set[Player], jobs: Set[Job]): Set[Either[Result, (String, String)]] = {
-      jobs flatMap { job => process(job, players) }
-    }
+  val weeks: Set[Run]
+  val outputDir: String
 
-    private def process(job: Job, players: Set[Player]): Set[Either[Result, (String, String)]] = {
-      val random = new Random(job.islandData.seed)
-      val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)), rand = random)
-      val theBoard: GameBoard = builder(job.islandData.island).copy(startingTile = Some(job.contract.plane.initial))
-      val game = Game(Budget(job.contract.budget), Crew(job.contract.crew),
-        job.contract.objectives).copy(plane = Some(job.contract.plane))
+  def trigger(): Unit = {
 
-      players map { p => {
-        try {
-          val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed)))
-          Left(Result(p.name, job.islandData.name, raw._1, raw._2))
-        } catch {
-          case e: _ => Right((p.name, e.getClass.getCanonicalName))
-        }}
+    val start = System.currentTimeMillis()
+    val jobs = asJobs(weeks)
+    val runner = Runner(outputDir = outputDir)
+    val results = runner(asPlayers, jobs)
+    val stop = System.currentTimeMillis()
+    val delta = stop - start
+
+    displayJobs(jobs)
+    export2json(s"$outputDir/_results.json", jobs, results)
+    display(delta, results, jobs)
+  }
+
+  protected def asJobs(runs: Set[Run]): Set[Job] = {
+    runs map { _.asJob }
+  }
+
+  private def display(delta: Long, results: Set[Result], jobs: Set[Job]): Unit = {
+    println("# Retrospective Results\n")
+
+    println("  - Execution time: " + delta + "(ms)\n")
+
+    players foreach { case (name, _) =>
+      println(s"## $name: ")
+      val dataset = results.toSeq filter { _.name == name } sortBy { _.islandName }
+      dataset foreach { r =>
+        print(s"  - ${r.islandName}: ")
+        r match {
+          case KO(_,_,reason,_) => {  println("KO - " + reason) }
+          case OK(_,_,remaining, resources, _) => {
+            println(s"${remaining} left - completed: " + extractContracts(r.asInstanceOf[OK],jobs))
+            resources foreach { case (r,i) => println(s"    - $r: $i") }
+          }
+        }
       }
-      }
     }
+  }
 
-    private def play(player: Player, engine: Engine): (Integer, Set[(Resource, Int)]) = {
-      val dataset = try {
-        System.setOut(new PrintStream(new ByteArrayOutputStream()))
-        System.setErr(new PrintStream(new ByteArrayOutputStream()))
-        engine.run(player.bot)
-      } finally {
-        System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)))
-        System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)))
-      }
-      val game = dataset._2
-      (game.budget.remaining, game.collectedResources.toSet filter { case (res, i) => i > 0 })
+
+  private def displayJobs(jobs: Set[Job]): Unit = {
+    println("## Jobs involved in the retrospective")
+    val sorted = jobs.toSeq sortBy { _.islandData.name }
+    sorted foreach { j =>
+       println("  - " + j.toString)
     }
+  }
 
-  object Displayer {
-
-    def exportToMarkdown(results: Set[Result], contracts: Map[String, Set[(Resource, Int)]]) {
-      println("# Retrospective Results\n")
-      val grouped = results groupBy { res => res.playerName }
-      grouped foreach { case (player, result) => {
-        println(s"## $player\n")
-        result.toSeq sortBy { _.islandName } foreach { r => {
-          println(s"  - ${r.islandName}:  [remaining: ${r.remaining}]")
-          if(!r.resources.isEmpty) { println(s"    - ${r.resources mkString " "} ") }
-        }}
-      }}
+  private def extractContracts(res: OK, jobs: Set[Job]): Set[Resource] = {
+    val theJob = (jobs.find { _.islandData.name == res.islandName }).get
+    val theObjs = theJob.contract.objectives
+    val collected = res.resources
+    val obtained = theObjs filter { case (res, amount) =>
+        collected.find { case(cRes, _) => cRes == res} match {
+          case Some((r,i)) => i >= amount
+          case None => false
+        }
     }
+    obtained map { case (res, amount) => res }
+  }
 
-    def exportToCSV(result: Set[Result]) {
+  protected def export2json(fileName: String, jobs: Set[Job], results: Set[Result]) {
+    println("# Exporting to JSON")
 
-    }
+    val jobsData = new JSONArray()
+    jobs map { j => jobsData.put(j.toJson) }
 
+    val resultData = new JSONArray()
+    results map { r => resultData.put(r.toJson) }
 
+    val json = new JSONObject()
+        .put("jobs",    jobsData)
+        .put("results", resultData)
+
+    val writer = new PrintWriter(new File(fileName))
+    try { json.write(writer) } finally { writer.close() }
+    println(s"  - JSON dataset available in $fileName")
   }
 
 }
