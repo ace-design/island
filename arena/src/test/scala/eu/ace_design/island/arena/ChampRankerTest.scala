@@ -1,5 +1,7 @@
 package eu.ace_design.island.arena
 
+import eu.ace_design.island.arena.utils.{KO, OK, Result}
+import eu.ace_design.island.arena.rankers.ChampRanker
 import eu.ace_design.island.map.resources.Resource
 import eu.ace_design.island.stdlib.Resources._
 import org.specs2.mutable._
@@ -14,24 +16,24 @@ class ChampRankerTest extends SpecificationWithJUnit {
   // Based on QGL championship, week #1
   val objectives: Set[(Resource, Int)] = Set((FLOWER, 80), (WOOD, 3000), (QUARTZ, 800), (PLANK, 1000))
   val results: Set[Result] = Set(
-    KO("qaa"),
-    OK("qab", 9474,  0, Set()),
-    OK("qac", 161,   0, Set((WOOD, 2911))),
-    OK("qad", 186,   0, Set()),
-    OK("qba", 4403,  0, Set((FLOWER, 81))),
-    OK("qbb", 80,    0, Set((WOOD, 39))),
-    OK("qbc", 441,   0, Set((QUARTZ, 197),(WOOD, 1383),(FLOWER, 16))),
-    OK("qbd", 13918, 0, Set()),
-    KO("qbf"),
-    OK("qca", 6438,  0, Set((QUARTZ, 127))),
-    OK("qcb", 8752,  0, Set((FLOWER, 80))),
-    OK("qcc", 7518,  0, Set((FLOWER, 37))),
-    OK("qcd", 14994, 0, Set()),
-    OK("qce", 115,   0, Set()),
-    OK("qda", 5859,  0, Set((FLOWER, 80),(QUARTZ, 31),(WOOD, 3038))),
-    OK("qdb", 8223,  0, Set((FLOWER, 80),(PLANK, 1930),(WOOD, 3004))),
-    OK("qdc", 83,    0, Set()),
-    OK("qdf", 14980, 0, Set())
+    KO("qaa", "island", "??"),
+    OK("qab", "island", 9474,  Set()),
+    OK("qac", "island", 161,   Set((WOOD, 2911))),
+    OK("qad", "island", 186,   Set()),
+    OK("qba", "island", 4403,  Set((FLOWER, 81))),
+    OK("qbb", "island", 80,    Set((WOOD, 39))),
+    OK("qbc", "island", 441,   Set((QUARTZ, 197),(WOOD, 1383),(FLOWER, 16))),
+    OK("qbd", "island", 13918, Set()),
+    KO("qbf", "island", "??"),
+    OK("qca", "island", 6438,  Set((QUARTZ, 127))),
+    OK("qcb", "island", 8752,  Set((FLOWER, 80))),
+    OK("qcc", "island", 7518,  Set((FLOWER, 37))),
+    OK("qcd", "island", 14994, Set()),
+    OK("qce", "island", 115,   Set()),
+    OK("qda", "island", 5859,  Set((FLOWER, 80),(QUARTZ, 31),(WOOD, 3038))),
+    OK("qdb", "island", 8223,  Set((FLOWER, 80),(PLANK, 1930),(WOOD, 3004))),
+    OK("qdc", "island", 83,    Set()),
+    OK("qdf", "island", 14980, Set())
   )
 
 
