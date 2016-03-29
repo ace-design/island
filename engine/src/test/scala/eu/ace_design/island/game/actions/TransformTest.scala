@@ -33,7 +33,7 @@ class TransformTest extends SpecificationWithJUnit {
       getSomeRum.buildResult(b, onLand) must throwAn[IllegalArgumentException]
     }
 
-    "reject to build something without negative value" in {
+    "reject to build something with negative value" in {
       getSomeRum2.buildResult(b, onLand) must throwAn[IllegalArgumentException]
     }
 
