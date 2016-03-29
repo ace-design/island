@@ -21,6 +21,8 @@ class TransformTest extends SpecificationWithJUnit {
   "The Transform action" should {
 
     val getSomeRum  = Transform(Map(SUGAR_CANE -> 102, FRUITS -> 15))    // should produced around 10 units, +/- 10%
+    val getSomeRum2  = Transform(Map(SUGAR_CANE -> -100, FRUITS -> -100))    // should produced around 10 units, +/- 10%
+
     val onLand = exec(Seq(MovedBoatResult(loc = (0,0), men = 2)), g) // Mens are on land now
 
     "reject to build something with no mens on land" in {
@@ -30,6 +32,11 @@ class TransformTest extends SpecificationWithJUnit {
     "reject to build something without enough resources to do so" in {
       getSomeRum.buildResult(b, onLand) must throwAn[IllegalArgumentException]
     }
+
+    "reject to build something without negative value" in {
+      getSomeRum2.buildResult(b, onLand) must throwAn[IllegalArgumentException]
+    }
+
 
     "reject to transform using an unknown recipe" in {
       val unknown = Transform(Map(WOOD -> 15, FUR -> 15))
