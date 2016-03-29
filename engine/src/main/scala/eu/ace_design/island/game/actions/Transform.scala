@@ -22,10 +22,13 @@ case class Transform(materials: Map[PrimaryResource, Int])  extends Action {
     materials foreach { case (res, amount) =>
       require(game.collectedResources.getOrElse(res, 0) >= amount,
               s"Cannot transform with material you do not have: [$res / $amount]")
+      require(amount>0,
+        s"Cannot transform with negative material [$amount]")
     }
     val (k, p) = produce(game)
     TransformResult(kind = k, production = p.floor.toInt, consumed = materials)
   }
+
 
   private def produce(game: Game): (ManufacturedResource, Double) = {
     val rawKind = Resources.manufactured.find { _.recipe.map{ _._1 } == materials.keySet }
