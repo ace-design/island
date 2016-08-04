@@ -19,7 +19,21 @@
     <artifactId>oss-parent</artifactId>
     <version>7</version>
   </parent>
-  
+
+    <properties>
+        <island.reference>1.0-SNAPSHOT</island.reference>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <encoding>UTF-8</encoding>
+        <!-- Software dependencies version-->
+        <scala.version.short>2.11</scala.version.short>
+        <scala.version>2.11.8</scala.version>
+        <specs2.version>2.4.15</specs2.version>
+        <!-- Classical Dependencies -->
+        <json.version>20160212</json.version>
+        <log4j.version>2.0</log4j.version>
+    </properties>
+
   <repositories>
       <repository>
           <id>oss.sonatype.org-releases</id>

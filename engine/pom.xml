@@ -15,16 +15,9 @@
     </parent>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <encoding>UTF-8</encoding>
-        <!-- Software dependencies version-->
-        <scala.version>2.11.4</scala.version>
-        <scala.version.short>2.11</scala.version.short>
-        <specs2.version>2.4.15</specs2.version>
-        <junit.version>4.11</junit.version>
         <jts.version>1.13</jts.version>
         <batik.version>1.7</batik.version>
+        <tika.version>1.13</tika.version>
     </properties>
 
 
@@ -47,11 +40,16 @@
             <version>${specs2.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
         <!-- Apache Tika is only used for test purpose (checking mime type of produced files) -->
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.5</version>
+            <version>${tika.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Import JTS for geometrical operations -->
@@ -80,24 +78,24 @@
         <dependency>
             <groupId>org.apache.xmlgraphics</groupId>
             <artifactId>batik-rasterizer</artifactId>
-            <version>1.7</version>
+            <version>${batik.version}</version>
         </dependency>
         <!-- Apache Log4J to support logging -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <!-- JSON is used for serialization purpose and game interaction with the players -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20160212</version>
+            <version>${json.version}</version>
         </dependency>
     </dependencies>
 

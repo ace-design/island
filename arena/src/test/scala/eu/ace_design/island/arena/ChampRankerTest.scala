@@ -4,11 +4,8 @@ import eu.ace_design.island.arena.utils.{KO, OK, Result}
 import eu.ace_design.island.arena.rankers.ChampRanker
 import eu.ace_design.island.map.resources.Resource
 import eu.ace_design.island.stdlib.Resources._
-import org.specs2.mutable._
-import org.junit.runner.RunWith
-import org.specs2.runner.JUnitRunner
+import org.specs2.mutable.SpecificationWithJUnit
 
-@RunWith(classOf[JUnitRunner])
 class ChampRankerTest extends SpecificationWithJUnit {
 
   "ChampRankerTest Specifications".title
