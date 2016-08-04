@@ -221,7 +221,7 @@ public class Runner {
                                          JavaConversions$.MODULE$.asScalaSet(objectives).toList().<Tuple2<Resource,Object>>toSet());
 
         // 3. Creating the Job
-        Job theJob = new Job(islandData,theContract);
+        Job theJob = new Job(islandData,theContract,howManyCreeks,timeoutDelay);
 
         // 4. Creating the player
         Player thePlayer = new Player(explorer.getSimpleName(),explorer);
@@ -271,5 +271,13 @@ public class Runner {
         assert outputDir.isDirectory() : "Output directory must be a directory";
         assert outputDir.canWrite()    : "Output directory must be writable";
     }
+
+
+    public static List<ExplorationEvent> exportEvents(Result r) {
+        return JavaConversions$.MODULE$.seqAsJavaList(r.events());
+    }
+
+    public static boolean isOk(Result r) { return (r instanceof OK); }
+
 
 }

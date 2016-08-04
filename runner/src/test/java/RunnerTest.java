@@ -1,4 +1,5 @@
 import eu.ace_design.island.arena.utils.Result;
+import eu.ace_design.island.game.ExplorationEvent;
 import eu.ace_design.island.runner.Runner;
 import eu.ace_design.island.runner.sample.MyBot;
 import org.junit.Test;
@@ -6,6 +7,7 @@ import java.io.File;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -52,7 +54,10 @@ public class RunnerTest {
     public void testEventsReturned() throws Exception {
         Path outDir = Files.createTempDirectory("test-sysout-restore");
         Result res = run(outDir);
-        assertEquals(3,res.events().length());
+
+        assertTrue(Runner.isOk(res));
+        List<ExplorationEvent> events = Runner.exportEvents(res);
+        assertEquals(3, events.size());
     }
 
 

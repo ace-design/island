@@ -1,7 +1,7 @@
 package eu.ace_design.island.arena.utils
 
 import eu.ace_design.island.bot.IExplorerRaid
-import eu.ace_design.island.game.{ExplorationEvent, Plane}
+import eu.ace_design.island.game.{Engine, ExplorationEvent, Plane}
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.map.resources.Resource
 import org.json.JSONObject
@@ -15,7 +15,8 @@ case class Player(name: String, bot: Class[_ <: IExplorerRaid]) {
 
 }
 
-case class Job(islandData: IslandData, contract: Contract) {
+case class Job(islandData: IslandData, contract: Contract,
+               creeks: Int = 10, timeout: Int = Engine.DEFAULT_TIMEOUT_VALUE) {
 
   override def toString: String = {
     islandData.toString + ": " + contract.toString
