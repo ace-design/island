@@ -1,37 +1,37 @@
 package eu.ace_design.island.runner;
 
+import eu.ace_design.island.arena.exporters.*;
+import eu.ace_design.island.arena.utils.*;
+import eu.ace_design.island.arena.utils.Result;
 import eu.ace_design.island.bot.IExplorerRaid;
 import eu.ace_design.island.game.*;
-import eu.ace_design.island.geom.Point;
 import eu.ace_design.island.io.IslandMapFactory;
 import eu.ace_design.island.map.IslandMap;
 import eu.ace_design.island.map.resources.Resource;
-import eu.ace_design.island.stdlib.POIGenerators;
 import eu.ace_design.island.stdlib.Resources;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import eu.ace_design.island.viewer.PoiJSONViewer;
-import eu.ace_design.island.viewer.svg.FogOfWar;
-import eu.ace_design.island.viewer.svg.FogOfWarViewer;
-import scala.Option;
 import scala.Tuple2;
 import scala.collection.JavaConversions$;
-import scala.collection.immutable.*;
-import scala.util.Random;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
  * The Runner class implements a Fluent API to configure and then fire an expedition on a given map
  */
 public class Runner {
+
+    public Runner(Class c) throws Exception {
+        this.explorer = c;
+    }
+
+    /**
+     * Fluent API to configure the runner
+     */
 
 	/**
 	 * Instantiate a runner using an IExplorerRaid as playing entity
@@ -104,7 +104,7 @@ public class Runner {
 	 * @return
 	 */
 	public Runner startingAt(int x, int y, String heading) {
-		this.thePlane = Plane$.MODULE$.apply(x,y,Directions.withName(heading));
+		this.thePlane = Plane$.MODULE$.apply(x,y, Directions.withName(heading));
 		return this;
 	}
 
@@ -128,6 +128,26 @@ public class Runner {
 		return this;
 	}
 
+    /**
+     * Set the number of available creeks
+     * @param creeks
+     * @return
+     */
+    public Runner withCreeks(int creeks) {
+        this.howManyCreeks = creeks;
+        return this;
+    }
+
+    /**
+     * Set the name of the island
+     * @param name
+     * @return
+     */
+    public Runner withName(String name) {
+        this.name = name;
+        return this;
+    }
+
 	/**
 	 * Do not export map data to the disk
 	 * @return
@@ -137,190 +157,119 @@ public class Runner {
 		return this;
 	}
 
+    /**
+     * Do not export logs from a given run
+     * @return
+     */
+    public Runner noLogs() {
+        this.storeLogs = false;
+        return this;
+    }
 
-	/**
-	 * Trigger the game engine using the defined configuration
-	 */
-	public void fire() {
-		required();
-		Random rand = new Random(seed);
-		Seq<POIGenerator> creeks =
-				Nil$.MODULE$.$colon$colon((POIGenerator) new POIGenerators.WithCreeks(howManyCreeks)).toSeq();
-		GameBoardBuilder builder =
-				new GameBoardBuilder(package$.MODULE$.DEFAULT_TILE_UNIT(), creeks, rand);
-		Option<Tuple2<Object,Object>> loc = Option.apply(thePlane.initial());
-		GameBoard theBoard = builder.apply(theIsland);
-		theBoard = theBoard.copy(theBoard.copy$default$1(),theBoard.copy$default$2(),
-								 theBoard.copy$default$3(),theBoard.copy$default$4(),
-								 theBoard.copy$default$5(), loc);
-		java.util.Set<Tuple2<Resource,Object>> objs = new java.util.HashSet<Tuple2<Resource,Object>>();
-		for(Resource r: this.contracts.keySet()) {
-			objs.add(new Tuple2<Resource, Object>(r, this.contracts.get(r)));
-		}
-		Game theGame =
-				Game$.MODULE$.apply(Budget$.MODULE$.apply(budget),
-									Crew$.MODULE$.apply(nbMens),
-									JavaConversions$.MODULE$.asScalaSet(objs).toList().<Tuple2<Resource,Object>>toSet());
-		theGame = theGame.copy(theGame.copy$default$1(), theGame.copy$default$2(), theGame.copy$default$3(),
-						 theGame.copy$default$4(), theGame.copy$default$5(),
-						 Option.apply(thePlane),
-				         theGame.copy$default$7(), theGame.copy$default$8(), theGame.copy$default$9(),
-				         theGame.copy$default$10(), theGame.copy$default$11());
+    public Runner hideInfo() {
+        this.displayInfo = false;
+        return this;
+    }
 
-		startEngine(theGame, theBoard);
-	}
+    /**
+     * Starting the engine
+     */
 
+    public Result fire() {
+        required();
+        return process();
+    }
 
-	/**
-	 * Internal data structure and instance variables
-	 */
+    /**
+     * Internal data structure and instance variables
+     */
 
-	private IExplorerRaid explorer;
-	private IslandMap theIsland;
-	private Plane thePlane;
-	private int budget;
-	private int nbMens;
+    private Class<? extends IExplorerRaid> explorer;
+    private IslandMap theIsland;
+    private Plane thePlane;
+    private int budget;
+    private int nbMens;
+    private String name = "Lian_Yu";
 
-	// Default values
-	private Long seed = 0L;
-	private int howManyCreeks = 10;
-	private File outputDir = new File(".");
-	private Map<Resource,Integer> contracts = new HashMap<Resource, Integer>();
-	private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
-	private boolean exportMapData = true;
-
-	// To enable assertion checking when encoutering an issue, add -ea to the VM arguments
-	private void required() {
-		assert explorer != null        : "Explorer cannot be null";
-		assert theIsland != null       : "The island must be loaded";
-		assert seed != null            : "Random seed generator must be provided"   ;
-		assert thePlane != null        : "Plane initial location and heading must be provided";
-		assert !(contracts.isEmpty())  : "Contracts cannot be empty" ;
-		assert outputDir.exists()      : "Output directory must exist"    ;
-		assert outputDir.isDirectory() : "Output directory must be a directory";
-		assert outputDir.canWrite()    : "Output directory must be writable";
-	}
-
-	/**
-	 * Start the engine, in silent mode (stdout and stderr are unavailable while playing)
-	 * @param g
-	 * @param b
-	 */
-	private void startEngine(Game g, GameBoard b) {
-		Engine engine = new Engine(b,g, new Random(seed), timeoutDelay);
-		Tuple2<scala.collection.Seq<ExplorationEvent>,Game> results = null;
-		PrintStream old = System.out;
-		try {
-
-			System.setOut(new PrintStream(new ByteArrayOutputStream()));
-			System.setErr(new PrintStream(new ByteArrayOutputStream()));
-			results = engine.run(explorer);
-		} catch (Exception e) {
-			System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
-			System.err.println(e);
-			e.printStackTrace();
-		}
-		finally {
-			System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
-			System.setOut(old);
-		}
-		if(results != null) {
-			try {
-				processResults(results._1(), results._2(), b);
-			} catch (IOException ioe) {
-				System.err.println(ioe.toString());
-				ioe.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * Process the results obtained at the end of the game
-	 * @param events
-	 * @param g
-	 * @param b
-	 */
-	private void processResults(scala.collection.Seq<ExplorationEvent> events, Game g, GameBoard b) throws IOException {
-		if(g.isOK()) {
-			System.out.println("Remaining budget: " + g.budget().remaining());
-			System.out.println("Collected resources:");
-			for(Resource r: JavaConversions$.MODULE$.asJavaCollection(g.collectedResources().keys())) {
-				Object amount = g.collectedResources().get(r).get();
-				System.out.println("  - " + r + ": " + amount);
-			}
-		} else {
-			System.out.println("Game didn't end well :(");
-		}
-		exportLog(events);
-		if (exportMapData) {
-			exportMap(g, b);
-			exportPois(b);
-		}
-	}
-
-	private void exportPois(GameBoard b) {
-		System.out.println("Generating JSON POIs file");
-		PoiJSONViewer viewer = new PoiJSONViewer(b);
-
-		Path out = Paths.get(viewer.apply(theIsland).getPath());
-		try {
-			Files.move(out, Paths.get((new File(outputDir.getPath() + "/_pois.json")).getAbsolutePath()),
-					StandardCopyOption.REPLACE_EXISTING);
-		} catch (IOException ioe) {
-			System.err.println("unable to export POIs as a JSON file, IO error");
-		}
-	}
+    // Default values
+    private Long seed = 0L;
+    private int howManyCreeks = 10;
+    private File outputDir = new File(".");
+    private Map<Resource,Integer> contracts = new HashMap<>();
+    private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
+    // By default we export everything
+    private boolean exportMapData = true;
+    private boolean storeLogs = true;
+    private boolean displayInfo = true;
 
 
-	/**
-	 * Generate the JSON event log
-	 * @param events
-	 */
-	private void exportLog(scala.collection.Seq<ExplorationEvent> events) {
-		System.out.println("Generating JSON log file");
-		PrintWriter writer = null;
-		try {
-			writer = new PrintWriter(outputDir.getAbsolutePath() + "/log.json", "UTF-8");
-			writer.print("[");
-			for(ExplorationEvent evt: JavaConversions$.MODULE$.asJavaIterable(events)) {
-				writer.print(evt.toJson() + ",");
-			}
-			writer.print("{}]");
-		} catch(IOException ioe) {
-			System.err.println("Unable to write JSON log file");
-		} finally {
-			writer.close();
-		}
-	}
+    /**
+     * Wrapper from the Java DSL to the Arena Runner engine
+     * @return
+     */
+    private Result process() {
 
-	/**
-	 * Generate a picture of the map
-	 * @param g
-	 * @param b
-	 */
-	private void exportMap(Game g, GameBoard b) throws IOException {
-		System.out.println("Generating SVG map file");
-		java.util.List<PointOfInterest> all = new ArrayList<PointOfInterest>();
-		for (Set<PointOfInterest> sp: JavaConversions$.MODULE$.asJavaCollection(b.pois().values())){
-			all.addAll(JavaConversions$.MODULE$.asJavaCollection(sp));
-		}
-		java.util.Set<Tuple2<Object,Object>> tmp = new java.util.HashSet<Tuple2<Object,Object>>();
-		for(PointOfInterest poi: all) {
-			if(poi.location().isDefined()) {
-				Point p = poi.location().get();
-				tmp.add(new Tuple2<Object, Object>(p.x(),p.y()));
-			}
-		}
-		scala.collection.immutable.Set<Tuple2<Object,Object>> pois = JavaConversions$.MODULE$.asScalaSet(tmp).toList().toSet();
-		FogOfWar fog = new FogOfWar(package$.MODULE$.DEFAULT_TILE_UNIT(),g.visited(),g.scanned(),pois,theIsland.size());
-		FogOfWarViewer viewer = new FogOfWarViewer(fog);
-		Path out = Paths.get(viewer.apply(theIsland).getPath());
-		Files.move(out, Paths.get((new File(outputDir.getPath() + "/map.svg")).getAbsolutePath()),
-				StandardCopyOption.REPLACE_EXISTING);
-	}
+        // 1. Creating the IslandData
+        IslandData islandData = new IslandData(theIsland,seed,name);
 
-	public Runner(Class c) throws Exception {
-		this.explorer = (IExplorerRaid) c.newInstance();
-	}
+        // 2. Creating the Contract
+        java.util.Set<Tuple2<Resource,Object>> objectives = new java.util.HashSet<Tuple2<Resource,Object>>();
+        for(Resource r: this.contracts.keySet()) {
+            objectives.add(new Tuple2<Resource, Object>(r, this.contracts.get(r)));
+        }
+        Contract theContract = new Contract(nbMens,budget,thePlane,
+                                         JavaConversions$.MODULE$.asScalaSet(objectives).toList().<Tuple2<Resource,Object>>toSet());
+
+        // 3. Creating the Job
+        Job theJob = new Job(islandData,theContract);
+
+        // 4. Creating the player
+        Player thePlayer = new Player(explorer.getSimpleName(),explorer);
+
+        // 5. Initializing the arena in silent mode
+        List<InfoDisplayer> displayers = new LinkedList<>();
+        List<Class<?>> exporters = new LinkedList<>();
+
+        // 6. Should we store the result log on the disk ?
+        if ( storeLogs ) {
+            exporters.add(GameLogExporter.class);
+        }
+
+        // 7. If the runner is not silent with respect to the map, adding the necessary exporters
+        if ( exportMapData ) {
+            exporters.add(POIsExporter.class);
+            exporters.add(VisitedMapExporter.class);
+        }
+
+        // 8. If the runner should display stuff, add the needed displayers
+        if ( displayInfo ) {
+            displayers.add(ResourcesInfo$.MODULE$);
+            displayers.add(ObjectiveInfo$.MODULE$);
+        }
+
+        // 8. Creating the arena runner to be used
+        eu.ace_design.island.arena.utils.Runner arenaRunner = new eu.ace_design.island.arena.utils.Runner(
+                JavaConversions$.MODULE$.asScalaBuffer(displayers).toSeq(),
+                JavaConversions$.MODULE$.asScalaBuffer(exporters).toSeq(),
+                outputDir.getAbsolutePath());
+
+        // 9. Running the runner
+        Result result = arenaRunner.apply(thePlayer,theJob).head();
+
+        // 10. Returning the result
+        return result;
+    }
+
+    // To enable assertion checking when encoutering an issue, add -ea to the VM arguments
+    private void required() {
+        assert explorer != null        : "Explorer cannot be null";
+        assert theIsland != null       : "The island must be loaded";
+        assert seed != null            : "Random seed generator must be provided"   ;
+        assert thePlane != null        : "Plane initial location and heading must be provided";
+        assert !(contracts.isEmpty())  : "Contracts cannot be empty" ;
+        assert outputDir.exists()      : "Output directory must exist"    ;
+        assert outputDir.isDirectory() : "Output directory must be a directory";
+        assert outputDir.canWrite()    : "Output directory must be writable";
+    }
 
 }
