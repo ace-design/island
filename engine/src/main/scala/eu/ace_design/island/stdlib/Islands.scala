@@ -59,4 +59,46 @@ object Islands extends DiSLand {
     ) usingSeed 0x9AC771d247f74037L withSize 2000 having 4096.faces
   }
 
+
+  /*******************************************************
+   ** Reference islands used by the evolution dashboard **
+   *******************************************************/
+
+  lazy val aloneInTheOcean: IslandMap = {
+    createIsland shapedAs ellipsis(x=5.percent, y=5.percent, theta=10) withSize 2000 having 4096.faces  builtWith Seq(
+      plateau(1), flowing(rivers = 1, distance = 90.percent), withMoisture(soils.wet, distance = 100),
+      AssignPitch, usingBiomes(WhittakerDiagrams.caribbean)) usingSeed  0xE19CE5A87D14FBEEL
+  }
+
+  lazy val largeIsland: IslandMap = {
+    createIsland shapedAs ellipsis(x=90.percent, y=75.percent, theta=10) withSize 2000 having 4096.faces  builtWith Seq(
+      plateau(45), flowing(rivers = 60, distance = 90.percent), withMoisture(soils.normal, distance = 200),
+      AssignPitch, usingBiomes(WhittakerDiagrams.caribbean)) usingSeed  0xF93741FB0DB4796FL
+  }
+
+  lazy val easyIsland: IslandMap = {
+    createIsland shapedAs ellipsis(x=50.percent, y=30.percent, theta=10) withSize 2000 having 4096.faces  builtWith Seq(
+      plateau(45), flowing(rivers = 30, distance = 40.percent), withMoisture(soils.wet, distance = 800),
+      AssignPitch, usingBiomes(WhittakerDiagrams.caribbean)) usingSeed 0xC8532AA8FE8211D9L
+  }
+
+  lazy val smallForest: IslandMap = {
+    createIsland shapedAs ellipsis(x=90.percent, y=70.percent, theta=30) withSize 2000 having 4096.faces  builtWith Seq(
+      plateau(50), flowing(rivers = 10, distance = 40.percent), withMoisture(soils.dry, distance = 100),
+      AssignPitch, usingBiomes(WhittakerDiagrams.caribbean)) usingSeed 0x5A5E718FB090236DL
+  }
+
+  lazy val complete: IslandMap = {
+    createIsland shapedAs radial(factor=1.19) withSize 2000 having 4096.faces  builtWith Seq(
+      plateau(50), flowing(rivers = 30, distance = 50.percent), withMoisture(soils.normal, distance = 100),
+      AssignPitch, usingBiomes(WhittakerDiagrams.complete)) usingSeed 0xD15183E20DDC0219L
+  }
+
+  lazy val forests: IslandMap = {
+    createIsland shapedAs ellipsis(x=90.percent,y=80.percent) withSize 2000 having 4096.faces builtWith Seq(
+      plateau(50), flowing(rivers = 0, distance = 50.percent), withMoisture(soils.normal, distance = 300),
+      AssignPitch, usingBiomes(WhittakerDiagrams.complete)) usingSeed 0xCF2964929AEC05C0L
+  }
+
+
 }

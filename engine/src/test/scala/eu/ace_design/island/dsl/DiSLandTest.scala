@@ -1,8 +1,11 @@
 package eu.ace_design.island.dsl
 
 import eu.ace_design.island.viewer.Viewer
+import org.junit.runner.RunWith
 import org.specs2.mutable._
+import org.specs2.runner.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class DiSLandTest extends SpecificationWithJUnit with DiSLand {
 
   "DiSLandTest Specifications".title

@@ -43,7 +43,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     */
   private def process(job: Job, players: Set[Player]): Set[Result] = {
     val random = new Random(job.islandData.seed)
-    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(10)), rand = random)
+    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(job.creeks)), rand = random)
     val theBoard: GameBoard = builder(job.islandData.island).copy(startingTile = Some(job.contract.plane.initial))
     val game = Game(Budget(job.contract.budget), Crew(job.contract.crew),
       job.contract.objectives).copy(plane = Some(job.contract.plane))
@@ -59,10 +59,10 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     _logger.info(s"Processing player [${p.name}] with island [${job.islandData.name}]")
     val start = System.currentTimeMillis()
     val r = try {
-      val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed)))
+      val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed), job.timeout))
       val result = raw._1.isOK match {
-        case true  => OK(p.name, job.islandData.name, raw._3, raw._4)
-        case false => KO(p.name, job.islandData.name, "game error")
+        case true  => OK(p.name, job.islandData.name, raw._3, raw._4, raw._2)
+        case false => KO(p.name, job.islandData.name, "game error", raw._2)
       }
       if(exporters.contains(classOf[GameLogExporter])) {
         GameLogExporter(outputDir)(s"${p.name}_${job.islandData.name}", raw._2)
@@ -72,7 +72,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
       }
       result
     } catch {
-      case e: Exception => KO(p.name, job.islandData.name, e.getClass.getCanonicalName)
+      case e: Exception => KO(p.name, job.islandData.name, e.getClass.getCanonicalName, null)
     }
     val exec = System.currentTimeMillis() - start;
     _logger.info(s" --> Execution time: ${exec}ms")

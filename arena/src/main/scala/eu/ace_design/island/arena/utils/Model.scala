@@ -1,10 +1,9 @@
 package eu.ace_design.island.arena.utils
 
 import eu.ace_design.island.bot.IExplorerRaid
-import eu.ace_design.island.game.Plane
+import eu.ace_design.island.game.{Engine, ExplorationEvent, Plane}
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.map.resources.Resource
-
 import org.json.JSONObject
 import org.json.JSONArray
 
@@ -16,7 +15,8 @@ case class Player(name: String, bot: Class[_ <: IExplorerRaid]) {
 
 }
 
-case class Job(islandData: IslandData, contract: Contract) {
+case class Job(islandData: IslandData, contract: Contract,
+               creeks: Int = 10, timeout: Int = Engine.DEFAULT_TIMEOUT_VALUE) {
 
   override def toString: String = {
     islandData.toString + ": " + contract.toString
@@ -56,6 +56,7 @@ trait Result {
   val name: String
   val islandName: String
   val execTime: Long
+  val events: Seq[ExplorationEvent]
 
   def toJson: JSONObject
   def withExecTime(t: Long): Result
@@ -64,6 +65,7 @@ trait Result {
 
 case class OK(override val name: String, override val islandName: String,
               remaining: Int, resources: Set[(Resource, Int)],
+              override val events: Seq[ExplorationEvent],
               override val execTime: Long = 0) extends Result  {
 
   override def toJson: JSONObject = {
@@ -84,6 +86,7 @@ case class OK(override val name: String, override val islandName: String,
 }
 
 case class KO(override val name: String, override val islandName: String, reason: String,
+              override val events: Seq[ExplorationEvent],
               override val execTime: Long = 0) extends Result {
 
   override def toJson: JSONObject = {

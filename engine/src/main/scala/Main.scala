@@ -22,25 +22,29 @@ object Main extends App with Logger with DiSLand {
 
   val silo = LogSilos.ROOT
 
-  val tortuga: IslandMap = Islands.tortuga
+  val isl: IslandMap = Islands.forests
 
-  tortuga -> ("tortuga" as pdf)
-  tortuga -> (s"tortuga-moisture" as heatMap(HasForMoisture(), Color.BLUE))
+  isl -> ("export" as pdf)
+  isl -> (s"export-moist" as heatMap(HasForMoisture(), Color.BLUE))
+  isl -> (s"export-alt" as heatMap(HasForHeight(),  Color.RED, Selectors.vertices,  Mappers.faceCenterRef))
 
-  tortuga.stats match {
+  isl.stats match {
     case None =>
     case Some(d) => d.toSeq sortBy { _._1.toString  } foreach {
       case (stat, value) => info(s"  - $stat => $value")
     }
   }
 
+  println(s"  - Seed: [0x${isl.uuid.get.toHexString.toUpperCase}L]")
+
+
   // Save a given map into a JSON file
-  IslandMapFactory(tortuga,new File("./tortuga.json"))
+  IslandMapFactory(isl,new File("./export.json"))
 
   // Load the file contents and instantiate a map from it
-  val map = IslandMapFactory(new File("./tortuga.json"))
+  val map = IslandMapFactory(new File("./export.json"))
 
-  println(map == tortuga)
+  println(map == isl)
 
   //export(island)
 
@@ -80,11 +84,11 @@ object Main extends App with Logger with DiSLand {
     }
   }
 
-  /*
+
   protected def boardStatistics(b: GameBoard) = {
     info(s"Available statistics for the Game board (${b.tiles.keySet.size} tiles)")
     b.contents foreach { case (res, amount) => info(f"  - ${res}%-10s => $amount") }
     b.pois foreach { case (loc, pois) => info(s"  $loc: $pois") }
-  } */
+  }
 }
 
