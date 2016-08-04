@@ -61,8 +61,8 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     val r = try {
       val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed)))
       val result = raw._1.isOK match {
-        case true  => OK(p.name, job.islandData.name, raw._3, raw._4)
-        case false => KO(p.name, job.islandData.name, "game error")
+        case true  => OK(p.name, job.islandData.name, raw._3, raw._4, raw._2)
+        case false => KO(p.name, job.islandData.name, "game error", raw._2)
       }
       if(exporters.contains(classOf[GameLogExporter])) {
         GameLogExporter(outputDir)(s"${p.name}_${job.islandData.name}", raw._2)
@@ -72,7 +72,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
       }
       result
     } catch {
-      case e: Exception => KO(p.name, job.islandData.name, e.getClass.getCanonicalName)
+      case e: Exception => KO(p.name, job.islandData.name, e.getClass.getCanonicalName, null)
     }
     val exec = System.currentTimeMillis() - start;
     _logger.info(s" --> Execution time: ${exec}ms")

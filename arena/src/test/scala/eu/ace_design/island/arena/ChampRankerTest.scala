@@ -16,24 +16,24 @@ class ChampRankerTest extends SpecificationWithJUnit {
   // Based on QGL championship, week #1
   val objectives: Set[(Resource, Int)] = Set((FLOWER, 80), (WOOD, 3000), (QUARTZ, 800), (PLANK, 1000))
   val results: Set[Result] = Set(
-    KO("qaa", "island", "??"),
-    OK("qab", "island", 9474,  Set()),
-    OK("qac", "island", 161,   Set((WOOD, 2911))),
-    OK("qad", "island", 186,   Set()),
-    OK("qba", "island", 4403,  Set((FLOWER, 81))),
-    OK("qbb", "island", 80,    Set((WOOD, 39))),
-    OK("qbc", "island", 441,   Set((QUARTZ, 197),(WOOD, 1383),(FLOWER, 16))),
-    OK("qbd", "island", 13918, Set()),
-    KO("qbf", "island", "??"),
-    OK("qca", "island", 6438,  Set((QUARTZ, 127))),
-    OK("qcb", "island", 8752,  Set((FLOWER, 80))),
-    OK("qcc", "island", 7518,  Set((FLOWER, 37))),
-    OK("qcd", "island", 14994, Set()),
-    OK("qce", "island", 115,   Set()),
-    OK("qda", "island", 5859,  Set((FLOWER, 80),(QUARTZ, 31),(WOOD, 3038))),
-    OK("qdb", "island", 8223,  Set((FLOWER, 80),(PLANK, 1930),(WOOD, 3004))),
-    OK("qdc", "island", 83,    Set()),
-    OK("qdf", "island", 14980, Set())
+    KO("qaa", "island", "??", Seq()),
+    OK("qab", "island", 9474,  Set(),Seq()),
+    OK("qac", "island", 161,   Set((WOOD, 2911)), Seq()),
+    OK("qad", "island", 186,   Set(), Seq()),
+    OK("qba", "island", 4403,  Set((FLOWER, 81)), Seq()),
+    OK("qbb", "island", 80,    Set((WOOD, 39)), Seq()),
+    OK("qbc", "island", 441,   Set((QUARTZ, 197),(WOOD, 1383),(FLOWER, 16)), Seq()),
+    OK("qbd", "island", 13918, Set(), Seq()),
+    KO("qbf", "island", "??", Seq()),
+    OK("qca", "island", 6438,  Set((QUARTZ, 127)), Seq()),
+    OK("qcb", "island", 8752,  Set((FLOWER, 80)), Seq()),
+    OK("qcc", "island", 7518,  Set((FLOWER, 37)), Seq()),
+    OK("qcd", "island", 14994, Set(), Seq()),
+    OK("qce", "island", 115,   Set(), Seq()),
+    OK("qda", "island", 5859,  Set((FLOWER, 80),(QUARTZ, 31),(WOOD, 3038)), Seq()),
+    OK("qdb", "island", 8223,  Set((FLOWER, 80),(PLANK, 1930),(WOOD, 3004)), Seq()),
+    OK("qdc", "island", 83,    Set(), Seq()),
+    OK("qdf", "island", 14980, Set(), Seq())
   )
 
 

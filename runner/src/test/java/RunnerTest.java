@@ -1,3 +1,4 @@
+import eu.ace_design.island.arena.utils.Result;
 import eu.ace_design.island.runner.Runner;
 import eu.ace_design.island.runner.sample.MyBot;
 import org.junit.Test;
@@ -47,9 +48,16 @@ public class RunnerTest {
         }
 	}
 
+	@Test
+    public void testEventsReturned() throws Exception {
+        Path outDir = Files.createTempDirectory("test-sysout-restore");
+        Result res = run(outDir);
+        assertEquals(3,res.events().length());
+    }
 
-	private static void run(Path out) throws Exception {
-		Runner.run(MyBot.class)
+
+	private static Result run(Path out) throws Exception {
+		return Runner.run(MyBot.class)
 				.exploring(load("map.json"))   // A File containing a map as a JSON object
 				.withSeed(0L)
 				.startingAt(1, 1, "EAST")
