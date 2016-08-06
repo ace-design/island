@@ -109,27 +109,20 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.3</version>
+                <version>3.2.1</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>compile</goal>
                             <goal>testCompile</goal>
                         </goals>
-                        <configuration>
-                            <jvmArgs>
-                                <jvmArg>-Xms64m</jvmArg>
-                                <jvmArg>-Xmx1024m</jvmArg>
-                            </jvmArgs>
-                            <args>
-                                <arg>-deprecation</arg>
-                                <arg>-feature</arg>
-                                <arg>-dependencyfile</arg>
-                                <arg>${project.build.directory}/.scala_dependencies</arg>
-                            </args>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <recompileMode>incremental</recompileMode>
+                    <!-- run the 'zinc -start' command to start the compilation server -->
+                    <useZincServer>true</useZincServer>
+                </configuration>
             </plugin>
             <!-- Maven GPG signature plugin -->
             <plugin>
