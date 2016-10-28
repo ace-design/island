@@ -22,7 +22,7 @@ class Engine(val board: GameBoard, val game: Game,
   override protected val silo: Kind = LogSilos.GAME_ENGINE
 
   // run a game using a given explorer. Use mutable state for the events (=> UGLY)
-  def run(explorer: IExplorerRaid): (Seq[ExplorationEvent], Game) = {
+  def run(explorer: IExplorerRaid): (Seq[ExplorationEvent], Game, Option[String]) = {
     info(s"Starting game for ${explorer.getClass.getCanonicalName}")
     val events = ListBuffer.empty[ExplorationEvent]
 
@@ -33,14 +33,19 @@ class Engine(val board: GameBoard, val game: Game,
       info("Initializing context [explorer.initializeContext(...)]")
       timeout(timeoutDelay) { explorer.initialize(context.toString) }
     } catch {
-      case e: Exception => return (events += ExplorationEvent(Actors.Explorer, e, "initialize"), game.flaggedAsKO)
+      case e: Exception => return (events += ExplorationEvent(Actors.Explorer, e, "initialize"), game.flaggedAsKO, None)
     }
 
     val gameAfter = play(explorer, events, game)
 
     info("Game is over")
     // returning the events
-    (events, gameAfter)
+    try {
+      (events, gameAfter, Some(explorer.deliverFinalReport()))
+    } catch {
+      case e: Exception => (events, gameAfter, None)
+    }
+
   }
 
   // play an action took by explorer, using events to store the log of the exploration

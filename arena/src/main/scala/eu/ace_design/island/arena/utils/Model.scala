@@ -66,6 +66,7 @@ trait Result {
 case class OK(override val name: String, override val islandName: String,
               remaining: Int, resources: Set[(Resource, Int)],
               override val events: Seq[ExplorationEvent],
+              report: Option[String] = None,
               override val execTime: Long = 0) extends Result  {
 
   override def toJson: JSONObject = {
@@ -78,6 +79,7 @@ case class OK(override val name: String, override val islandName: String,
       .put("island", islandName)
       .put("remaining", remaining)
       .put("collected", res)
+      .put("report", report.getOrElse("None"))
       .put("ms", execTime)
   }
 

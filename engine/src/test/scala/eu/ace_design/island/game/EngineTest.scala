@@ -37,7 +37,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.initialize(anyString) throws new RuntimeException("error in explorer init")
       // starting the engine
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       events.size must_== 2 // initialization context + exception event
       there was one(explorer).initialize(anyString)
       there was no(explorer).takeDecision
@@ -48,7 +48,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": geek """
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       events.size must_== 2 // initialization context + exception event
       there was one(explorer).initialize(anyString)
       there was one(explorer).takeDecision
@@ -59,7 +59,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "not_a_real_action" }"""
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       events.size must_== 3 // initialization context + received action + exception event
       there was one(explorer).initialize(anyString)
       there was one(explorer).takeDecision
@@ -70,7 +70,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land",  "parameters": { "creek": "c1", "people": 30 } } }"""
       val engine = new Engine(emptyBoard, Game(Budget(1), Crew(50), Set()).copy(plane = Some(plane)))
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beFalse
       events.size must_== 3 // initialization context + received action + exception event
       there was one(explorer).initialize(anyString)
@@ -93,7 +93,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "stop" }"""
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beTrue
       events.size must_== 3 // initialization context + received action + end of game event
       there was one(explorer).initialize(anyString)
@@ -105,7 +105,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.plane must beNone
     }
@@ -114,7 +114,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "c1", "people": 50 } } }"""
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beFalse
       events.size must_== 3 // initialization context + received action + end of game event
       there was one(explorer).initialize(anyString)
@@ -125,7 +125,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns """{ "action": "land", "parameters": { "creek": "cXX", "people": 3 } } }"""
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beFalse
       events.size must_== 3 // initialization context + received action + end of game event
       there was one(explorer).initialize(anyString)
@@ -136,7 +136,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beTrue
       there was one(explorer).initialize(anyString)
       there was two(explorer).takeDecision
@@ -147,7 +147,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns move
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beFalse
       there was one(explorer).initialize(anyString)
       there was one(explorer).takeDecision
@@ -158,7 +158,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns borderLand thenReturn  move
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beFalse
       there was one(explorer).initialize(anyString)
       there was two(explorer).takeDecision
@@ -168,7 +168,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn move thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.visited must_== Set((10,10), (10,9))
       g.budget.remaining must beLessThan(g.budget.initial)
@@ -178,7 +178,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val borderLand = """{ "action": "land", "parameters": { "creek": "border", "people": 3 } } }"""
       explorer.takeDecision() returns borderLand thenReturn scout thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g,_) = engine.run(explorer)
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
     }
@@ -186,7 +186,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn scout thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g,_) = engine.run(explorer)
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
     }
@@ -194,7 +194,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn explore thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g,_) = engine.run(explorer)
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
 
@@ -204,7 +204,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val exploit = """{"action": "exploit", "parameters": { "resource": "ORE" } }"""
       explorer.takeDecision() returns land thenReturn exploit thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g,_) = engine.run(explorer)
       g.isOK must beFalse
       there was one(explorer).initialize(anyString)
       there was two(explorer).takeDecision
@@ -214,7 +214,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       val explorer = mock[IExplorerRaid]
       explorer.takeDecision() returns land thenReturn exploit thenReturn stop
       val engine = new Engine(emptyBoard, emptyGame)
-      val (events, g) = engine.run(explorer)
+      val (events, g,_) = engine.run(explorer)
       g.isOK must beTrue
       g.budget.remaining must beLessThan(g.budget.initial)
     }
@@ -224,7 +224,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns """{ "action": "fly" }""" thenReturn stop
       val plane = Plane(10,7,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
-      val (_, g) = engine.run(explorer)
+      val (_, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.plane.get.position must_!= plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
@@ -235,7 +235,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns """{ "action": "heading", parameters: { "direction": "W" } }""" thenReturn stop
       val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
-      val (_, g) = engine.run(explorer)
+      val (_, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.plane.get.position must_!= plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
@@ -246,7 +246,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "N" } }""" thenReturn stop
       val plane = Plane(13,7,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
-      val (_, g) = engine.run(explorer)
+      val (_, g, _) = engine.run(explorer)
       g.isOK must beFalse
     }
 
@@ -255,7 +255,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns """{ "action": "echo", parameters: { "direction": "S" } }""" thenReturn stop
       val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
-      val (_, g) = engine.run(explorer)
+      val (_, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.plane.get.position must_== plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
@@ -266,7 +266,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() returns """{ "action": "scan" }""" thenReturn stop
       val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)))
-      val (_, g) = engine.run(explorer)
+      val (_, g, _) = engine.run(explorer)
       g.isOK must beTrue
       g.plane.get.position must_== plane.position
       g.budget.remaining must beLessThan(g.budget.initial)
@@ -278,7 +278,7 @@ class EngineTest extends SpecificationWithJUnit with Mockito {
       explorer.takeDecision() answers { a => Thread.sleep(delay*3); stop }
       val plane = Plane(10,10,Directions.SOUTH)   // (10,10) is defined in the mock
       val engine = new Engine(emptyBoard, emptyGame.copy(plane = Some(plane)), timeoutDelay = delay)
-      val (e, g) = engine.run(explorer)
+      val (e, g, _) = engine.run(explorer)
       g.isOK must beFalse
     }
 

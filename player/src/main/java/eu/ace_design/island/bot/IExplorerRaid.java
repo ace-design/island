@@ -21,10 +21,12 @@ package eu.ace_design.island.bot;
  */
 public interface IExplorerRaid {
 
-	public void initialize(String context);
+	void initialize(String context);
 
-	public String takeDecision();
+	String takeDecision();
 
-	public void acknowledgeResults(String results);
+	void acknowledgeResults(String results);
+
+	String deliverFinalReport();
 
 }
