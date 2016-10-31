@@ -8,5 +8,5 @@ punchline: Discover and explore wild islands!
 github: "https://github.com/ace-design/island/"
 
 # Build settings
-markdown: redcarpet
+markdown: kramdown
 permalink: pretty
