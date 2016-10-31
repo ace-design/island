@@ -144,7 +144,7 @@ Manufactured resources are produced on the campground, transforming the already 
 		<tr>
 			<td><code>GLASS</code></td>
 			<td>fine glass jewelry</td>
-			<td> 5 quartz + 10 woods ~> 1 glass </td>
+			<td> 10 quartz + 5 woods ~> 1 glass </td>
 		</tr>
 		<tr>
 			<td><code>INGOT</code></td>
