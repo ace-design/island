@@ -27,6 +27,8 @@ IExplorerRaid raid = new MyExplorer();        // Empty Constructor
 
 String context = "{ ... }";raid.initialize(context);                     // Context initialization
 while ( !endOfGame ) {  String decision = raid.takeDecision();      // Decision taking, one at a time  String result  = engine.compute(decision);  raid.acknowledgeResults(result);	          // Result storage}
+
+String report = raid.deliverFinalReport();    // Retrieve report from the raid
 ```
 
 The `endOfGame` condition is defined as the following (only the last one is correct from the championship point of view):
@@ -62,7 +64,7 @@ The `IExplorerRaid` interface is published as a Maven artefact, thanks to the op
   <dependency>
     <groupId>eu.ace-design</groupId>
     <artifactId>island-player</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
   </dependency>
 </dependencies>
 <!-- ... -->
@@ -85,19 +87,29 @@ package eu.ace_design.island.mvp;
 public class Explorer implements IExplorerRaid {
 
   // we do not care of the context in this minimal implementation
+  @Override
   public void initialize(String context) {
     return;
   }
 
   // we always return the same action: stopping the game
+  @Override
   public String takeDecision() {
     return "{ \"action\": \"stop\" }";
   }
 
   // we do not care of the result of the action in this minimal implementation
+  @Override
   public void acknowledgeResults(String results) {
     return;
   }
+  
+  // Dumb final report
+  @Override
+  public String deliverFinalReport() {
+    return "Hei Boss, here is my report!";
+  }
+	
 }
 ```
 
