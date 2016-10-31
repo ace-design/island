@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, FileDescriptor, FileOutputStream, PrintSt
 import eu.ace_design.island.arena.exporters.{GameLogExporter, InfoDisplayer, ResultExporter, VisitedMapExporter}
 import eu.ace_design.island.game._
 import eu.ace_design.island.map.resources.Resource
-import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
+import eu.ace_design.island.stdlib.POIGenerators.{WithCreeks, WithEmergencySite}
 import org.apache.logging.log4j.LogManager
 
 import scala.util.Random
@@ -43,7 +43,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     */
   private def process(job: Job, players: Set[Player]): Set[Result] = {
     val random = new Random(job.islandData.seed)
-    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(job.creeks)), rand = random)
+    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(job.creeks), WithEmergencySite), rand = random)
     val theBoard: GameBoard = builder(job.islandData.island).copy(startingTile = Some(job.contract.plane.initial))
     val game = Game(Budget(job.contract.budget), Crew(job.contract.crew),
       job.contract.objectives).copy(plane = Some(job.contract.plane))

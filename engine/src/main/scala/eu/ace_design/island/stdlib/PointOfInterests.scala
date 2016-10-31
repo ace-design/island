@@ -2,8 +2,8 @@ package eu.ace_design.island.stdlib
 
 import eu.ace_design.island.game._
 import eu.ace_design.island.geom.Point
-import eu.ace_design.island.map.{IsCoast, IslandMap}
-import eu.ace_design.island.stdlib.PointOfInterests.Creek
+import eu.ace_design.island.map._
+import eu.ace_design.island.stdlib.PointOfInterests.{Creek, EmergencySite}
 
 import scala.util.Random
 
@@ -21,6 +21,9 @@ object PointOfInterests {
 
   case class Hideout(override val identifier: String,
                      override val location: Option[Point]) extends PointOfInterest {}
+
+  case class EmergencySite(override val identifier: String,
+                           override val location: Option[Point]) extends PointOfInterest {}
 
 }
 
@@ -40,7 +43,7 @@ object POIGenerators {
       // find locations:
       val coasts = board.m.findVerticesWith(Set(IsCoast())).toSeq
       // instantiate ports
-      val ports = (0 until howMany) map { i =>
+      val ports: IndexedSeq[((Int, Int), Creek)] = (0 until howMany) map { i =>
         val idx = rand.nextInt(coasts.size-1)
         loc(coasts(idx)) -> Creek(UUIDGenerator(), Some(coasts(idx)))
       }
@@ -48,4 +51,40 @@ object POIGenerators {
       (board /: ports) { (acc, poi) => acc addPOI poi }
     }
   }
+
+  object WithEmergencySite extends POIGenerator {
+
+    // We generate one emergency site near the coast
+    override def apply(rand: Random = new Random(), loc: TileLocator)(board: GameBoard): GameBoard = {
+      val faceRef = emergencyFaceAsBeach(board, rand) match {
+        case None => emergencyFaceAsHighFace(board, rand) match {
+          case None => throw new POIException("Unable to find a face for the emergency rescue site")
+          case Some(ref) => ref
+        }
+        case Some(ref) => ref
+      }
+      val emergencyPoint = board.m.vertex(board.m.face(faceRef).center)
+
+      board addPOI (loc(emergencyPoint) -> EmergencySite(UUIDGenerator(),Some(emergencyPoint)))
+    }
+
+    private def emergencyFaceAsBeach(board: GameBoard, rand: Random): Option[Int] = {
+      (board.m.faceProps.restrictedTo(HasForBiome()) filter { case (_, b) =>  b == Biomes.BEACH }).toList match {
+        case Nil => None
+        case list => Some(list(rand.nextInt(list.size))._1)
+      }
+    }
+
+    private def emergencyFaceAsHighFace(board: GameBoard, rand: Random): Option[Int] = {
+      val dataset = board.m.faceProps.restrictedTo(HasForHeight())
+      val max = dataset.values.max
+      (dataset filter { case (_, h) =>  h <= max * 0.4 }).toList match {
+        case Nil => None
+        case list => Some(list(rand.nextInt(list.size))._1)
+      }
+    }
+
+  }
 }
+
+class POIException(message: String) extends Exception(message)

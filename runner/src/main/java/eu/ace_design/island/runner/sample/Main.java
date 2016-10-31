@@ -25,7 +25,8 @@ public class Main {
 				.fire();
 
 		if (result instanceof OK) {
-			// Language conflict here. Scala pattern extractors can only be implemented using instanceOf in Java. Ugly.
+			// Language conflict here: Scala pattern extractors can only be implemented using instanceOf in Java.
+			// This is pretty ugly. Don't do that.
 			System.out.println("Report: [" + ((OK) result).report().get() + "]");
 		}
 	}
