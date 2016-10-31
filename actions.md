@@ -240,7 +240,7 @@ The exploration of the current tile gives to the player extensive information ab
       { "amount": "LOW", "resource": "WOOD", "cond": "HARSH" }
     ],
     "pois": [ "creek-id" ]
-  }.
+  },
   "status": "OK"
 }
 ``` 
