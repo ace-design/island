@@ -1,5 +1,8 @@
 package eu.ace_design.island.runner.sample;
 
+import eu.ace_design.island.arena.utils.OK;
+import eu.ace_design.island.arena.utils.Result;
+
 import java.io.*;
 import static eu.ace_design.island.runner.Runner.*;
 
@@ -7,7 +10,8 @@ public class Main {
 
 	public static void main(String[] args) throws Exception {
 
-		run(MyBot.class)
+		Result result =
+				run(MyBot.class)
 				.exploring(load("map.json"))   // A File containing a map as a JSON object
 				.withSeed(0L)
 				.startingAt(1, 1, "EAST")
@@ -20,6 +24,11 @@ public class Main {
 				.withTimeout(2000)             // player timeout is 2 seconds
 				.fire();
 
+		if (result instanceof OK) {
+			// Language conflict here: Scala pattern extractors can only be implemented using instanceOf in Java.
+			// This is pretty ugly. Don't do that.
+			System.out.println("Report: [" + ((OK) result).report().get() + "]");
+		}
 	}
 
 	private static File load(String resFile)  {

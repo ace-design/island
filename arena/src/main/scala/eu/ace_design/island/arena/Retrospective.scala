@@ -55,7 +55,7 @@ trait Retrospective extends Teams with App {
         print(s"    - Using island ${r.islandName}, ")
         r match {
           case KO(_,_,reason,_,_) => {  println("KO - " + reason) }
-          case OK(_,_,remaining, resources,_,_) => {
+          case OK(_,_,remaining, resources,_,_,_) => {
             val contracts = extractContracts(r.asInstanceOf[OK],jobs)
             print("completed : " + (if (contracts.isEmpty) "none" else contracts.mkString(",")))
             println(s" / ${remaining} action points left")

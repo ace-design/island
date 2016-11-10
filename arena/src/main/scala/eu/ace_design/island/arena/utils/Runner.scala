@@ -5,7 +5,7 @@ import java.io.{ByteArrayOutputStream, FileDescriptor, FileOutputStream, PrintSt
 import eu.ace_design.island.arena.exporters.{GameLogExporter, InfoDisplayer, ResultExporter, VisitedMapExporter}
 import eu.ace_design.island.game._
 import eu.ace_design.island.map.resources.Resource
-import eu.ace_design.island.stdlib.POIGenerators.WithCreeks
+import eu.ace_design.island.stdlib.POIGenerators.{WithCreeks, WithEmergencySite}
 import org.apache.logging.log4j.LogManager
 
 import scala.util.Random
@@ -43,7 +43,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     */
   private def process(job: Job, players: Set[Player]): Set[Result] = {
     val random = new Random(job.islandData.seed)
-    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(job.creeks)), rand = random)
+    val builder = new GameBoardBuilder(poiGenerators = Seq(new WithCreeks(job.creeks), WithEmergencySite), rand = random)
     val theBoard: GameBoard = builder(job.islandData.island).copy(startingTile = Some(job.contract.plane.initial))
     val game = Game(Budget(job.contract.budget), Crew(job.contract.crew),
       job.contract.objectives).copy(plane = Some(job.contract.plane))
@@ -61,7 +61,7 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
     val r = try {
       val raw = play(p, new Engine(theBoard, game.copy(), new Random(job.islandData.seed), job.timeout))
       val result = raw._1.isOK match {
-        case true  => OK(p.name, job.islandData.name, raw._3, raw._4, raw._2)
+        case true  => OK(p.name, job.islandData.name, raw._3, raw._4, raw._2, raw._5)
         case false => KO(p.name, job.islandData.name, "game error", raw._2)
       }
       if(exporters.contains(classOf[GameLogExporter])) {
@@ -82,7 +82,8 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
   /**
     * Play a given bot using a given engine, silently redirecting the stdout andf stderr standard exits
     */
-  private def play(player: Player, engine: Engine): (Game, Seq[ExplorationEvent], Integer, Set[(Resource, Int)]) = {
+  private def play(player: Player, engine: Engine):
+        (Game, Seq[ExplorationEvent], Integer, Set[(Resource, Int)], Option[String]) = {
     val dataset = try {
       System.setOut(new PrintStream(new ByteArrayOutputStream()))
       System.setErr(new PrintStream(new ByteArrayOutputStream()))
@@ -92,7 +93,8 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
       System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)))
     }
     val game = dataset._2
-    (game, dataset._1, game.budget.remaining, game.collectedResources.toSet filter { case (res, i) => i > 0 })
+    val report = dataset._3
+    (game, dataset._1, game.budget.remaining, game.collectedResources.toSet filter { case (res, i) => i > 0 }, report)
   }
 
 

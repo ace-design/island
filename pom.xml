@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.ace-design</groupId>
   <artifactId>island</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Island</name>
   <description>
@@ -21,7 +21,7 @@
   </parent>
 
     <properties>
-        <island.reference>1.0-SNAPSHOT</island.reference>
+        <island.reference>2.0-SNAPSHOT</island.reference>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>

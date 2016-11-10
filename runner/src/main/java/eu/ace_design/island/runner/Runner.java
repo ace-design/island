@@ -245,6 +245,7 @@ public class Runner {
         if ( displayInfo ) {
             displayers.add(ResourcesInfo$.MODULE$);
             displayers.add(ObjectiveInfo$.MODULE$);
+			displayers.add(POIInfo$.MODULE$);
         }
 
         // 8. Creating the arena runner to be used
