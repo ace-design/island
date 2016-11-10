@@ -146,14 +146,14 @@ The radar is used to check the presence of ground in a given direction. The rada
 
 ## Scanning the map: `SCAN`
 
-The drone is equipped with an HD camera coupled to a ground analysis software. This software identifies relevant information about the Island, based on a picture of the 3x3 square under the plane. It reveals two different kind of information: (i) the major biomes identified in the picture (a biome must cover more than 20% of the picture to be identifiable) and (ii) acceptable landing points for a boat, so called _creeks_. Creeks are differentiated thanks to an unique identifier.
+The drone is equipped with an HD camera coupled to a ground analysis software. This software identifies relevant information about the Island, based on a picture of the 3x3 square under the plane. It reveals two different kind of information: (i) the major biomes identified in the picture (a biome must cover more than 20% of the picture to be identifiable) and (ii) acceptable landing points for a boat, so called _creeks_. Creeks are differentiated thanks to an unique identifier. This is the very same situation for emergency sites, identified as _sites_.
 
 * Request example:
     * `{ "action": "scan" }`
   * Response example:
-    * `{"cost": 2, "extras": { "biomes": ["GLACIER", "ALPINE"], "creeks": []}, "status": "OK"}`
+    * `{"cost": 2, "extras": { "biomes": ["GLACIER", "ALPINE"], "creeks": [], "sites": []}, "status": "OK"}`
     * `{"cost": 2, "extras": { "biomes": ["BEACH"], "creeks": ["id"], "sites": []}, "status": "OK"}`
-    * `{"cost": 2, "extras": { "biomes": [], "creeks": [], "sites": ["id"]}, "status": "OK"}` 
+    * `{"cost": 2, "extras": { "biomes": ["BEACH"], "creeks": [], "sites": ["id"]}, "status": "OK"}` 
 
 # Phase #1 & 2: Landing, Stopping
 
