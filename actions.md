@@ -152,9 +152,8 @@ The drone is equipped with an HD camera coupled to a ground analysis software. T
     * `{ "action": "scan" }`
   * Response example:
     * `{"cost": 2, "extras": { "biomes": ["GLACIER", "ALPINE"], "creeks": []}, "status": "OK"}`
-    * `{"cost": 2, "extras": { "biomes": ["BEACH"], "creeks": ["id"]}, "status": "OK"}`
-    * `{"cost": 2, "extras": { "biomes": [], "creeks": []}, "status": "OK"}` 
-
+    * `{"cost": 2, "extras": { "biomes": ["BEACH"], "creeks": ["id"], "sites": []}, "status": "OK"}`
+    * `{"cost": 2, "extras": { "biomes": [], "creeks": [], "sites": ["id"]}, "status": "OK"}` 
 
 # Phase #1 & 2: Landing, Stopping
 
