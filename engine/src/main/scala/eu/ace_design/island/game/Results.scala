@@ -1,6 +1,7 @@
 package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources._
+import eu.ace_design.island.stdlib.PointOfInterests.EmergencySite
 import org.json.{JSONArray, JSONObject}
 
 /**
@@ -125,7 +126,9 @@ case class EchoResult(override val cost: Int = 0, range: Int, found: RadarValue.
 }
 
 case class ScanResult(override val cost: Int = 0,
-                      biomes: Set[Biome], creeks: Set[PointOfInterest], scanned: Set[(Int,Int)]) extends Result {
+                      biomes: Set[Biome],
+                      creeks: Set[PointOfInterest], sites: Set[PointOfInterest],
+                      scanned: Set[(Int,Int)]) extends Result {
   override val shouldStop: Boolean = false
   override val ok: Boolean = true
   override def withCost(c: Int): Result = this.copy(cost = c)
@@ -134,6 +137,7 @@ case class ScanResult(override val cost: Int = 0,
     val result = new JSONObject()
     result.put("biomes", (new JSONArray() /: biomes ) { (acc, b) => acc.put(b) } )
     result.put("creeks", (new JSONArray() /: creeks ) { (acc, c) => acc.put(c.identifier) })
+    result.put("sites", (new JSONArray() /: sites ) { (acc, c) => acc.put(c.identifier) })
     result
   }
 }

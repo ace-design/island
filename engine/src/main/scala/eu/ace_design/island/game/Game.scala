@@ -2,7 +2,7 @@ package eu.ace_design.island.game
 
 import eu.ace_design.island.map.resources.{Biome, ManufacturedResource, PrimaryResource, Resource}
 import eu.ace_design.island.stdlib.Biomes
-import eu.ace_design.island.stdlib.PointOfInterests.Creek
+import eu.ace_design.island.stdlib.PointOfInterests.{Creek, EmergencySite}
 import eu.ace_design.island.util.Polynomial
 
 /**
@@ -294,11 +294,12 @@ class Plane private(val initial: (Int, Int), val position: (Int, Int), val headi
     val biomes = tiles.toSeq flatMap { _.biomes } groupBy { _._1 } map {
       case (b,l) => b -> (( 0.0 /: l) { (acc,pair) => acc + pair._2 } / area.size )
     } filter { case (_,value) => value >= Plane.SCAN_PRECISION }
-    val creeks = area flatMap { board.pois.getOrElse(_,Set()) } filter { _ match {
+    val pois = area flatMap { board.pois.getOrElse(_,Set()) } filter { _ match {
       case Creek(_,_) => true
+      case EmergencySite(_,_) => true
       case _ => false
     }}
-    (biomes.keySet, creeks.toSet, area.toSet)
+    (biomes.keySet, pois.toSet, area.toSet)
   }
 
 
