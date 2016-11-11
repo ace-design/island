@@ -74,7 +74,7 @@ The `IExplorerRaid` interface is published as a Maven artefact, thanks to the op
 
 Your bot must not interfere with the bots defined by the other players that will play in the same championship. Thus, your bot must be defined in a dedicated package, and all the classes you are using must be defined inside this package.
 
-**Polytech students:** You must be using the following package pattern: `fr.unice.polytech.qgl.xxx`, where `xxx` is your project key identifier. Your bot must be implemented in a class named `Explorer` located in this package.
+**Polytech students:** You must be using the following package pattern: `fr.unice.polytech.si3.qgl.xxxx`, where `xxxx` is your project key identifier on _mjøllnir_. Your bot must be implemented in a class named `Explorer` located in this package.
 
 ## Minimal Viable Product (MVP)
 
