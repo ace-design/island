@@ -41,8 +41,8 @@ case class GameLogExporter(override val outputDir: String)  extends PlayerExport
 case class VisitedMapExporter(override val outputDir: String) extends PlayerExporter {
 
   def apply(name: String, m: IslandMap, game: Game, tileUnit: Int, board: GameBoard) {
-    val pois = board.pois.values.flatten map { _.location } filter { _.isDefined } map { _.get } map { p => (p.x,p.y) }
-    val fog = new FogOfWar(factor = tileUnit, visited = game.visited, scanned = game.scanned, pois = pois.toSet, size = m.size)
+    val fog = new FogOfWar(factor = tileUnit, visited = game.visited, scanned = game.scanned,
+                            pois = board.pois.values.flatten.toSet, size = m.size)
     val viewer = FogOfWarViewer(fog)
     val tmp = Paths.get(viewer(m).getAbsolutePath)
     val out = (new File(s"$outputDir/$name.svg")).toPath
