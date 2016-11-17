@@ -44,7 +44,7 @@ trait Run extends Teams with DiSLand {
     val job = Job(islandData, contract)
 
     val runner = Runner(Seq(MapInfo, IslandStatistics, POIInfo, ResourcesInfo, ObjectiveInfo),
-                        Seq(classOf[VisitedMapExporter], classOf[GameLogExporter]), outputDir)
+                        Seq(classOf[VisitedMapExporter], classOf[GameLogExporter], classOf[POIsExporter]), outputDir)
 
     println(s"\n## Starting a Run with the following players on island week$number")
     println(s"  - $playerNames\n")

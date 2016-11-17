@@ -166,6 +166,11 @@ public class Runner {
         return this;
     }
 
+    public Runner showReport() {
+		this.displayReport = true;
+		return this;
+	}
+
     public Runner hideInfo() {
         this.displayInfo = false;
         return this;
@@ -197,7 +202,8 @@ public class Runner {
     private File outputDir = new File(".");
     private Map<Resource,Integer> contracts = new HashMap<>();
     private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
-    // By default we export everything
+    private boolean displayReport = false;
+	// By default we export everything
     private boolean exportMapData = true;
     private boolean storeLogs = true;
     private boolean displayInfo = true;
@@ -256,6 +262,10 @@ public class Runner {
 
         // 9. Running the runner
         Result result = arenaRunner.apply(thePlayer,theJob).head();
+
+		if (isOk(result) && displayReport) {
+			System.out.println("Report: [" + ((OK)result).report().get() +"]");
+		}
 
         // 10. Returning the result
         return result;
