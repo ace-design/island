@@ -64,23 +64,23 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
         case true  => OK(p.name, job.islandData.name, raw._3, raw._4, raw._2, raw._5)
         case false => KO(p.name, job.islandData.name, "game error", raw._2)
       }
-      result
+      val exec = System.currentTimeMillis() - start;
+      _logger.info(s" --> Execution time: ${exec}ms")
+      if(exporters.contains(classOf[VisitedMapExporter])) {
+        VisitedMapExporter(outputDir)(p.name, job.islandData.island, raw._1, theBoard.tileUnit, theBoard)
+      }
+      result.withExecTime(exec)
     } catch {
       case e: Exception => KO(p.name, job.islandData.name, e.getClass.getCanonicalName, null)
     }
-    val exec = System.currentTimeMillis() - start;
-    _logger.info(s" --> Execution time: ${exec}ms")
 
     if(exporters.contains(classOf[GameLogExporter])) {
       GameLogExporter(outputDir)(s"${p.name}_${job.islandData.name}", r.events)
     }
-    if(exporters.contains(classOf[VisitedMapExporter])) {
-      VisitedMapExporter(outputDir)(p.name, job.islandData.island, game, theBoard.tileUnit, theBoard)
-    }
     if(exporters.contains(classOf[POIsExporter])) {
       POIsExporter(outputDir)(theBoard,job.islandData.island)
     }
-    r.withExecTime(exec)
+    r
   }
 
   /**

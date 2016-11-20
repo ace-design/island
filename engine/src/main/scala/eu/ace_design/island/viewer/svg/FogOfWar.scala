@@ -5,13 +5,19 @@ import java.awt.{BasicStroke, Color, Graphics2D, Rectangle}
 
 import eu.ace_design.island.game.PointOfInterest
 import eu.ace_design.island.stdlib.PointOfInterests.{Creek, EmergencySite}
+import eu.ace_design.island.util.{LogSilos, Logger}
 
 class FogOfWar(factor: Int,
                visited: Set[(Int, Int)], scanned: Set[(Int,Int)],
-               pois: Set[PointOfInterest], size: Int) extends SVGEnhancer {
+               pois: Set[PointOfInterest], size: Int) extends SVGEnhancer with Logger {
 
+  override final val silo = LogSilos.VIEWER
 
   override def apply(g: Graphics2D): Unit = {
+
+    debug("visited:" + visited.mkString(","))
+    debug("scanned:" + scanned.mkString(","))
+    debug("pois" + pois.mkString(","))
 
     // Setting up the color
     val gray = new Color(0,0,0,128)
