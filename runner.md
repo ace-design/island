@@ -20,7 +20,7 @@ The language is provided in the `island-runner` artifact:
     <dependency>
       <groupId>eu.ace-design</groupId>
       <artifactId>island-runner</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>2.0-SNAPSHOT</version>
     </dependency>
 ```
 
@@ -78,7 +78,7 @@ The game arena is provided as a maven dependency:
 <dependency>
 	<groupId>eu.ace-design</groupId>
 	<artifactId>island-arena</artifactId>
-   <version>1.0-SNAPSHOT</version>
+   <version>2.0-SNAPSHOT</version>
 </dependency>
 ```
 
