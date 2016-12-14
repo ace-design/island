@@ -263,8 +263,13 @@ public class Runner {
         // 9. Running the runner
         Result result = arenaRunner.apply(thePlayer,theJob).head();
 
-		if (isOk(result) && displayReport) {
-			System.out.println("Report: [" + ((OK)result).report().get() +"]");
+		if (isOk(result) && displayReport ) {
+			OK ok = ((OK) result);
+			if (ok.report().isDefined()) {
+				System.out.println("Report: [" + ((OK) result).report().get() + "]");
+			} else {
+			 	System.out.println("Report: undefined");
+			}
 		}
 
         // 10. Returning the result

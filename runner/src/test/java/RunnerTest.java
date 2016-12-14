@@ -1,6 +1,8 @@
+import eu.ace_design.island.arena.utils.OK;
 import eu.ace_design.island.arena.utils.Result;
 import eu.ace_design.island.game.ExplorationEvent;
 import eu.ace_design.island.runner.Runner;
+import eu.ace_design.island.runner.sample.FaultyBot;
 import eu.ace_design.island.runner.sample.MyBot;
 import org.junit.Test;
 import java.io.File;
@@ -12,7 +14,6 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class RunnerTest {
-
 
 	@Test
 	public void testMapSVGReplacement() throws Exception {
@@ -61,8 +62,18 @@ public class RunnerTest {
     }
 
 
-	private static Result run(Path out) throws Exception {
-		return Runner.run(MyBot.class)
+    @Test
+	public void testFaultyReport() throws Exception {
+		Result res = run(Files.createTempDirectory("test-exception-report"), FaultyBot.class, true);
+		assertTrue(Runner.isOk(res));
+		OK ok = (OK) res;
+		assertTrue(ok.report().isEmpty());
+	}
+
+
+	private static Result run(Path out, Class c, boolean displayReport) throws Exception {
+		Runner runner =
+				Runner.run(c)
 				.exploring(load("map.json"))   // A File containing a map as a JSON object
 				.withSeed(0L)
 				.startingAt(1, 1, "EAST")
@@ -70,8 +81,15 @@ public class RunnerTest {
 				.withCrew(15)
 				.collecting(1000, "WOOD")
 				.storingInto(out.toAbsolutePath().toString())
-                .hideInfo()
-				.fire();
+				.hideInfo();
+
+		if (displayReport) { runner = runner.showReport(); }
+
+		return runner.fire();
+	}
+
+	private static Result run(Path out) throws Exception {
+		return run(out, MyBot.class, false);
 	}
 
 	private static File load(String resFile)  {
