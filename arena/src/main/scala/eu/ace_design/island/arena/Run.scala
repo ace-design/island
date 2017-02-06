@@ -72,9 +72,13 @@ trait Run extends Teams with DiSLand {
           println("    - No resources collected")
         else
           res.resources foreach { r => println(s"    - ${r._1}: ${r._2}")}
-        println(s"  - Report: ${res.report.getOrElse("None")}")
+        val report: String = res.report.getOrElse("_None_")
+        if(report.split("\n").length == 1) {
+          println(s"  - Report: `$report`")
+        } else {
+          println(s"  - Report: \n\n```\n$report\n```\n")
+        }
       }
-
     }
 
     if(kos.nonEmpty) {

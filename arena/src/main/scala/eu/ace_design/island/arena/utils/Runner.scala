@@ -50,7 +50,9 @@ case class Runner(displayers: Seq[InfoDisplayer] = Seq(),
 
     displayers foreach { e => e(job.islandData.island, theBoard, game) }
 
+    println("```")
     val results = players map { process(job, theBoard.copy(), game.copy(), _)}
+    println("```")
 
     results
   }
