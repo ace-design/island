@@ -238,7 +238,7 @@ The exploration of the current tile gives to the player extensive information ab
       { "amount": "HIGH", "resource": "FUR", "cond": "FAIR" },
       { "amount": "LOW", "resource": "WOOD", "cond": "HARSH" }
     ],
-    "pois": [ "creek-id" ]
+    "pois": [{"kind": "Creek", "id": "43e3eb42-50f0-47c5-afa3-16cd3d50faff"}]
   },
   "status": "OK"
 }
