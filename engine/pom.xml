@@ -124,7 +124,7 @@
                     <useZincServer>true</useZincServer>
                 </configuration>
             </plugin>
-            <!-- Maven GPG signature plugin -->
+            <!-- Maven GPG signature plugin, the key is now oK -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>

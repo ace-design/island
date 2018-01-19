@@ -63,10 +63,14 @@ object EmergencyDistance extends InfoDisplayer {
     val creeks = board.findPOIsByType(Creek("aCreek",None)).map{ _._2 }.toList
     val site = board.findPOIsByType(EmergencySite("aSite",None)).map{ _._2 }.head
 
-    println(s"  - Emergency site [${site.name}] located at (${site.location.get.x},${site.location.get.y})\n")
+    println(f"\n  - Emergency site [${site.identifier}] located at (${site.location.get.x}%.2f,${site.location.get.y}%.2f)\n")
 
+    println(s"| Rank | Creek ID | Distance to site | x | y |")
+    println(s"|------|----------|------------------|---|---|")
+
+    var rank = 0
     creeks.sortWith { (close, far) => dist(close, site) < dist(far, site) } foreach { creek =>
-      println(s"  1. Creek [${creek.name}] located at (${creek.location.get.x},${creek.location.get.y}), distance: ${dist(creek,site)}")
+      println(f"| C${rank += 1;rank}%02d | ${creek.identifier} | ${dist(creek,site)}%.2f | ${creek.location.get.x}%.2f | ${creek.location.get.y}%.2f |")
     }
   }
 

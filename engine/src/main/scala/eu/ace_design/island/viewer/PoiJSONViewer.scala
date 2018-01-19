@@ -32,7 +32,7 @@ case class PoiJSONViewer(board: GameBoard) extends Viewer with Logger {
 
     val out = initOutput
     val writer = new PrintWriter(out, "UTF8")
-    result.write(writer)
+    writer.write(result.toString(4))
     writer.close()
     out
   }
