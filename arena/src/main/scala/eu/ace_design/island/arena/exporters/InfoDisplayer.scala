@@ -1,7 +1,8 @@
 package eu.ace_design.island.arena.exporters
 
-import eu.ace_design.island.game.{Game, GameBoard}
+import eu.ace_design.island.game.{Game, GameBoard, PointOfInterest}
 import eu.ace_design.island.map.IslandMap
+import eu.ace_design.island.stdlib.PointOfInterests.{Creek, EmergencySite}
 
 
 trait InfoDisplayer {
@@ -53,6 +54,23 @@ object POIInfo extends InfoDisplayer {
       println(s"  - $loc: ${ data mkString("(",",",")") }")
     }}
   }
+}
+
+object EmergencyDistance extends InfoDisplayer {
+  override protected val title = "Emergency site & Creeks"
+
+  override protected def process(isl: IslandMap, board: GameBoard, game: Game) {
+    val creeks = board.findPOIsByType(Creek("aCreek",None)).map{ _._2 }.toList
+    val site = board.findPOIsByType(EmergencySite("aSite",None)).map{ _._2 }.head
+
+    println(s"  - Emergency site [${site.name}] located at (${site.location.get.x},${site.location.get.y})\n")
+
+    creeks.sortWith { (close, far) => dist(close, site) < dist(far, site) } foreach { creek =>
+      println(s"  1. Creek [${creek.name}] located at (${creek.location.get.x},${creek.location.get.y}), distance: ${dist(creek,site)}")
+    }
+  }
+
+  private def dist(a: PointOfInterest, b: PointOfInterest): Double = a.location.get --> b.location.get
 }
 
 object MapInfo extends InfoDisplayer {
