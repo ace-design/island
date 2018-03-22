@@ -67,13 +67,13 @@ The intention of the first phase is to exploit _cheap_ actions to identify where
 		<tr>
 			<th><code>SCOUT</code></th>
 			<td>2</td>
-			<td>cheap</td>
+			<td>medium</td>
 			<td>terrain difficulty</td>
 		</tr>
 		<tr>
 			<th><code>GLIMPSE</code></th>
 			<td>2</td>
-			<td>medium</td>
+			<td>cheap</td>
 			<td>terrain difficulty and range</td>
 		</tr>
 		<tr>
