@@ -6,7 +6,7 @@ import eu.ace_design.island.arena.exporters._
 import eu.ace_design.island.arena.rankers.ChampRanker
 import eu.ace_design.island.arena.utils.{Contract, IslandData, Job, Runner}
 import eu.ace_design.island.dsl.DiSLand
-import eu.ace_design.island.game.Plane
+import eu.ace_design.island.game.{Engine, Plane}
 import eu.ace_design.island.io.IslandMapFactory
 import eu.ace_design.island.map.IslandMap
 import eu.ace_design.island.map.resources.Resource
@@ -22,6 +22,8 @@ trait Run extends Teams with DiSLand {
   def theIsland: IslandMap
   def seed: Long
   def objectives: Set[(Resource, Int)]
+  def timeout: Int = Engine.DEFAULT_TIMEOUT_VALUE
+  def nbCreeks: Int = 10
 
   def outputDir = s"championships/week${number}"
   lazy val islFile = new File(s"$outputDir/_map.json")
@@ -41,7 +43,7 @@ trait Run extends Teams with DiSLand {
 
     val islandData = IslandData(island = IslandMapFactory(islFile), seed = seed, name = s"week${number}")
     val contract = Contract(crew = crew, budget = budget, plane = plane, objectives = objectives)
-    val job = Job(islandData, contract)
+    val job = Job(islandData, contract, creeks = nbCreeks, timeout = timeout)
 
     val runner = Runner(Seq(MapInfo, IslandStatistics, EmergencyDistance, ResourcesInfo, ObjectiveInfo),
                         Seq(classOf[VisitedMapExporter], classOf[GameLogExporter], classOf[POIsExporter]), outputDir)
