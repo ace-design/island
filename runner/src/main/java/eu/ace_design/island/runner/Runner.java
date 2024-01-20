@@ -66,11 +66,11 @@ public class Runner {
 
 	/**
 	 * Define the number of mens available for the raid
-	 * @param nbMens
+	 * @param crewMembers
 	 * @return
 	 */
-	public Runner withCrew(int nbMens) {
-		this.nbMens = nbMens;
+	public Runner withCrew(int crewMembers) {
+		this.crew = crewMembers;
 		return this;
 	}
 
@@ -130,11 +130,11 @@ public class Runner {
 
     /**
      * Set the number of available creeks
-     * @param creeks
+     * @param inlets
      * @return
      */
-    public Runner withCreeks(int creeks) {
-        this.howManyCreeks = creeks;
+    public Runner withInlets(int inlets) {
+        this.howManyInlets = inlets;
         return this;
     }
 
@@ -193,12 +193,12 @@ public class Runner {
     private IslandMap theIsland;
     private Plane thePlane;
     private int budget;
-    private int nbMens;
+    private int crew;
     private String name = "Lian_Yu";
 
     // Default values
     private Long seed = 0L;
-    private int howManyCreeks = 10;
+    private int howManyInlets = 10;
     private File outputDir = new File(".");
     private Map<Resource,Integer> contracts = new HashMap<>();
     private int timeoutDelay = Engine.DEFAULT_TIMEOUT_VALUE();
@@ -223,11 +223,11 @@ public class Runner {
         for(Resource r: this.contracts.keySet()) {
             objectives.add(new Tuple2<Resource, Object>(r, this.contracts.get(r)));
         }
-        Contract theContract = new Contract(nbMens,budget,thePlane,
+        Contract theContract = new Contract(crew,budget,thePlane,
                                          JavaConversions$.MODULE$.asScalaSet(objectives).toList().<Tuple2<Resource,Object>>toSet());
 
         // 3. Creating the Job
-        Job theJob = new Job(islandData,theContract,howManyCreeks,timeoutDelay);
+        Job theJob = new Job(islandData,theContract, howManyInlets,timeoutDelay);
 
         // 4. Creating the player
         Player thePlayer = new Player(explorer.getSimpleName(),explorer);
