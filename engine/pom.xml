@@ -36,8 +36,32 @@
         <!-- Import the Specs 2 framework for Behavior-driven development  -->
         <dependency>
             <groupId>org.specs2</groupId>
-            <artifactId>specs2_${scala.version.short}</artifactId>
-            <version>${specs2.version}</version>
+            <artifactId>specs2-core_2.11</artifactId>
+            <version>4.10.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-junit_2.11</artifactId>
+            <version>4.10.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-mock_2.11</artifactId>
+            <version>4.10.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-matcher_2.11</artifactId>
+            <version>4.10.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-matcher-extra_2.11</artifactId>
+            <version>4.10.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -109,7 +133,7 @@
             <plugin>
                 <groupId>net.alchim31.maven</groupId>
                 <artifactId>scala-maven-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>4.8.1</version>
                 <executions>
                     <execution>
                         <goals>
@@ -120,8 +144,6 @@
                 </executions>
                 <configuration>
                     <recompileMode>incremental</recompileMode>
-                    <!-- run the 'zinc -start' command to start the compilation server -->
-                    <useZincServer>true</useZincServer>
                 </configuration>
             </plugin>
             <!-- Maven GPG signature plugin, the key is now oK -->

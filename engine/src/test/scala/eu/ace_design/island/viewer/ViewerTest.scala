@@ -11,7 +11,7 @@ import org.specs2.matcher.{XmlMatchers, FileMatchers}
 class ViewerTest extends SpecificationWithJUnit with FileMatchers with XmlMatchers {
 
   // Mandatory to use the specific XML factory and disable document validation (too slow when activated)
-  System.setProperty("javax.xml.parsers.SAXParserFactory", classOf[MyXMLParserFactory].getName)
+  //System.setProperty("javax.xml.parsers.SAXParserFactory", classOf[MyXMLParserFactory].getName)
 
   "ViewerTest Specifications".title
 
