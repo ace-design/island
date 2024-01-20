@@ -3,14 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>island-arena</artifactId>
-    <version>2.1-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Island :: Arena</name>
     <description>The Game arena</description>
 
 
     <parent>
-        <groupId>eu.ace-design</groupId>
+        <groupId>ca.ace-design-lab</groupId>
         <artifactId>island</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
@@ -28,12 +28,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>eu.ace-design</groupId>
+            <groupId>ca.ace-design-lab</groupId>
             <artifactId>island-player</artifactId>
             <version>${island.reference}</version>
         </dependency>
         <dependency>
-            <groupId>eu.ace-design</groupId>
+            <groupId>ca.ace-design-lab</groupId>
             <artifactId>island-engine</artifactId>
             <version>${island.reference}</version>
         </dependency>
@@ -88,6 +88,7 @@
                     <recompileMode>incremental</recompileMode>
                 </configuration>
             </plugin>
+            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -102,6 +103,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 </project>

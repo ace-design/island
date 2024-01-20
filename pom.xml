@@ -4,7 +4,7 @@
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0         
 			     http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>eu.ace-design</groupId>
+  <groupId>ca.ace-design-lab</groupId>
   <artifactId>island</artifactId>
   <version>2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -33,6 +33,21 @@
         <json.version>20160212</json.version>
         <log4j.version>2.0</log4j.version>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.1.2</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <tokenEnabled>true</tokenEnabled>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
   <repositories>
       <repository>
@@ -112,8 +127,8 @@
   <modules>
       <module>engine</module>
       <module>player</module>
-      <module>runner</module>
       <module>arena</module>
+      <module>runner</module>
   </modules>    
 
 </project>
