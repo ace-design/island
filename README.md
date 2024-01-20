@@ -20,5 +20,12 @@ More information available at the following URL: [http://ace-design.github.io/is
   * [player](https://github.com/ace-design/island/tree/develop/player): The player interface (containing the IEXplorerRaid java interface), to be implemented by the player
   * [runner](https://github.com/ace-design/island/tree/develop/runner): Experimental feature to run the engine on a given player, outside of a championship arena
  
- 
+ ## How to compile and deploy
+
+```
+mvn install
+export GPG_TTY=$(tty)
+mvn clean deploy
+```
+
   

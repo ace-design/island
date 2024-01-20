@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>island-arena</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>3.0</version>
     <packaging>jar</packaging>
     <name>Island :: Arena</name>
     <description>The Game arena</description>
@@ -12,7 +12,7 @@
     <parent>
         <groupId>ca.ace-design-lab</groupId>
         <artifactId>island</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>3.0</version>
     </parent>
 
     <repositories>
@@ -88,22 +88,23 @@
                     <recompileMode>incremental</recompileMode>
                 </configuration>
             </plugin>
-            <!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.4</version>
+                <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
+                        <id>empty-javadoc-jar</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>sign</goal>
+                            <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                            <classesDirectory>${basedir}/javadoc</classesDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
         </plugins>
     </build>
 </project>

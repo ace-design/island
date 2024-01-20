@@ -4,10 +4,13 @@
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0         
 			     http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>ca.ace-design-lab</groupId>
   <artifactId>island</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>3.0</version>
+
   <packaging>pom</packaging>
+
   <name>Island</name>
   <description>
     Island is a programing game used to support Software engineering teaching
@@ -21,7 +24,7 @@
   </parent>
 
     <properties>
-        <island.reference>2.0-SNAPSHOT</island.reference>
+        <island.reference>3.0</island.reference>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <encoding>UTF-8</encoding>
@@ -46,49 +49,61 @@
                     <tokenEnabled>true</tokenEnabled>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                        <configuration>
+                            <show>public</show>
+                            <failOnError>false</failOnError>
+                            <detectOfflineLinks>false</detectOfflineLinks>
+                            <doclint>all,-missing</doclint>
+                            <nohelp>true</nohelp>
+                            <excludePackageNames>*.internal.*,testutil,demo</excludePackageNames>
+                            <quiet>true</quiet>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
-  <repositories>
-      <repository>
-          <id>oss.sonatype.org-releases</id>
-          <name>releases</name>
-          <url>https://oss.sonatype.org/content/repositories/releases</url>
-      </repository>
-
-      <repository>
-          <id>oss.sonatype.org-snapshots</id>
-          <name>snapshots</name>
-          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      </repository>
-
-      <repository>
-          <id>central</id>
-          <name>Maven repository</name>
-          <url>https://repo1.maven.org/maven2</url>
-      </repository>
-
-      <!--
-      <repository>
-          <id>scalaz-bintray</id>
-          <name>releases</name>
-          <url>https://dl.bintray.com/scalaz/releases</url>
-      </repository>
-      -->
-  </repositories>
-  
-  <distributionManagement>
-      <snapshotRepository>
-          <id>ossrh</id>
-          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      </snapshotRepository>
-    <repository>
-      <id>ossrh</id>
-      <name>Nexus Release Repository</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
-  
   <scm>
     <url>https://github.com/ace-design/island</url>
     <connection>scm:git:git@github.com:ace-design/island.git</connection>
@@ -97,13 +112,13 @@
   
   <developers>
     <developer>
-      <id>mosser</id>
+      <id>mossers</id>
       <name>Sebastien Mosser</name>
-      <email>mosser@i3s.unice,fr</email>
-      <url>http://www.i3s.unice.fr/~mosser</url>
-      <organization>I3S Lab, University of Nice - Sophia Antipolis (UMR CNRS 7271)</organization>
-      <organizationUrl>http://www.i3s.unice.fr</organizationUrl>
-      <timezone>+2</timezone>
+      <email>mossers@mcmaster.ca</email>
+      <url>https://mosser.github.io</url>
+      <organization>McMaster Centre for Software Certification</organization>
+      <organizationUrl>http://mcscert.ca</organizationUrl>
+      <timezone>-5</timezone>
       <roles>
         <role>Architect</role>
         <role>Main Developer</role>
@@ -120,8 +135,8 @@
   </licenses>
   
   <organization>
-    <name>Université Nice-Sophia Antipolis :: Polytech Nice-Sophia </name>
-    <url>http://informatique.polytechnice.fr</url>
+    <name>McMaster University</name>
+    <url>http://mcmaster.ca</url>
   </organization>
   
   <modules>
