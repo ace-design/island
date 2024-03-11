@@ -23,8 +23,8 @@ More information available at the following URL: [http://ace-design.github.io/is
  ## How to compile and deploy
 
 ```
-mvn install
 export GPG_TTY=$(tty)
+mvn install
 mvn clean deploy
 ```
 

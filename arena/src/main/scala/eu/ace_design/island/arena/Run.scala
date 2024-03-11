@@ -75,7 +75,7 @@ trait Run extends Teams with DiSLand {
         else
           res.resources foreach { r => println(s"    - ${r._1}: ${r._2}")}
         val report: String = res.report.getOrElse("_None_")
-        if(report.split("\n").length == 1) {
+        if(report != null && report.split("\n").length == 1) {
           println(s"  - Report: `$report`")
         } else {
           println(s"  - Report: \n\n```\n$report\n```\n")
